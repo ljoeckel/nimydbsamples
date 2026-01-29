@@ -1,0 +1,257 @@
+:root {
+    --bg: #f6f7fb;
+    --card: #ffffff;
+    --text: #101828;
+    --muted: #667085;
+    --border: #d0d5dd;
+
+    --brand: #4f46e5;
+    --brandRing: rgba(79, 70, 229, 0.15);
+
+    --radius: 14px;
+}
+
+/* ✅ BASE RESET */
+* {
+    box-sizing: border-box;
+}
+
+/*
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.0;
+  padding: 18px;
+}
+*/
+body {
+    /* font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; */
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    margin: 0;
+    padding: 18px;
+    line-height: 1.0;
+    color: var(--gray-900);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
+
+/* ✅ DEMO CONTAINER */
+.container {
+    max-width: 880px;
+    margin: 0 auto;
+}
+
+.card {
+    background: var(--card);
+    border: 1px solid #eaecf0;
+    border-radius: 22px;
+    padding: 22px;
+    box-shadow: 0 10px 30px rgba(16, 24, 40, 0.06);
+}
+
+.header {
+    margin-bottom: 18px;
+}
+
+.header h1 {
+    margin: 0 0 6px;
+    font-size: 22px;
+}
+
+.header p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+/* ✅ FORM LAYOUT (GRID + GAP) */
+.form {
+    display: grid;
+    gap: 16px;
+    margin-top: 18px;
+}
+
+/* ✅ RESPONSIVE 2-COLUMN */
+@media (min-width: 700px) {
+    .form {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .form .full {
+        grid-column: 1 / -1;
+    }
+}
+
+/* ✅ GROUP WRAPPER */
+.form-group {
+    display: grid;
+    gap: 8px;
+}
+
+label {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+/* ✅ IMPORTANT: Fix default font mismatch for form elements */
+input,
+textarea,
+select,
+button {
+    font: inherit;
+}
+
+/* ✅ INPUT/TEXTAREA/SELECT STYLE (but avoid checkbox/radio!) */
+input:not([type="checkbox"]):not([type="radio"]),
+textarea,
+select {
+    width: 100%;
+    padding: 6px 7px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: #fff;
+    outline: none;
+    transition: border-color 180ms ease, box-shadow 180ms ease,
+        transform 120ms ease;
+}
+
+/* ✅ placeholder look */
+input::placeholder,
+textarea::placeholder {
+    color: #98a2b3;
+}
+
+/* ✅ textarea resize control */
+textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+/* ✅ focus ring = PRO LOOK */
+input:focus,
+textarea:focus,
+select:focus {
+    border-color: var(--brand);
+    box-shadow: 0 0 0 4px var(--brandRing);
+}
+
+/* ✅ focus-visible (better accessibility) */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+button:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 3px;
+}
+
+.input-error {
+    margin: -2px 0 0;
+    border: 2px solid #ff4444 !important;
+    background-color: #fff0f0;
+}
+
+/* ✅ helper text */
+.hint {
+    margin: -2px 0 0;
+    font-size: 13px;
+    color: var(--muted);
+}
+
+/* ✅ error message */
+.error {
+    margin: -2px 0 0;
+    font-size: 13px;
+    color: #d92d20;
+}
+
+.formsuccess {
+    margin: 13px 0 0;
+    font-size: 16px;
+    color: #0a811e;
+}
+
+.formerror {
+    margin: 13px 0 0;
+    font-size: 16px;
+    color: #cc183c;
+}
+
+
+/* ✅ checkbox / radio brand color */
+input[type="checkbox"],
+input[type="radio"] {
+    accent-color: var(--brand);
+}
+
+/* ✅ checkbox row alignment */
+.form-group.checkbox label {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 500;
+    color: #344054;
+    user-select: none;
+}
+
+/* ✅ small “section label” for better UI */
+.section-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    color: #344054;
+    text-transform: uppercase;
+    margin-top: 2px;
+}
+
+/* ✅ button */
+.btn {
+    padding: 12px 16px;
+    border: none;
+    border-radius: 14px;
+    background: var(--brand);
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 120ms ease, opacity 180ms ease;
+}
+
+.btn:hover {
+    opacity: 0.95;
+    transform: translateY(-1px);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ✅ secondary button */
+.btn.secondary {
+    background: #101828;
+}
+
+/* ✅ footer actions */
+.actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* ✅ Fine print */
+.fine-print {
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.fine-print a {
+    color: var(--brand);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.fine-print a:hover {
+    text-decoration: underline;
+}

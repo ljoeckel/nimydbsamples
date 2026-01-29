@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+
+<head data-init="@get('/server-events')">
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/style.css"> <!-- Pfad zum CSS -->
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <script type="module"
+        src="https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js"></script>
+</head>
+
+<body>
+    <div class="container"
+        data-signals="{formID: 'MAIN', name: '', email: '', emailInvalid: false, password: '', message: '', country: '', plan: 'starter', canSubmit: true, terms: false}">
+        <div class="card">
+            <div class="header">
+                <h1>Form Demo with 'datastar' and 'Nim'</h1>
+                <p>HTML / CSS / Nim — just clean structure + simple modern (no Bootstrap, no UI library).</p>
+            </div>
+
+            <form class="form" data-on:submit__prevent="@post('/submit-form')">
+                <!-- Full Name -->
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input id="name" data-bind:name type="text" placeholder="Your Name" />
+                    <small class="hint">Your name will appear on your profile.</small>
+                </div>
+
+                <div class="form-group">
+                    <!-- E-Mail -->
+                    <label for="email">Email</label>
+                    <input id="email" data-bind:email /* if emailInvalid is true class 'input-error' will be added */
+                        data-class="{'input-error': $emailInvalid}"
+                        data-on:input__debounce.500ms="@post('/validate-email')" type="email" />
+                    <small class="hint" data-show="!$emailInvalid">Enter a valid E-Mail address</small>
+                    <!-- Error text is shown when emailInvalid is true -->
+                    <small class="error" data-show="$emailInvalid">Invalid E-Mail address</small>
+                </div>
+
+                <!-- Password -->
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input id="password" name="password" data-bind:password type="password" placeholder="••••••••"
+                        autocomplete="new-password" />
+                    <small class="hint">Use at least 8 characters.</small>
+                </div>
+
+                <!-- Country Select -->
+                <div class="form-group">
+                    <label for="country">Country</label>
+                    <select id="country" name="country" data-bind:country autocomplete="country-name">
+                        <option value="" selected disabled>Select country</option>
+                        <option>Switzerland</option>
+                        <option>Germany</option>
+                        <option>Spain</option>
+                        <option>Canada</option>
+                        <option>Australia</option>
+                        <option>USA</option>
+                    </select>
+                    <small class="hint">This helps us show localized content.</small>
+                </div>
+
+                <!-- Message -->
+                <div class="form-group full">
+                    <label for="message">Message</label>
+                    <!-- textarea id="message" data-bind:message rows="3"></textarea -->
+                    <textarea id="message" data-bind:message name="message" rows="6"
+                        placeholder="Write your message..."></textarea>
+                    <small class="hint">Tell us what you want to build.</small>
+                </div>
+
+                <div class="form-group checkbox full">
+                    <label>
+                        <input type="checkbox" data-bind:terms />
+                        I agree to the terms and conditions
+                    </label>
+                </div>
+
+
+                <div class="form-group full">
+                    <span class="section-title">Choose Plan</span>
+
+                    <div class="form-group checkbox">
+                        <!-- Beide binden an 'plan' -->
+                        <label>
+                            <input type="radio" value="starter" data-bind:plan />Starter (Free)
+                        </label>
+                    </div>
+
+                    <div class="form-group checkbox">
+                        <label>
+                            <input type="radio" value="pro" data-bind:plan />Pro (Paid)
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Fine print -->
+                <p class="fine-print full">
+                    By submitting this form, you agree to our <a href="#">Privacy Policy</a>.
+                </p>
+
+                <!-- Buttons -->
+                <div class="actions full">
+                    <button class="btn" type="submit" data-attr:disabled="!$canSubmit">Submit</button>
+                    <button class="btn secondary" type="button" data-on:click="@post('/contact-sales')">
+                        Contact Sales
+                    </button>
+
+                    <!-- Response from server is here -->
+                    <div id="response-message"></div>
+                    <div id="events-message"></div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</body>
+
+</html>

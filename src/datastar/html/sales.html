@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+
+<head data-init="@get('/server-events')">
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/style.css"> <!-- Pfad zum CSS -->
+    <script type="module"
+        src="https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js"></script>
+</head>
+
+<body>
+    <div class="container" data-signals="{formID: 'SALES', name: '', email: '', message: ''}">
+        <div class="card">
+            <div class="header">
+                <h1>Contact 'Sales' Department</h1>
+            </div>
+
+            <form class="form" data-on:submit__prevent="@post('/submit-form')">
+                <!-- Full Name -->
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input id="name" data-bind:name type="text" placeholder="Your Name" />
+                    <small class="hint"> </small>
+                </div>
+
+                <div class="form-group">
+                    <!-- E-Mail -->
+                    <label for="email">Email</label>
+                    <input id="email" data-bind:email /* if emailInvalid is true class 'input-error' will be added */
+                        data-class="{'input-error': $emailInvalid}"
+                        data-on:input__debounce.500ms="@post('/validate-email')" type="email" />
+                    <small class="hint" data-show="!$emailInvalid">Enter a valid E-Mail address</small>
+                    <!-- Error text is shown when emailInvalid is true -->
+                    <small class="error" data-show="$emailInvalid">Invalid E-Mail address</small>
+                </div>
+
+
+                <!-- Message -->
+                <div class="form-group full">
+                    <label for="message">Message</label>
+                    <!-- textarea id="message" data-bind:message rows="3"></textarea -->
+                    <textarea id="message" data-bind:message name="message" rows="6"
+                        placeholder="Write your message to the Sales department..."></textarea>
+                    <small class="hint">Tell us how we can help.</small>
+                </div>
+
+                <!-- Buttons -->
+                <div class="actions full">
+                    <button class="btn" type="submit" data-attr:disabled="!$canSubmit">Submit</button>
+                    <button class="btn" type="button" data-on:click="@post('/')">Back</button>
+                    <!-- Response from server is here -->
+                    <div id="response-message"></div>
+                    <div id="events-message"></div>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+</body>
+
+</html>
