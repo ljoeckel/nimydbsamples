@@ -1,11 +1,13 @@
 ## Run in the src/datastar directory: nim c -r form.nim
 ## Then open http://localhost:8080 in your browser
-
-import std/[asyncdispatch, asynchttpserver, times, json, strutils]
+## Save formdata with Transaction
+## 
+import std/[tables, asyncdispatch, asynchttpserver, times, json, strutils]
 import std/[posix]
 import datastar
 import datastar/asynchttpserver as DATASTAR
 import yottadb
+import ydbutils
 
 const HTML = "html"
 
@@ -40,16 +42,21 @@ proc handleValidateEmail(req: Request) {.async.} =
 
 # Handle Form submit
 proc handleSubmit(req: Request) {.async.} =
-    var msg:string
     let signals = parseJson(req.body)
+    var msg:string
     let email = signals["email"].getStr()
     let name = signals["name"].getStr()
     if name.len > 0 and email.len > 0:
         # Save all signals in the database for each form submit
-        let id = increment ^datastar("submits")
+        # 1. Create the TX-Context (pass 'signals' to yottadb environment)
+        # because YottaDB calls the Transaction callback in a separate thread via C
         for key in signals.keys:
-            let str = strip($signals[key], chars={'"'})
-            setvar: ^datastar(id, key) = str
+            setvar: context(key) = strip($signals[key], chars={'"'})
+        # 2. Run the Transaction
+        let rc = Transaction:
+            let id = increment ^datastar("submits")
+            for (key, value) in queryItr context.kv:
+                setvar: ^datastar(id, key) = value
 
         msg = "<div id='response-message' class='formsuccess'>Thank you '" & name & "', Data received!</div>"
     else:

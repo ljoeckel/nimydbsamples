@@ -13,5 +13,7 @@ requires "datastar"
 requires "nimyottadb"
 
 # Tasks
-task demo, "Run http server on http://localhost:8080 and fill out a form":
+task form, "Run http server on http://localhost:8080 and fill out a form":
   exec "cd src/datastar && nim c -r -d:release --threads:off --hints:off --verbosity:0 form.nim"
+task formtx, "Run http server on http://localhost:8080 and fill out a form (Save in Transaction)":
+  exec "cd src/datastar && nim c -r -d:release --threads:off --hints:off --verbosity:0 formtx.nim"
