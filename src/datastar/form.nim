@@ -5,6 +5,8 @@ import std/[asyncdispatch, asynchttpserver, times, json, strutils]
 import std/[posix]
 import datastar
 import datastar/asynchttpserver as DATASTAR
+import yottadb
+import ydbutils
 
 const HTML = "html"
 
@@ -48,25 +50,32 @@ proc handleSubmit(req: Request) {.async.} =
     let name = signals["name"].getStr()
     let email = signals["email"].getStr()
 
+    # Show the response-message on the form
     let msg = if name.len > 0 and email.len > 0:
             "<div id='response-message' class='formsuccess'>Thank you '" & name & "', Data received!</div>"
         else:
             "<div id='response-message' class='formerror'>Sorry! Invalid or missing data!</div>"
-
     let sse = await req.newSSEGenerator(); defer: req.closeSSE()
     await sse.patchElements(msg)
 
     # Show all signals in the Message Textfield
     await sse.patchSignals(%*{"message": $signals})
 
+    # Save all signals in the database for each form submit
+    timed("Save to yottadb"):
+        let id = increment ^datastar("submits")
+        for key in signals.keys:
+            setvar: ^datastar(id, key) = $signals[key]
+    
 
 # Send the servertime to the client each second
 proc handleServerEvents(req: Request) {.async.} =
     # connection is opened with <head data-init="@get('/server-events')">
     let sse = await req.newSSEGenerator(); defer: req.closeSSE()
     while true:
-        let msg = "<div id='events-message' class='formsuccess'>" & $now() & "</div>"
-        await sse.patchElements(msg)
+        let currentDateTime = $now()
+        await sse.patchElements("<div id='events-message' class='formsuccess'>" & currentDateTime & "</div>")
+        await sse.patchSignals(%*{"time": currentDateTime})
         await sleepAsync(1000)
 
 
