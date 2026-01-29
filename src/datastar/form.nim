@@ -6,17 +6,14 @@ import std/[posix]
 import datastar
 import datastar/asynchttpserver as DATASTAR
 import yottadb
-import ydbutils
 
 const HTML = "html"
-
 
 # Shutdown
 proc handleSignal() {.noconv.} =
     echo "\nShutting down..."
     quit(0)
 setControlCHook(handleSignal)
-
 
 #-------------
 # Handler's
@@ -25,12 +22,10 @@ proc handleStatic(req: Request, url: string, content: string) {.async.} =
     let indexHtml = readFile(HTML & "/" & url)
     await req.respond(Http200, indexHtml, newHttpHeaders([("Content-Type", content)]))
 
-
 # Reload /
 proc reload(req: Request) {.async.} =
     let sse = await req.newSSEGenerator(); defer: req.closeSSE()
     await sse.executeScript("window.location.reload()")
-
 
 # Validate E-Mail
 proc handleValidateEmail(req: Request) {.async.} =
@@ -43,30 +38,28 @@ proc handleValidateEmail(req: Request) {.async.} =
         "canSubmit": not isInvalid
     })
 
-
 # Handle Form submit
 proc handleSubmit(req: Request) {.async.} =
+    var msg:string
     let signals = parseJson(req.body)
-    let name = signals["name"].getStr()
     let email = signals["email"].getStr()
-
-    # Show the response-message on the form
-    let msg = if name.len > 0 and email.len > 0:
-            "<div id='response-message' class='formsuccess'>Thank you '" & name & "', Data received!</div>"
-        else:
-            "<div id='response-message' class='formerror'>Sorry! Invalid or missing data!</div>"
-    let sse = await req.newSSEGenerator(); defer: req.closeSSE()
-    await sse.patchElements(msg)
-
-    # Show all signals in the Message Textfield
-    await sse.patchSignals(%*{"message": $signals})
-
-    # Save all signals in the database for each form submit
-    timed("Save to yottadb"):
+    let name = signals["name"].getStr()
+    if name.len > 0 and email.len > 0:
+        # Save all signals in the database for each form submit
         let id = increment ^datastar("submits")
         for key in signals.keys:
-            setvar: ^datastar(id, key) = $signals[key]
-    
+            let str = strip($signals[key], chars={'"'})
+            setvar: ^datastar(id, key) = str
+
+        msg = "<div id='response-message' class='formsuccess'>Thank you '" & name & "', Data received!</div>"
+    else:
+        msg = "<div id='response-message' class='formerror'>Sorry! Invalid or missing data!</div>"
+        
+    # Update the Browser
+    let sse = await req.newSSEGenerator(); defer: req.closeSSE()
+    await sse.patchElements(msg)
+    # Show all signals in the Message Textfield
+    await sse.patchSignals(%*{"message": $signals})
 
 # Send the servertime to the client each second
 proc handleServerEvents(req: Request) {.async.} =
