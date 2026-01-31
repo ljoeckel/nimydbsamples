@@ -2,7 +2,7 @@
 ## Then open http://localhost:8080 in your browser
 ## Save formdata with Transaction
 ## 
-import std/[tables, asyncdispatch, asynchttpserver, times, json, strutils]
+import std/[tables, asyncdispatch, asynchttpserver, times, json, strutils, strformat]
 import std/[posix]
 import datastar
 import datastar/asynchttpserver as DATASTAR
@@ -55,8 +55,9 @@ proc handleSubmit(req: Request) {.async.} =
         # 2. Run the Transaction
         let rc = Transaction:
             let id = increment ^datastar("submits")
-            for (key, value) in queryItr context.kv:
-                setvar: ^datastar(id, key) = value
+            for subs in queryItr context.keys:
+                let key = subs[0]
+                setvar: ^datastar(id, key) = getvar context(key)
 
         msg = "<div id='response-message' class='formsuccess'>Thank you '" & name & "', Data received!</div>"
     else:
@@ -67,6 +68,49 @@ proc handleSubmit(req: Request) {.async.} =
     await sse.patchElements(msg)
     # Show all signals in the Message Textfield
     await sse.patchSignals(%*{"message": $signals})
+
+
+proc handleApiSubmits(req: Request) {.async.} =
+    let sse = await req.newSSEGenerator(); defer: req.closeSSE()
+    var rows = "<tbody id='user-table-body'>"
+    
+    for key in orderItr ^datastar:
+        let name = getvar ^datastar(key, "name")
+        if name.len > 0:
+            let email = getvar ^datastar(key, "email")
+            let message = getvar ^datastar(key, "message")
+            let class = if message.contains("info"): "error" else: "formsuccess"
+            var row = fmt"""
+                <tr class='{class}'
+                    data-on:click="$selectedId = {key}; @post('/api/select-row')"
+                    data-class-selected="$selectedId === {key}">
+                """
+            row.add fmt"""
+                    <td>{key}</td>
+                    <td>{name}</td>
+                    <td>{email}</td>
+                    <td>{message}</td>
+                </tr>
+                """
+            rows.add(row)
+    rows.add("</tbody>")
+    await sse.patchElements(rows)
+
+# Display row data on the Admin page
+proc handleApiSelectRow(req: Request) {.async.} =
+    let signals = parseJson(req.body)
+    let id = signals["selectedId"]
+    let gbl = fmt"^datastar({id})"
+    let name = getvar @gbl("name")
+    let email = getvar @gbl("email")
+    let message = getvar @gbl("message")
+    let sse = await req.newSSEGenerator(); defer: req.closeSSE()
+    await sse.patchSignals(%*{
+        "name": name,
+        "email": email,
+        "message": message
+    })
+
 
 # Send the servertime to the client each second
 proc handleServerEvents(req: Request) {.async.} =
@@ -82,12 +126,15 @@ proc handleServerEvents(req: Request) {.async.} =
 proc router(req: Request) {.async.} =
     case req.url.path
     of "/": await handleStatic(req, "form.html", "text/html") #await handleIndex(req)
+    of "/admin": await handleStatic(req, "admin.html", "text/html") #await handleIndex(req)
     of "/favicon.ico": await handleStatic(req, "favicon.ico", "image/x-icon") #await handleIco(req) # deliver CSS
     of "/style.css": await handleStatic(req, "style.css", "text/css") #await handleStyle(req) # deliver CSS
     of "/contact-sales": await handleStatic(req, "sales.html", "text/html") #await handleContactSales(req) # redirect to sales department
     of "/server-events": await handleServerEvents(req)
     of "/validate-email": await handleValidateEmail(req) # validate email field
     of "/submit-form": await handleSubmit(req) # receive formdata
+    of "/api/submits": await handleApiSubmits(req)
+    of "/api/select-row": await handleApiSelectRow(req)
     else:
         echo "NOT FOUND: req.url=", req.url
         await req.respond(Http404, "Not Found")
