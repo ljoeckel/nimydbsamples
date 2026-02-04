@@ -32,7 +32,8 @@ body {
 
 /* ✅ DEMO CONTAINER */
 .container {
-    border-radius: 22px;
+    border-bottom-left-radius: 22px;
+    border-bottom-right-radius: 22px;
     max-width: 900px;
     margin: 0 auto;
 }
@@ -43,6 +44,10 @@ body {
     border-radius: 22px;
     padding: 22px;
     box-shadow: 0 10px 30px rgba(16, 24, 40, 0.06);
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+    border-bottom-left-radius: 22px;
+    border-bottom-right-radius: 22px;
 }
 
 .header {
@@ -326,7 +331,6 @@ input[type="radio"] {
 }
 
 
-
 /* NAVBAR */
 .force-closed {
     display: none !important;
@@ -336,6 +340,8 @@ input[type="radio"] {
     display: flex;
     align-items: center;
     background-color: #333;
+    border-top-left-radius: 22px;
+    border-top-right-radius: 22px;
 }
 
 .navbar h3 {
@@ -356,6 +362,11 @@ input[type="radio"] {
     text-decoration: none;
 }
 
+/* top-left round corner for 'Home' */
+#home {
+    border-top-left-radius: 22px;
+}
+
 /* Subnav button */
 .subnav .subnavbtn {
     display: flex;
@@ -369,6 +380,8 @@ input[type="radio"] {
     cursor: pointer;
 }
 
+
+
 /* Add a red background color to navigation links on hover */
 .navbar a:hover,
 .subnav:hover .subnavbtn {
@@ -379,6 +392,8 @@ input[type="radio"] {
 .subnav-content {
     display: none;
     position: absolute;
+    margin: 0 18px;
+
     left: 0;
     background-color: var(--nav-bg);
     width: 100%;
@@ -392,10 +407,10 @@ input[type="radio"] {
     text-decoration: none;
 }
 
+
 /* Add a grey background color on hover */
 .subnav-content a:hover {
     background-color: #eee;
-    /*color: black;*/
     color: var(--nav-bg)
 }
 

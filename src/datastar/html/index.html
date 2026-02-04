@@ -17,7 +17,7 @@
     data-signals="{formID: '', name: '', email: '', emailInvalid: false, password: '', message: '', country: '', plan: 'starter', canSubmit: true, terms: false, menuOpen: false}">
     <!-- The navigation menu -->
     <div class="navbar">
-        <a href="#home" data-on:click="@get('/form.html')">Home</a>
+        <a href="#home" id="home" data-on:click="@get('/form.html')">Home</a>
 
         <div class="subnav" data-on:mouseenter="console.log('mouseenter'); $menuOpen = true"
             data-on:mouseleave="console.log('mouseleave'); $menuOpen = false">
@@ -40,9 +40,7 @@
         <div class="subnav">
             <button class="subnavbtn">About <i class="fa fa-caret-down"></i></button>
             <div id="sub3" class="subnav-content">
-                <a href="#home" data-on:click="$menuOpen = false; @get('/form.html')">Home</a>
-                <a href="#sales" data-on:click="$menuOpen = false; @get('/salesdiv.html')">Sales</a>
-                <a href="#admin" data-on:click="$menuOpen = false; @get('/admindiv.html')">Administration</a>
+                <a href="#home" data-on:click="$menuOpen = false; @get('/about.html')">This Demo</a>
             </div>
         </div>
 

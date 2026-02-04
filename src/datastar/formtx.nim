@@ -86,8 +86,6 @@ proc handleApiSelectRow(req: Request) {.async.} =
 
 # Send the servertime to the client each second
 proc handleClearForm(req: Request) {.async.} =
-    echo "clear form"
-
     let sse = await req.newSSEGenerator(); defer: req.closeSSE()
     await sse.patchSignals(%*{
         "emailInvalid": false,
@@ -163,7 +161,7 @@ proc router(req: Request) {.async.} =
     of "/api/submits": await handleApiSubmits(req)
     of "/api/select-row": await handleApiSelectRow(req)
     else: # static
-        var (dir, file, ext) = splitFile(Path(req.url.path))  # to avoid Nim warning
+        var (dir, file, ext) = splitFile(Path(req.url.path))
         if $dir == "/" and ($file).len == 0: 
             file = Path("index")
             ext = ".html"
