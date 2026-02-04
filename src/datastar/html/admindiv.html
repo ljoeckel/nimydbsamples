@@ -1,4 +1,4 @@
-<div id="container" class="card" data-signals="{formID: 'Admin', selectedId: 0}">
+<div id="container" class="card" data-signals="{formID: 'Admin'}">
     <div class="header">
         <form class="form">
             <h1>Administration</h1>
@@ -82,6 +82,7 @@
         <!-- Buttons -->
         <div class="actions full">
             <button class="btn" type="submit" data-attr:disabled="!$canSubmit">Submit</button>
+            <button class="btn btn-secondary" type="button" data-on:click="@get('/clear-form')">Clear</button>
             <!-- Response from server is here -->
             <div id="response-message"></div>
         </div>
@@ -92,7 +93,8 @@
             <p>High-quality sound with active noise cancellation</p>
             <div class="price">₹12,999</div>
             <button class="cardbtn cardbtn-primary">Add to Cart</button>
-            <button class="cardbtn cardbtn-secondary" popovertarget="product-detail">View Details </button>
+            <button class="cardbtn cardbtn-secondary" type="button" popovertarget="product-detail">View Details
+            </button>
         </div>
 
         <!-- Product Detail Popover -->

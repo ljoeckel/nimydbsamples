@@ -9,7 +9,9 @@
     --success: green;
     --brand: #4f46e5;
     --brandRing: rgba(79, 70, 229, 0.15);
+    --nav-bar: #333;
     --nav-bg: rgb(160, 14, 14);
+    --nav-fg: white;
     --radius: 14px;
 }
 
@@ -239,8 +241,8 @@ input[type="radio"] {
 }
 
 /* ✅ secondary button */
-.btn.secondary {
-    background: #101828;
+.btn-secondary {
+    background: #242629;
 }
 
 /* ✅ footer actions */
@@ -339,11 +341,13 @@ input[type="radio"] {
 .navbar {
     display: flex;
     align-items: center;
-    background-color: #333;
+    background-color: var(--nav-bar);
     border-top-left-radius: 22px;
     border-top-right-radius: 22px;
+    position: relative;
 }
 
+/* For #clock field */
 .navbar h3 {
     margin-left: auto;
     font-size: 14px;
@@ -353,10 +357,10 @@ input[type="radio"] {
     margin-bottom: 0;
 }
 
-/* Navigation links */
+/* Navigation without submenu */
 .navbar a {
     font-size: 16px;
-    color: white;
+    color: var(--nav-fg);
     text-align: center;
     padding: 14px 16px;
     text-decoration: none;
@@ -374,13 +378,11 @@ input[type="radio"] {
     gap: 8px;
     font-size: 16px;
     border: none;
-    color: white;
+    color: var(--nav-fg);
     padding: 14px 16px;
     background-color: inherit;
     cursor: pointer;
 }
-
-
 
 /* Add a red background color to navigation links on hover */
 .navbar a:hover,
@@ -392,8 +394,6 @@ input[type="radio"] {
 .subnav-content {
     display: none;
     position: absolute;
-    margin: 0 18px;
-
     left: 0;
     background-color: var(--nav-bg);
     width: 100%;
@@ -403,10 +403,9 @@ input[type="radio"] {
 /* Style the subnav links */
 .subnav-content a {
     float: left;
-    color: white;
+    color: var(--nav-fg);
     text-decoration: none;
 }
-
 
 /* Add a grey background color on hover */
 .subnav-content a:hover {

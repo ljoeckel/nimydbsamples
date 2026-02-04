@@ -38,6 +38,7 @@
         <!-- Buttons -->
         <div class="actions full">
             <button class="btn" type="submit" data-attr:disabled="!$canSubmit">Submit</button>
+            <button class="btn btn-secondary" type="button" data-on:click="@get('/clear-form')">Clear</button>
             <!-- Response from server is here -->
             <div id="response-message"></div>
         </div>

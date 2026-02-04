@@ -97,7 +97,8 @@ proc handleClearForm(req: Request) {.async.} =
         "name": "",
         "email": "",
         "message": "",
-        "plan": "starter"
+        "plan": "starter",
+        "selectedId": 0
     })
     await sse.patchElements("<div id='response-message'></div>")
 
@@ -114,18 +115,17 @@ proc handleSubmit(req: Request) {.async.} =
         # Save all signals in the database for each form submit
         # 1. Create the TX-Context (pass 'signals' to yottadb environment)
         # because YottaDB calls the Transaction callback in a separate thread via C
-        killnode: context("selectedId")
         for key in signals.keys:
             setvar: context(key) = strip($signals[key], chars={'"'})
         # 2. Run the Transaction
         let rc = Transaction:
-            var id = 0
-            if data(context("selectedId")) != 0:
-                id = parseInt(getvar(context("selectedId")))
-            else:
+            var id = parseInt(getvar(context("selectedId")))
+            if id == 0:
                 id = increment ^datastar("submits")
+                echo "New record: ", id
             for subs in queryItr context.keys:
                 let key = subs[0]
+                echo "key:", key, "=", getvar context(key)
                 setvar: ^datastar(id, key) = getvar context(key)
 
         msg = "<div id='response-message' class='formsuccess'>Thank you '" & name & "', Data received!</div>"
