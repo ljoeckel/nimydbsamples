@@ -18,7 +18,7 @@ Ensure you have YottaDB and Nim installed. For detailed setup instructions, plea
 
 A lightweight web application demonstrating how to capture, validate, and persist form data directly into YottaDB.
 
-![Form Screenshot](screenshot_homt.png)
+![Form Screenshot](screenshot_home.png)
 
 ### Technical Highlights
 * **Pure Backend Logic:** All validation, persistence, and UI updates are handled strictly on the server side.
