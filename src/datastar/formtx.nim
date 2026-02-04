@@ -2,15 +2,12 @@
 ## Then open http://localhost:8080 in your browser
 ## Save formdata with Transaction
 ## 
-import std/[tables, asyncdispatch, asynchttpserver, times, json, strutils, strformat, paths]
+import std/[asyncdispatch, asynchttpserver, times, json, strutils, strformat, paths]
 import std/[posix]
 import datastar
 import datastar/asynchttpserver as DATASTAR
 import yottadb
-import ydbutils
 import mimetypes
-
-const HTML = "html"
 
 # Shutdown
 proc handleSignal() {.noconv.} =
@@ -22,18 +19,13 @@ setControlCHook(handleSignal)
 # Handler's
 #-------------
 proc handleStatic(req: Request, file: Path, ext: string) {.async.} =
-    let path = Path(HTML & "/" & $file & ext)
-    echo "handleStatic:", path
+    let path = Path("html/" & $file & ext)
     try:
         let data = readFile($path)
         await req.respond(Http200, data, newHttpHeaders([("Content-Type", getMimeType(ext))]))
     except:
         await req.respond(Http404, "<h1>File '" & $path & "' not found</h1>", newHttpHeaders([("Content-Type", "text/html")]))
 
-# Reload /
-proc reload(req: Request) {.async.} =
-    let sse = await req.newSSEGenerator(); defer: req.closeSSE()
-    await sse.executeScript("window.location.reload()")
 
 # Validate E-Mail
 proc handleValidateEmail(req: Request) {.async.} =
@@ -54,6 +46,7 @@ proc handleApiSubmits(req: Request) {.async.} =
     for key in orderItr ^datastar:
         let name = getvar ^datastar(key, "name")
         if name.len > 0:
+            let formid = getvar ^datastar(key, "formID")
             let email = getvar ^datastar(key, "email")
             let message = getvar ^datastar(key, "message")
             let class = if message.contains("info"): "error" else: "formsuccess"
@@ -63,6 +56,7 @@ proc handleApiSubmits(req: Request) {.async.} =
                     data-class-selected="$selectedId === {key}">
                 """
             row.add fmt"""
+                    <td>{formid}</td>
                     <td>{key}</td>
                     <td>{name}</td>
                     <td>{email}</td>
@@ -72,6 +66,7 @@ proc handleApiSubmits(req: Request) {.async.} =
             rows.add(row)
     rows.add("</tbody>")
     await sse.patchElements(rows)
+
 
 # Display row data on the Admin page
 proc handleApiSelectRow(req: Request) {.async.} =
@@ -89,13 +84,35 @@ proc handleApiSelectRow(req: Request) {.async.} =
     })
 
 
+# Send the servertime to the client each second
+proc handleClearForm(req: Request) {.async.} =
+    echo "clear form"
+
+    let sse = await req.newSSEGenerator(); defer: req.closeSSE()
+    await sse.patchSignals(%*{
+        "emailInvalid": false,
+        "password": "",
+        "country": "",
+        "canSubmit": true,
+        "terms": false,
+        "menuOpen": false,
+        "name": "",
+        "email": "",
+        "message": "",
+        "plan": "starter"
+    })
+    await sse.patchElements("<div id='response-message'></div>")
+
+
 # Handle Form submit
 proc handleSubmit(req: Request) {.async.} =
     let signals = parseJson(req.body)
     let email = signals["email"].getStr()
     let name = signals["name"].getStr()
+    let message = signals["message"].getStr()
+    let formID = signals["formID"].getStr()
     var msg:string
-    if name.len > 0 and email.len > 0:
+    if name.len > 0 and email.len > 0 and message.len > 0:
         # Save all signals in the database for each form submit
         # 1. Create the TX-Context (pass 'signals' to yottadb environment)
         # because YottaDB calls the Transaction callback in a separate thread via C
@@ -120,8 +137,10 @@ proc handleSubmit(req: Request) {.async.} =
     # Update the Browser
     let sse = await req.newSSEGenerator(); defer: req.closeSSE()
     await sse.patchElements(msg)
+
     # Update table on Admin page    
-    await handleApiSubmits(req)
+    if formID == "Admin":
+        await handleApiSubmits(req)
 
 
 # Send the servertime to the client each second
@@ -133,32 +152,23 @@ proc handleServerEvents(req: Request) {.async.} =
         await sse.patchSignals(%*{"time": $now()})
         await sleepAsync(1000)
 
-proc handleSalesDiv(req: Request) {.async.} =
-    let card = readFile("html/salesdiv.html")
-    echo "salesdiv"
-    echo card
-    let sse = await req.newSSEGenerator(); defer: req.closeSSE()
-    await sse.patchElements(card)
 
 
 proc router(req: Request) {.async.} =
-    #let p = Path(req.url.path)
-    echo "req.url.path:", $req.url.path
     case req.url.path
-    #of "/salesdiv": await handleSalesDiv(req)
-    #of "/adminiv": await handleSalesDiv(req)
     of "/server-events": await handleServerEvents(req)
     of "/validate-email": await handleValidateEmail(req) # validate email field
     of "/submit-form": await handleSubmit(req) # receive formdata
-    #of "/server-time": await handleServerTime(req) # receive formdata
+    of "/clear-form": await handleClearForm(req)
     of "/api/submits": await handleApiSubmits(req)
     of "/api/select-row": await handleApiSelectRow(req)
-    else: 
+    else: # static
         var (dir, file, ext) = splitFile(Path(req.url.path))  # to avoid Nim warning
         if $dir == "/" and ($file).len == 0: 
             file = Path("index")
             ext = ".html"
         await handleStatic(req, file, ext)
+
 
 if isMainModule:
     initMimeTable()

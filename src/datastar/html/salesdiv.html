@@ -1,4 +1,4 @@
-<div id="container" class="card">
+<div id="container" class="card" data-signals="{formID: 'Sales'}">
     <div class="header">
         <form class="form">
             <h1>Contact 'SalesDiv' Department</h1>
@@ -10,18 +10,19 @@
         <div class="form-group">
             <label for="name">Full Name</label>
             <input id="name" data-bind:name type="text" placeholder="Your Name" autofocus />
-            <small class="hint"> </small>
+            <!-- small class="hint"> </small-->
         </div>
 
         <div class="form-group">
             <!-- E-Mail -->
-            <label for="email">Email</label>
+            <div>
+                <label for="email">Email</label>
+                <small class="error" data-show="$emailInvalid">Invalid E-Mail address</small>
+            </div>
             <input id="email" data-bind:email /* if emailInvalid is true class 'input-error' will be added */
                 data-class="{'input-error': $emailInvalid}" data-on:input__debounce.500ms="@post('/validate-email')"
                 type="email" />
-            <small class="hint" data-show="!$emailInvalid">Enter a valid E-Mail address</small>
-            <!-- Error text is shown when emailInvalid is true -->
-            <small class="error" data-show="$emailInvalid">Invalid E-Mail address</small>
+            <!-- small class="hint" data-show="!$emailInvalid">Enter a valid E-Mail address</small-->
         </div>
 
 
@@ -37,7 +38,6 @@
         <!-- Buttons -->
         <div class="actions full">
             <button class="btn" type="submit" data-attr:disabled="!$canSubmit">Submit</button>
-            <button class="btn" type="button" data-on:click="@get('/form.html')">Back</button>
             <!-- Response from server is here -->
             <div id="response-message"></div>
         </div>
