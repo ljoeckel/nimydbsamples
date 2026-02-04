@@ -5,34 +5,6 @@
         </form>
     </div>
 
-    <div class="toolbar">
-        <button class="icon-btn" popovertarget="file-menu">📁</button>
-        <button class="icon-btn" popovertarget="edit-menu">✏️</button>
-        <button class="icon-btn" popovertarget="view-menu">👁️</button>
-    </div>
-
-    <!-- Dropdown Menus (auto popovers) -->
-    <div id="file-menu" class="dropdown-menu" popover>
-        <button>New File</button>
-        <button>Open File</button>
-        <button>Save</button>
-        <button>Export</button>
-    </div>
-
-    <div id="edit-menu" class="dropdown-menu" popover>
-        <button>Cut</button>
-        <button>Copy</button>
-        <button>Paste</button>
-        <button>Undo</button>
-    </div>
-
-    <div id="view-menu" class="dropdown-menu" popover>
-        <button>Zoom In</button>
-        <button>Zoom Out</button>
-        <button>Full Screen</button>
-    </div>
-
-
     <table class="styled-table" data-init="@get('/api/submits')">
         <thead>
             <tr>
@@ -87,39 +59,34 @@
             <div id="response-message"></div>
         </div>
 
-
-        <div class="product-card">
-            <h3>Premium Wireless Headphones</h3>
-            <p>High-quality sound with active noise cancellation</p>
-            <div class="price">₹12,999</div>
-            <button class="cardbtn cardbtn-primary">Add to Cart</button>
-            <button class="cardbtn cardbtn-secondary" type="button" popovertarget="product-detail">View Details
-            </button>
-        </div>
-
-        <!-- Product Detail Popover -->
-        <div id="product-detail" class="product-detail" popover>
-            <button class="close-btn" popovertarget="product-detail" popovertargetaction="hide">
-                ✕
-            </button>
-            <h2>Premium Wireless Headphones</h2>
-            <p>Experience studio-quality sound with cutting-edge active noise cancellation technology. Perfect
-                for music lovers and professionals.</p>
-
-            <h3>Features</h3>
-            <ul class="features">
-                <li>✓ Active Noise Cancellation (ANC)</li>
-                <li>✓ 40-hour battery life</li>
-                <li>✓ Bluetooth 5.3 connectivity</li>
-                <li>✓ Premium leather ear cushions</li>
-                <li>✓ Multi-device pairing</li>
-                <li>✓ Voice assistant support</li>
-            </ul>
-
-            <button class="btn btn-primary" data-on:click="@post('/api/submits')">
-                <!-- style="margin-top: 1.5rem; -->
-                Add to Cart - ₹12,999
-            </button>
-        </div>
     </form>
+    <div class="toolbar">
+        <button class="icon-btn" popovertarget="file-menu">📁</button>
+        <button class="icon-btn" popovertarget="edit-menu">✏️</button>
+        <button class="icon-btn" popovertarget="view-menu">👁️</button>
+    </div>
+
+    <!-- Dropdown Menus (auto popovers) -->
+    <div id="file-menu" class="dropdown-menu" popover>
+        <button>New File</button>
+        <button>Open File</button>
+        <button>Save</button>
+        <button>Export</button>
+    </div>
+
+    <div id="edit-menu" class="dropdown-menu" popover>
+        <button>Cut</button>
+        <button>Copy</button>
+        <button>Paste</button>
+        <button>Undo</button>
+    </div>
+
+    <div id="view-menu" class="dropdown-menu" popover>
+        <button>Zoom In</button>
+        <button>Zoom Out</button>
+        <button>Full Screen</button>
+    </div>
+
+
+
 </div>

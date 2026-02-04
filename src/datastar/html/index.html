@@ -14,7 +14,7 @@
 </head>
 
 <body
-    data-signals="{formID: '', name: '', email: '', emailInvalid: false, password: '', message: '', country: '', plan: 'starter', canSubmit: true, terms: false, menuOpen: false, selectedId: 0}">
+    data-signals="{formID: '', name: '', email: '', emailInvalid: false, password: '', message: '', country: '', plan: 'starter', canSubmit: true, terms: false, menuOpen: false, selectedId: -1}">
     <!-- The navigation menu -->
     <div class="navbar">
         <a href="#home" id="home" data-on:click="@get('/form.html')">Home</a>
@@ -25,6 +25,7 @@
             <div class="subnav-content" data-class="{'force-closed': !$menuOpen}">
                 <a href="#sales" data-on:click="$menuOpen = false; @get('/salesdiv.html')">Sales</a>
                 <a href="#admin" data-on:click="$menuOpen = false; @get('/admindiv.html')">Administration</a>
+                <a href="#cards" data-on:click="$menuOpen = false; @get('/cardsdiv.html')">Cards</a>
             </div>
         </div>
 

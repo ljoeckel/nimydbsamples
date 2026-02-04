@@ -1,0 +1,44 @@
+<div id="container" class="card" data-signals="{formID: 'Cards'}">
+    <div class="header">
+        <form class="form">
+            <h1>Cards</h1>
+        </form>
+    </div>
+
+
+    <div class="product-card">
+        <h3>Premium Wireless Headphones</h3>
+        <p>High-quality sound with active noise cancellation</p>
+        <div class="price">₹12,999</div>
+        <button class="cardbtn cardbtn-primary">Add to Cart</button>
+        <button class="cardbtn cardbtn-secondary" type="button" popovertarget="product-detail">View Details
+        </button>
+    </div>
+
+    <!-- Product Detail Popover -->
+    <div id="product-detail" class="product-detail" popover>
+        <button class="close-btn" popovertarget="product-detail" popovertargetaction="hide">
+            ✕
+        </button>
+        <h2>Premium Wireless Headphones</h2>
+        <p>Experience studio-quality sound with cutting-edge active noise cancellation technology. Perfect
+            for music lovers and professionals.</p>
+
+        <h3>Features</h3>
+        <ul class="features">
+            <li>✓ Active Noise Cancellation (ANC)</li>
+            <li>✓ 40-hour battery life</li>
+            <li>✓ Bluetooth 5.3 connectivity</li>
+            <li>✓ Premium leather ear cushions</li>
+            <li>✓ Multi-device pairing</li>
+            <li>✓ Voice assistant support</li>
+        </ul>
+
+        <button class="btn btn-primary" data-on:click="@post('/api/submits')">
+            <!-- style="margin-top: 1.5rem; -->
+            Add to Cart - ₹12,999
+        </button>
+    </div>
+    </form>
+
+</div>

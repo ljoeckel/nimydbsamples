@@ -49,20 +49,10 @@ proc handleApiSubmits(req: Request) {.async.} =
             let formid = getvar ^datastar(key, "formID")
             let email = getvar ^datastar(key, "email")
             let message = getvar ^datastar(key, "message")
-            let class = if message.contains("info"): "error" else: "formsuccess"
-            var row = fmt"""
-                <tr class='{class}'
-                    data-on:click="$selectedId = {key}; @post('/api/select-row')"
-                    data-class-selected="$selectedId === {key}">
-                """
-            row.add fmt"""
-                    <td>{formid}</td>
-                    <td>{key}</td>
-                    <td>{name}</td>
-                    <td>{email}</td>
-                    <td>{message}</td>
-                </tr>
-                """
+            var row = "<tr "
+            row.add("data-on:click=\"$selectedId = " & key & "; @post('/api/select-row')\" ")
+            row.add("data-class=\"{ selected: $selectedId === " & key & "}\">")
+            row.add fmt"<td>{formid}</td><td>{key}</td><td>{name}</td><td>{email}</td><td>{message}</td></tr>"
             rows.add(row)
     rows.add("</tbody>")
     await sse.patchElements(rows)
@@ -98,7 +88,7 @@ proc handleClearForm(req: Request) {.async.} =
         "email": "",
         "message": "",
         "plan": "starter",
-        "selectedId": 0
+        "selectedId": -1
     })
     await sse.patchElements("<div id='response-message'></div>")
 
@@ -120,12 +110,10 @@ proc handleSubmit(req: Request) {.async.} =
         # 2. Run the Transaction
         let rc = Transaction:
             var id = parseInt(getvar(context("selectedId")))
-            if id == 0:
+            if id < 0:
                 id = increment ^datastar("submits")
-                echo "New record: ", id
             for subs in queryItr context.keys:
                 let key = subs[0]
-                echo "key:", key, "=", getvar context(key)
                 setvar: ^datastar(id, key) = getvar context(key)
 
         msg = "<div id='response-message' class='formsuccess'>Thank you '" & name & "', Data received!</div>"
