@@ -67,7 +67,7 @@ proc handleServerEvents(req: Request) {.async.} =
     let sse = await req.newSSEGenerator(); defer: req.closeSSE()
     while true:
         let currentDateTime = $now()
-        await sse.patchElements("<div id='events-message' class='formsuccess'>" & currentDateTime & "</div>")
+        await sse.patchElements("<div id='clock'>" & currentDateTime & "</div>")
         await sse.patchSignals(%*{"time": currentDateTime})
         await sleepAsync(1000)
 

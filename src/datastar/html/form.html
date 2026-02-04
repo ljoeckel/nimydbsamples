@@ -1,30 +1,19 @@
-<!DOCTYPE html>
-<html>
 
-<head data-init="@get('/server-events')">
-    <meta charset="UTF-8">
-    <link rel="stylesheet" href="/style.css"> <!-- Pfad zum CSS -->
-    <link rel="shortcut icon" href="/favicon.ico" />
-    <script type="module"
-        src="https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js"></script>
-</head>
-
-<body>
-    <div class="container"
-        data-signals="{formID: 'MAIN', name: '', email: '', emailInvalid: false, password: '', message: '', country: '', plan: 'starter', canSubmit: true, terms: false}">
-        <div class="card">
+        <div id="container" class="card">
             <div class="header">
-                <h1>Form Demo with 'datastar' and 'Nim'</h1>
+                <form class="form">
+                    <h1>Demo with Datastar, Nim and YottaDB</h1>
+                </form>
                 <p>HTML / CSS / Nim — just clean structure + simple modern (no Bootstrap, no UI library).</p>
                 <p>All data of this form is saved in YottaDB under the globalname <b>^datastar</b></p>
                 <p>A E-Mail address is valid if it contains a '@' (No real validation here)</p>
             </div>
 
-            <form class="form" data-on:submit__prevent="@post('/submit-form')">
+            <form class="form" data-on:submit__prevent="@post(' /submit-form')">
                 <!-- Full Name -->
                 <div class="form-group">
                     <label for="name">Full Name</label>
-                    <input id="name" data-bind:name type="text" placeholder="Your Name" />
+                    <input type="text" id="name" data-bind:name type="text" placeholder="Your Name" autofocus />
                     <small class="hint">Your name will appear on your profile.</small>
                 </div>
 
@@ -104,16 +93,12 @@
                 <!-- Buttons -->
                 <div class="actions full">
                     <button class="btn" type="submit" data-attr:disabled="!$canSubmit">Submit</button>
-                    <button class="btn secondary" type="button" data-on:click="@post('/contact-sales')">Contact Sales</button>
-                    <button class="btn secondary" type="button" data-on:click="@post('/admin')">Admin</button>
+                    <button class="btn secondary" type="button" data-on:click="@get('/salesdiv.html')">Contact Sales</button>
+                    <button class="btn secondary" type="button" data-on:click="@get('/admindiv.html')">Admin</button>
                     <!-- Response from server is here -->
                     <div id="response-message"></div>
-                    <div id="events-message"></div>
                 </div>
             </form>
         </div>
     </div>
 
-</body>
-
-</html>

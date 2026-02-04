@@ -2,12 +2,13 @@
 ## Then open http://localhost:8080 in your browser
 ## Save formdata with Transaction
 ## 
-import std/[tables, asyncdispatch, asynchttpserver, times, json, strutils, strformat]
+import std/[tables, asyncdispatch, asynchttpserver, times, json, strutils, strformat, paths]
 import std/[posix]
 import datastar
 import datastar/asynchttpserver as DATASTAR
 import yottadb
 import ydbutils
+import mimetypes
 
 const HTML = "html"
 
@@ -20,9 +21,14 @@ setControlCHook(handleSignal)
 #-------------
 # Handler's
 #-------------
-proc handleStatic(req: Request, url: string, content: string) {.async.} =
-    let data = readFile(HTML & "/" & url)
-    await req.respond(Http200, data, newHttpHeaders([("Content-Type", content)]))
+proc handleStatic(req: Request, file: Path, ext: string) {.async.} =
+    let path = Path(HTML & "/" & $file & ext)
+    echo "handleStatic:", path
+    try:
+        let data = readFile($path)
+        await req.respond(Http200, data, newHttpHeaders([("Content-Type", getMimeType(ext))]))
+    except:
+        await req.respond(Http404, "<h1>File '" & $path & "' not found</h1>", newHttpHeaders([("Content-Type", "text/html")]))
 
 # Reload /
 proc reload(req: Request) {.async.} =
@@ -39,35 +45,6 @@ proc handleValidateEmail(req: Request) {.async.} =
         "emailInvalid": isInvalid,
         "canSubmit": not isInvalid
     })
-
-# Handle Form submit
-proc handleSubmit(req: Request) {.async.} =
-    let signals = parseJson(req.body)
-    var msg:string
-    let email = signals["email"].getStr()
-    let name = signals["name"].getStr()
-    if name.len > 0 and email.len > 0:
-        # Save all signals in the database for each form submit
-        # 1. Create the TX-Context (pass 'signals' to yottadb environment)
-        # because YottaDB calls the Transaction callback in a separate thread via C
-        for key in signals.keys:
-            setvar: context(key) = strip($signals[key], chars={'"'})
-        # 2. Run the Transaction
-        let rc = Transaction:
-            let id = increment ^datastar("submits")
-            for subs in queryItr context.keys:
-                let key = subs[0]
-                setvar: ^datastar(id, key) = getvar context(key)
-
-        msg = "<div id='response-message' class='formsuccess'>Thank you '" & name & "', Data received!</div>"
-    else:
-        msg = "<div id='response-message' class='formerror'>Sorry! Invalid or missing data!</div>"
-        
-    # Update the Browser
-    let sse = await req.newSSEGenerator(); defer: req.closeSSE()
-    await sse.patchElements(msg)
-    # Show all signals in the Message Textfield
-    await sse.patchSignals(%*{"message": $signals})
 
 
 proc handleApiSubmits(req: Request) {.async.} =
@@ -112,34 +89,80 @@ proc handleApiSelectRow(req: Request) {.async.} =
     })
 
 
+# Handle Form submit
+proc handleSubmit(req: Request) {.async.} =
+    let signals = parseJson(req.body)
+    let email = signals["email"].getStr()
+    let name = signals["name"].getStr()
+    var msg:string
+    if name.len > 0 and email.len > 0:
+        # Save all signals in the database for each form submit
+        # 1. Create the TX-Context (pass 'signals' to yottadb environment)
+        # because YottaDB calls the Transaction callback in a separate thread via C
+        killnode: context("selectedId")
+        for key in signals.keys:
+            setvar: context(key) = strip($signals[key], chars={'"'})
+        # 2. Run the Transaction
+        let rc = Transaction:
+            var id = 0
+            if data(context("selectedId")) != 0:
+                id = parseInt(getvar(context("selectedId")))
+            else:
+                id = increment ^datastar("submits")
+            for subs in queryItr context.keys:
+                let key = subs[0]
+                setvar: ^datastar(id, key) = getvar context(key)
+
+        msg = "<div id='response-message' class='formsuccess'>Thank you '" & name & "', Data received!</div>"
+    else:
+        msg = "<div id='response-message' class='formerror'>Sorry! Invalid or missing data!</div>"
+        
+    # Update the Browser
+    let sse = await req.newSSEGenerator(); defer: req.closeSSE()
+    await sse.patchElements(msg)
+    # Update table on Admin page    
+    await handleApiSubmits(req)
+
+
 # Send the servertime to the client each second
 proc handleServerEvents(req: Request) {.async.} =
     # connection is opened with <head data-init="@get('/server-events')">
     let sse = await req.newSSEGenerator(); defer: req.closeSSE()
     while true:
-        let currentDateTime = $now()
-        await sse.patchElements("<div id='events-message' class='formsuccess'>" & currentDateTime & "</div>")
-        await sse.patchSignals(%*{"time": currentDateTime})
+        await sse.patchElements("<h3 id='clock'>" & $now() & "</h3>")
+        await sse.patchSignals(%*{"time": $now()})
         await sleepAsync(1000)
+
+proc handleSalesDiv(req: Request) {.async.} =
+    let card = readFile("html/salesdiv.html")
+    echo "salesdiv"
+    echo card
+    let sse = await req.newSSEGenerator(); defer: req.closeSSE()
+    await sse.patchElements(card)
 
 
 proc router(req: Request) {.async.} =
+    #let p = Path(req.url.path)
+    echo "req.url.path:", $req.url.path
     case req.url.path
-    of "/": await handleStatic(req, "form.html", "text/html") #await handleIndex(req)
-    of "/admin": await handleStatic(req, "admin.html", "text/html") #await handleIndex(req)
-    of "/favicon.ico": await handleStatic(req, "favicon.ico", "image/x-icon") #await handleIco(req) # deliver CSS
-    of "/style.css": await handleStatic(req, "style.css", "text/css") #await handleStyle(req) # deliver CSS
-    of "/contact-sales": await handleStatic(req, "sales.html", "text/html") #await handleContactSales(req) # redirect to sales department
+    #of "/salesdiv": await handleSalesDiv(req)
+    #of "/adminiv": await handleSalesDiv(req)
     of "/server-events": await handleServerEvents(req)
     of "/validate-email": await handleValidateEmail(req) # validate email field
     of "/submit-form": await handleSubmit(req) # receive formdata
+    #of "/server-time": await handleServerTime(req) # receive formdata
     of "/api/submits": await handleApiSubmits(req)
     of "/api/select-row": await handleApiSelectRow(req)
-    else:
-        echo "NOT FOUND: req.url=", req.url
-        await req.respond(Http404, "Not Found")
+    else: 
+        var (dir, file, ext) = splitFile(Path(req.url.path))  # to avoid Nim warning
+        if $dir == "/" and ($file).len == 0: 
+            file = Path("index")
+            ext = ".html"
+        await handleStatic(req, file, ext)
 
 if isMainModule:
+    initMimeTable()
+
     let server = newAsyncHttpServer()
     echo "Server running at http://localhost:8080 (Ctrl+C to stop)"
     waitFor server.serve(Port(8080), router)

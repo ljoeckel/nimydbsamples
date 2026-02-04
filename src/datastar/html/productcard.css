@@ -1,0 +1,123 @@
+.product-card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      width: 300px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .product-card h3 {
+      margin: 0 0 0.5rem 0;
+      color: #1f2937;
+    }
+
+    .product-card p {
+      color: #6b7280;
+      margin: 0 0 1rem 0;
+    }
+
+    .price {
+      font-size: 24px;
+      font-weight: bold;
+      color: #3b82f6;
+      margin-bottom: 1rem;
+    }
+
+    
+    .cardbtn {
+      width: 100%;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .cardbtn-primary {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .cardbtn-primary:hover {
+      background: #2563eb;
+    }
+
+    .cardbtn-secondary {
+      background: #f3f4f6;
+      color: #1f2937;
+      margin-top: 0.5rem;
+    }
+
+    .cardbtn-secondary:hover {
+      background: #e5e7eb;
+    }
+  
+
+
+    /* Popover detail styling */
+    .product-detail {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      max-width: 500px;
+      border: none;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    }
+
+    .product-detail:popover-open {
+      animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .product-detail::backdrop {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+    }
+
+    .product-detail h2 {
+      margin-top: 0;
+      color: #1f2937;
+    }
+
+    .product-detail .features {
+      list-style: none;
+      padding: 0;
+    }
+
+    .product-detail .features li {
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #f3f4f6;
+      color: #4b5563;
+    }
+
+    .product-detail .features li:last-child {
+      border-bottom: none;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: #f3f4f6;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+    }
+
+    .close-btn:hover {
+      background: #e5e7eb;
+    }

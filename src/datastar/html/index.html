@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+    <head data-init="@get('/server-events')">
+        <meta charset="UTF-8">
+        <script type="module"
+            src="https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js"></script>
+        <link rel="stylesheet" href="/style.css">
+        <link rel="stylesheet" href="/toolbar.css">
+        <link rel="stylesheet" href="/productcard.css">
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <!-- Load font awesome icons -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    </head>
+   
+    <body data-signals="{formID: 'MAIN', name: '', email: '', emailInvalid: false, password: '', message: '', country: '', plan: 'starter', canSubmit: true, terms: false}">
+        <!-- The navigation menu -->
+        <div class="navbar">
+            <a href="#home" data-on:click="@get('/form.html')">Home</a>
+            <a href="#sales" data-on:click="@get('/salesdiv.html')">Sales</a>
+            <a href="#admin" data-on:click="@get('/admindiv.html')">Administration</a>
+
+            <div class="subnav">
+                <button class="subnavbtn">Technologies<i class="fa fa-caret-down"></i></button>
+                <div class="subnav-content">
+                    <a href="https://data-star.dev/">Datastar</a>
+                    <a href="https://nim-lang.org">Nim</a>
+                    <a href="https://yottadb.com">YottaDB</a>
+                </div>
+            </div>
+
+            <div class="subnav">
+                <button class="subnavbtn">About <i class="fa fa-caret-down"></i></button>
+                <div class="subnav-content">
+                    <a href="#company">Company</a>
+                    <a href="#team">Team</a>
+                    <a href="#careers">Careers</a>
+                </div>
+            </div>
+                
+            <h3 id="clock"></h3>
+        </div> 
+
+        <!-- Load the form.html page -->
+        <div id="container" class="card" data-init="@get('/form.html')"></div>    
+
+    </body>
+
+</html>

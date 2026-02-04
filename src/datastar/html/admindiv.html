@@ -1,0 +1,122 @@
+    <div id="container" class="card" data-signals="{selectedId: 0}">
+        <div class="header">
+            <form class="form">
+                <h1>Administration</h1>
+            </form>
+        </div>
+
+        <div class="toolbar">
+            <button class="icon-btn" popovertarget="file-menu">📁</button>
+            <button class="icon-btn" popovertarget="edit-menu">✏️</button>
+            <button class="icon-btn" popovertarget="view-menu">👁️</button>
+        </div>
+
+        <!-- Dropdown Menus (auto popovers) -->
+        <div id="file-menu" class="dropdown-menu" popover>
+            <button>New File</button>
+            <button>Open File</button>
+            <button>Save</button>
+            <button>Export</button>
+        </div>
+
+        <div id="edit-menu" class="dropdown-menu" popover>
+            <button>Cut</button>
+            <button>Copy</button>
+            <button>Paste</button>
+            <button>Undo</button>
+        </div>
+
+        <div id="view-menu" class="dropdown-menu" popover>
+            <button>Zoom In</button>
+            <button>Zoom Out</button>
+            <button>Full Screen</button>
+        </div>
+
+
+        <table class="styled-table" data-init="@get('/api/submits')">
+            <thead>
+                <tr>
+                    <th>Submit#</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Request</th>
+                </tr>
+            </thead>
+            <!-- The backend will target this ID to insert rows -->
+            <tbody id="user-table-body"></tbody>
+        </table>
+
+        <!-- Paginierungs-Steuerung -->
+        <div class="pagination">
+            <button id="btn_prev">Zurück</button>
+            <span id="page_info">Seite 1</span>
+            <button id="btn_next">Weiter</button>
+        </div>
+
+        <form class="form" data-on:submit__prevent="@post('/submit-form')">
+            <!-- Full Name -->
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input id="name" data-bind:name type="text" placeholder="Your Name" autofocus/>
+            </div>
+
+            <div class="form-group">
+                <!-- E-Mail -->
+                <label for="email">Email</label>
+                <input id="email" data-bind:email /* if emailInvalid is true class 'input-error' will be added */
+                    data-class="{'input-error': $emailInvalid}" data-on:input__debounce.500ms="@post('/validate-email')"
+                    type="email" />
+                <!-- Error text is shown when emailInvalid is true -->
+                <small class="error" data-show="$emailInvalid">Invalid E-Mail address</small>
+            </div>
+
+            <!-- Message -->
+            <div class="form-group full">
+                <label for="message">Message</label>
+                <textarea id="message" data-bind:message name="message" rows="6"
+                    placeholder="Write your message..."></textarea>
+            </div>
+
+                    <!-- Buttons -->
+            <div class="actions full">
+                <button class="btn" type="submit" data-attr:disabled="!$canSubmit">Submit</button>
+                <button class="btn" type="button" data-on:click="@get('/form.html')">Back</button>
+                <!-- Response from server is here -->
+                <div id="response-message"></div>
+            </div>
+
+
+            <div class="product-card">
+                <h3>Premium Wireless Headphones</h3>
+                <p>High-quality sound with active noise cancellation</p>
+                <div class="price">₹12,999</div>
+                <button class="cardbtn cardbtn-primary">Add to Cart</button>
+                <button class="cardbtn cardbtn-secondary" popovertarget="product-detail">View Details </button>
+            </div>
+
+            <!-- Product Detail Popover -->
+            <div id="product-detail" class="product-detail" popover>
+                <button class="close-btn" popovertarget="product-detail" popovertargetaction="hide">
+                    ✕
+                </button>
+                <h2>Premium Wireless Headphones</h2>
+                <p>Experience studio-quality sound with cutting-edge active noise cancellation technology. Perfect
+                    for music lovers and professionals.</p>
+
+                <h3>Features</h3>
+                <ul class="features">
+                    <li>✓ Active Noise Cancellation (ANC)</li>
+                    <li>✓ 40-hour battery life</li>
+                    <li>✓ Bluetooth 5.3 connectivity</li>
+                    <li>✓ Premium leather ear cushions</li>
+                    <li>✓ Multi-device pairing</li>
+                    <li>✓ Voice assistant support</li>
+                </ul>
+
+                <button class="btn btn-primary" data-on:click="@post('/api/submits')">
+                    <!-- style="margin-top: 1.5rem; -->
+                    Add to Cart - ₹12,999
+                </button>
+            </div>
+        </form>
+    </div>
