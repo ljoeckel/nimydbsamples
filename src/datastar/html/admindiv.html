@@ -1,8 +1,6 @@
 <div id="container" class="card" data-signals="{formID: 'Admin'}">
     <div class="header">
-        <form class="form">
-            <h1>Administration</h1>
-        </form>
+        <h1>Administration</h1>
     </div>
 
     <table class="styled-table" data-init="@get('/api/submits')">
@@ -13,6 +11,7 @@
                 <th>Name</th>
                 <th>Email</th>
                 <th>Request</th>
+                <th>Action</th>
             </tr>
         </thead>
         <!-- The backend will target this ID to insert rows -->
@@ -51,6 +50,12 @@
                 placeholder="Write your message..."></textarea>
         </div>
 
+        <!-- Status -->
+        <div class="form-group full">
+            <label for="status">Status</label>
+            <input id="status" data-bind:status name="status" type="text" />
+        </div>
+
         <!-- Buttons -->
         <div class="actions full">
             <button class="btn" type="submit" data-attr:disabled="!$canSubmit">Submit</button>
@@ -58,35 +63,5 @@
             <!-- Response from server is here -->
             <div id="response-message"></div>
         </div>
-
     </form>
-    <div class="toolbar">
-        <button class="icon-btn" popovertarget="file-menu">📁</button>
-        <button class="icon-btn" popovertarget="edit-menu">✏️</button>
-        <button class="icon-btn" popovertarget="view-menu">👁️</button>
-    </div>
-
-    <!-- Dropdown Menus (auto popovers) -->
-    <div id="file-menu" class="dropdown-menu" popover>
-        <button>New File</button>
-        <button>Open File</button>
-        <button>Save</button>
-        <button>Export</button>
-    </div>
-
-    <div id="edit-menu" class="dropdown-menu" popover>
-        <button>Cut</button>
-        <button>Copy</button>
-        <button>Paste</button>
-        <button>Undo</button>
-    </div>
-
-    <div id="view-menu" class="dropdown-menu" popover>
-        <button>Zoom In</button>
-        <button>Zoom Out</button>
-        <button>Full Screen</button>
-    </div>
-
-
-
 </div>

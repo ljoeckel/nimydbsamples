@@ -6,8 +6,8 @@ import std/[asyncdispatch, asynchttpserver, times, json, strutils, strformat, pa
 import std/[posix]
 import datastar
 import datastar/asynchttpserver as DATASTAR
-import yottadb
 import mimetypes
+import yottadb
 
 # Shutdown
 proc handleSignal() {.noconv.} =
@@ -38,21 +38,52 @@ proc handleValidateEmail(req: Request) {.async.} =
         "canSubmit": not isInvalid
     })
 
+type 
+    SubmitMessage = object
+        formid: string
+        key: string
+        name: string
+        email: string
+        message: string
+        status: string
 
-proc handleApiSubmits(req: Request) {.async.} =
+
+proc tableRow(key: string, msg: SubmitMessage): Future[string] {.async.} =
+    result = """
+        <tr data-on:click__stop="$selectedId={key}; @post('/api/select-row')" data-class="{selected: $selectedId==={key}}">
+            <td>{formid}</td>
+            <td>{key}</td>
+            <td>{name}</td>
+            <td>{email}</td>
+            <td>{message}</td>
+            <td>{status}</td>
+            <td>
+                <button data-on:click__stop="$selectedId={key}; @post('/api/delete-row')"><i class="bi bi-trash"></i></button>
+                <button data-on:click__stop="$selectedId={key}; @post('/api/edit-row')"><i class="bi bi-alarm"></i></button>
+            </td>
+        </tr>
+        """
+    result = result.replace("{formid}", msg.formid)
+    result = result.replace("{key}", msg.key)
+    result = result.replace("{name}", msg.name)
+    result = result.replace("{email}", msg.email)    
+    result = result.replace("{message}", msg.message) 
+    result = result.replace("{status}", msg.status) 
+
+proc handleApiGetSubmits(req: Request) {.async.} =
     let sse = await req.newSSEGenerator(); defer: req.closeSSE()
     var rows = "<tbody id='user-table-body'>"
-    
     for key in orderItr ^datastar:
         let name = getvar ^datastar(key, "name")
         if name.len > 0:
-            let formid = getvar ^datastar(key, "formID")
-            let email = getvar ^datastar(key, "email")
-            let message = getvar ^datastar(key, "message")
-            var row = "<tr "
-            row.add("data-on:click=\"$selectedId = " & key & "; @post('/api/select-row')\" ")
-            row.add("data-class=\"{ selected: $selectedId === " & key & "}\">")
-            row.add fmt"<td>{formid}</td><td>{key}</td><td>{name}</td><td>{email}</td><td>{message}</td></tr>"
+            var msg: SubmitMessage
+            msg.formid = getvar ^datastar(key, "formID")
+            msg.key = key
+            msg.name = name
+            msg.email = getvar ^datastar(key, "email")
+            msg.message = getvar ^datastar(key, "message")
+            msg.status = getvar ^datastar(key, "status")
+            var row = await tableRow(key, msg)
             rows.add(row)
     rows.add("</tbody>")
     await sse.patchElements(rows)
@@ -66,12 +97,26 @@ proc handleApiSelectRow(req: Request) {.async.} =
     let name = getvar @gbl("name")
     let email = getvar @gbl("email")
     let message = getvar @gbl("message")
+    let status = getvar @gbl("status")
     let sse = await req.newSSEGenerator(); defer: req.closeSSE()
     await sse.patchSignals(%*{
         "name": name,
         "email": email,
-        "message": message
+        "message": message,
+        "status": status
     })
+
+proc handleApiDeleteRow(req: Request) {.async.} =
+    let signals = parseJson(req.body)
+    let id = signals["selectedId"]
+    dsl.kill: ^datastar(id)
+    await handleApiGetSubmits(req)
+
+proc handleApiEditRow(req: Request) {.async.} =
+    let signals = parseJson(req.body)
+    let id = signals["selectedId"]
+    setvar: ^datastar(id,"status") = "Marked " & $now()
+    await handleApiGetSubmits(req)
 
 
 # Send the servertime to the client each second
@@ -87,6 +132,7 @@ proc handleClearForm(req: Request) {.async.} =
         "name": "",
         "email": "",
         "message": "",
+        "status": "",
         "plan": "starter",
         "selectedId": -1
     })
@@ -126,7 +172,7 @@ proc handleSubmit(req: Request) {.async.} =
 
     # Update table on Admin page    
     if formID == "Admin":
-        await handleApiSubmits(req)
+        await handleApiGetSubmits(req)
 
 
 # Send the servertime to the client each second
@@ -146,14 +192,22 @@ proc router(req: Request) {.async.} =
     of "/validate-email": await handleValidateEmail(req) # validate email field
     of "/submit-form": await handleSubmit(req) # receive formdata
     of "/clear-form": await handleClearForm(req)
-    of "/api/submits": await handleApiSubmits(req)
+    of "/api/submits": await handleApiGetSubmits(req)
     of "/api/select-row": await handleApiSelectRow(req)
+    of "/api/delete-row": await handleApiDeleteRow(req)
+    of "/api/edit-row": await handleApiEditRow(req)
     else: # static
         var (dir, file, ext) = splitFile(Path(req.url.path))
         if $dir == "/" and ($file).len == 0: 
             file = Path("index")
             ext = ".html"
-        await handleStatic(req, file, ext)
+
+        if ext.len > 0:
+            await handleStatic(req, file, ext)
+        else:
+            echo "Error: Not found: ", $req.url.path
+            await req.respond(Http404, "<h1>Request '" & $req.url.path & "' not known</h1>", newHttpHeaders([("Content-Type", "text/html")]))
+
 
 
 if isMainModule:

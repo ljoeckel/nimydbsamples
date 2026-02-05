@@ -319,13 +319,13 @@ input[type="radio"] {
 
 /* Hover-Effekt */
 .styled-table tbody tr:hover {
-    background: #3b82f6;
-    color: white;
+    background: #aec0ed;
+    color: black;
 }
 
 /* Die Klasse für die aktive Auswahl */
 .styled-table tbody tr.selected {
-    background: #2563eb !important;
+    background: #1756de !important;
     color: yellow;
 }
 
