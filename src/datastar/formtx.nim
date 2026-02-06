@@ -9,15 +9,27 @@ import datastar/asynchttpserver as DATASTAR
 import mimetypes
 import yottadb
 
+type 
+    Registration = object of RootObj
+        id: int
+        formId: string
+        name: string
+        password: string
+        email: string
+        message: string
+        country: string
+        plan: string
+        terms: bool
+        status: string
+        time: string
+
 # Shutdown
 proc handleSignal() {.noconv.} =
     echo "\nShutting down..."
     quit(0)
 setControlCHook(handleSignal)
 
-#-------------
-# Handler's
-#-------------
+# Serve static resources (html, css, etc.
 proc handleStatic(req: Request, file: Path, ext: string) {.async.} =
     let path = Path("html/" & $file & ext)
     try:
@@ -29,6 +41,7 @@ proc handleStatic(req: Request, file: Path, ext: string) {.async.} =
 
 # Validate E-Mail
 proc handleValidateEmail(req: Request) {.async.} =
+    echo $req.body
     let signals = parseJson(req.body)
     let email = signals["email"].getStr()
     let isInvalid = email.len > 0 and not email.contains("@")
@@ -38,84 +51,64 @@ proc handleValidateEmail(req: Request) {.async.} =
         "canSubmit": not isInvalid
     })
 
-type 
-    SubmitMessage = object
-        formid: string
-        key: string
-        name: string
-        email: string
-        message: string
-        status: string
-
-
-proc tableRow(key: string, msg: SubmitMessage): Future[string] {.async.} =
-    result = """
-        <tr data-on:click__stop="$selectedId={key}; @post('/api/select-row')" data-class="{selected: $selectedId==={key}}">
-            <td>{formid}</td>
-            <td>{key}</td>
-            <td>{name}</td>
-            <td>{email}</td>
-            <td>{message}</td>
-            <td>{status}</td>
+# Create a table row
+proc tableRow(msg: Registration): Future[string] {.async.} =
+    let dataclass = "{selected: $selectedId===" & $msg.id & "}"
+    result = fmt"""
+        <tr data-on:click__stop="$selectedId={msg.id}; @post('/api/select-row/:{msg.id}')" data-class="{dataclass}">
+            <td>{msg.formId}</td>
+            <td>{msg.id}</td>
+            <td>{msg.name}</td>
+            <td>{msg.email}</td>
+            <td>{msg.message}</td>
+            <td>{msg.status}</td>
             <td>
-                <button data-on:click__stop="$selectedId={key}; @post('/api/delete-row')"><i class="bi bi-trash"></i></button>
-                <button data-on:click__stop="$selectedId={key}; @post('/api/edit-row')"><i class="bi bi-alarm"></i></button>
+                <button data-on:click__stop="@post('/api/delete-row/:{msg.id}')"><i class="bi bi-trash"></i></button>
+                <button data-on:click__stop="@post('/api/mark-row/:{msg.id}')"><i class="bi bi-alarm"></i></button>
+                <button data-on:click__stop="@post('/api/edit-row/:{msg.id}')"><i class="bi bi-pencil"></i></button>
             </td>
         </tr>
         """
-    result = result.replace("{formid}", msg.formid)
-    result = result.replace("{key}", msg.key)
-    result = result.replace("{name}", msg.name)
-    result = result.replace("{email}", msg.email)    
-    result = result.replace("{message}", msg.message) 
-    result = result.replace("{status}", msg.status) 
 
+# Load Tabledata
 proc handleApiGetSubmits(req: Request) {.async.} =
     let sse = await req.newSSEGenerator(); defer: req.closeSSE()
     var rows = "<tbody id='user-table-body'>"
-    for key in orderItr ^datastar:
-        let name = getvar ^datastar(key, "name")
-        if name.len > 0:
-            var msg: SubmitMessage
-            msg.formid = getvar ^datastar(key, "formID")
-            msg.key = key
-            msg.name = name
-            msg.email = getvar ^datastar(key, "email")
-            msg.message = getvar ^datastar(key, "message")
-            msg.status = getvar ^datastar(key, "status")
-            var row = await tableRow(key, msg)
-            rows.add(row)
+    for id in orderItr ^Registration:
+        var registration: Registration
+        bingoser.load(@[id], registration)
+        rows.add(await tableRow(registration))
     rows.add("</tbody>")
     await sse.patchElements(rows)
 
 
 # Display row data on the Admin page
-proc handleApiSelectRow(req: Request) {.async.} =
-    let signals = parseJson(req.body)
-    let id = signals["selectedId"]
-    let gbl = fmt"^datastar({id})"
-    let name = getvar @gbl("name")
-    let email = getvar @gbl("email")
-    let message = getvar @gbl("message")
-    let status = getvar @gbl("status")
+proc handleApiSelectRow(req: Request, id: string) {.async.} =
+    var reg: Registration
+    bingoser.load(@[id], reg)
     let sse = await req.newSSEGenerator(); defer: req.closeSSE()
     await sse.patchSignals(%*{
-        "name": name,
-        "email": email,
-        "message": message,
-        "status": status
+        "id": reg.id,
+        "name": reg.name,
+        "password": reg.password,
+        "email": reg.email,
+        "country": reg.country,
+        "message": reg.message,
+        "status": reg.status
     })
 
-proc handleApiDeleteRow(req: Request) {.async.} =
-    let signals = parseJson(req.body)
-    let id = signals["selectedId"]
-    dsl.kill: ^datastar(id)
+
+proc handleApiDeleteRow(req: Request, id: string) {.async.} =
+    dsl.kill: ^Registration(id)
     await handleApiGetSubmits(req)
 
-proc handleApiEditRow(req: Request) {.async.} =
-    let signals = parseJson(req.body)
-    let id = signals["selectedId"]
-    setvar: ^datastar(id,"status") = "Marked " & $now()
+
+proc handleApiEditRow(req: Request, id: string) {.async.} =
+    setvar: ^Registration(id,"status") = "Edited " & $now()
+    await handleApiGetSubmits(req)
+
+proc handleApiMarkRow(req: Request, id: string) {.async.} =
+    setvar: ^Registration(id,"status") = "Marked " & $now()
     await handleApiGetSubmits(req)
 
 
@@ -139,39 +132,21 @@ proc handleClearForm(req: Request) {.async.} =
     await sse.patchElements("<div id='response-message'></div>")
 
 
-# Handle Form submit
 proc handleSubmit(req: Request) {.async.} =
-    let signals = parseJson(req.body)
-    let email = signals["email"].getStr()
-    let name = signals["name"].getStr()
-    let message = signals["message"].getStr()
-    let formID = signals["formID"].getStr()
-    var msg:string
-    if name.len > 0 and email.len > 0 and message.len > 0:
-        # Save all signals in the database for each form submit
-        # 1. Create the TX-Context (pass 'signals' to yottadb environment)
-        # because YottaDB calls the Transaction callback in a separate thread via C
-        for key in signals.keys:
-            setvar: context(key) = strip($signals[key], chars={'"'})
-        # 2. Run the Transaction
-        let rc = Transaction:
-            var id = parseInt(getvar(context("selectedId")))
-            if id < 0:
-                id = increment ^datastar("submits")
-            for subs in queryItr context.keys:
-                let key = subs[0]
-                setvar: ^datastar(id, key) = getvar context(key)
+    let signals = $(parseJson(req.body))
+    let rc = Transaction(signals):
+        let signals = $cast[cstring](param)
+        var registration = parseJson(signals).to(Registration)
+        echo "submit: registration=", registration
+        # assign id to new Registration
+        if registration.id == -1:
+            registration.id = increment ^CNT("registration")
+        # Save to DB
+        bingoser.store(@[$(registration.id)], registration)
 
-        msg = "<div id='response-message' class='formsuccess'>Thank you '" & name & "', Data received!</div>"
-    else:
-        msg = "<div id='response-message' class='formerror'>Sorry! Invalid or missing data!</div>"
-        
-    # Update the Browser
-    let sse = await req.newSSEGenerator(); defer: req.closeSSE()
-    await sse.patchElements(msg)
-
-    # Update table on Admin page    
-    if formID == "Admin":
+    if rc == YDB_OK:
+        let sse = await req.newSSEGenerator(); defer: req.closeSSE()
+        await sse.patchElements("<div id='response-message' class='formsuccess'>Thank you,data received!</div>")
         await handleApiGetSubmits(req)
 
 
@@ -185,17 +160,27 @@ proc handleServerEvents(req: Request) {.async.} =
         await sleepAsync(1000)
 
 
-
 proc router(req: Request) {.async.} =
-    case req.url.path
+    var path, id: string
+    if req.url.path.startsWith("/api/"):
+        let ss = req.url.path.split("/:")
+        path = ss[0]
+        if ss.len >= 2:
+            id = ss[1]
+    else:
+        path = req.url.path
+    echo "path=", path, " id=", id
+
+    case path
     of "/server-events": await handleServerEvents(req)
     of "/validate-email": await handleValidateEmail(req) # validate email field
     of "/submit-form": await handleSubmit(req) # receive formdata
     of "/clear-form": await handleClearForm(req)
     of "/api/submits": await handleApiGetSubmits(req)
-    of "/api/select-row": await handleApiSelectRow(req)
-    of "/api/delete-row": await handleApiDeleteRow(req)
-    of "/api/edit-row": await handleApiEditRow(req)
+    of "/api/select-row": await handleApiSelectRow(req, id)
+    of "/api/delete-row": await handleApiDeleteRow(req, id)
+    of "/api/edit-row": await handleApiEditRow(req, id)
+    of "/api/mark-row": await handleApiMarkRow(req, id)
     else: # static
         var (dir, file, ext) = splitFile(Path(req.url.path))
         if $dir == "/" and ($file).len == 0: 
@@ -207,7 +192,6 @@ proc router(req: Request) {.async.} =
         else:
             echo "Error: Not found: ", $req.url.path
             await req.respond(Http404, "<h1>Request '" & $req.url.path & "' not known</h1>", newHttpHeaders([("Content-Type", "text/html")]))
-
 
 
 if isMainModule:
