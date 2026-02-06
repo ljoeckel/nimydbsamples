@@ -11,14 +11,14 @@ import yottadb
 
 type 
     Registration = object of RootObj
-        id: int
-        formId: string
+        id: int = -1
+        formId: string = "Form"
         name: string
         password: string
         email: string
         message: string
         country: string
-        plan: string
+        plan: string = "starter"
         terms: bool
         status: string
         time: string
@@ -30,18 +30,27 @@ proc handleSignal() {.noconv.} =
 setControlCHook(handleSignal)
 
 # Serve static resources (html, css, etc.
-proc handleStatic(req: Request, file: Path, ext: string) {.async.} =
-    let path = Path("html/" & $file & ext)
+proc handleStatic(req: Request, file: string, ext: string) {.async.} =
+    let path = Path("html/" & file & ext)
     try:
         let data = readFile($path)
         await req.respond(Http200, data, newHttpHeaders([("Content-Type", getMimeType(ext))]))
     except:
         await req.respond(Http404, "<h1>File '" & $path & "' not found</h1>", newHttpHeaders([("Content-Type", "text/html")]))
 
+# Reload /
+proc reload(req: Request) {.async.} =
+    let sse = await req.newSSEGenerator(); defer: req.closeSSE()
+    await sse.executeScript("window.location.reload()")
+  
+# Forward to another page
+proc forward(req: Request, url: string) {.async.} =
+    let sse = await req.newSSEGenerator(); defer: req.closeSSE()
+    let data = readFile(url)
+    await sse.patchElements(data)
 
 # Validate E-Mail
 proc handleValidateEmail(req: Request) {.async.} =
-    echo $req.body
     let signals = parseJson(req.body)
     let email = signals["email"].getStr()
     let isInvalid = email.len > 0 and not email.contains("@")
@@ -81,74 +90,55 @@ proc handleApiGetSubmits(req: Request) {.async.} =
     rows.add("</tbody>")
     await sse.patchElements(rows)
 
-
-# Display row data on the Admin page
+# Select Row and show data in the form
 proc handleApiSelectRow(req: Request, id: string) {.async.} =
-    var reg: Registration
-    bingoser.load(@[id], reg)
+    var reg = Registration()
+    bingoser.load(@[id], reg) # load from DB
     let sse = await req.newSSEGenerator(); defer: req.closeSSE()
-    await sse.patchSignals(%*{
-        "id": reg.id,
-        "name": reg.name,
-        "password": reg.password,
-        "email": reg.email,
-        "country": reg.country,
-        "message": reg.message,
-        "status": reg.status
-    })
+    await sse.patchSignals(%reg) # json
 
-
+# Delete Row
 proc handleApiDeleteRow(req: Request, id: string) {.async.} =
     dsl.kill: ^Registration(id)
     await handleApiGetSubmits(req)
 
-
+# Edit Row
 proc handleApiEditRow(req: Request, id: string) {.async.} =
     setvar: ^Registration(id,"status") = "Edited " & $now()
-    await handleApiGetSubmits(req)
+    await forward(req, "html/form.html")
 
+# Mark Row (Update Timestamp)
 proc handleApiMarkRow(req: Request, id: string) {.async.} =
     setvar: ^Registration(id,"status") = "Marked " & $now()
     await handleApiGetSubmits(req)
 
-
-# Send the servertime to the client each second
+# Reset the form, clear response-message on form
 proc handleClearForm(req: Request) {.async.} =
     let sse = await req.newSSEGenerator(); defer: req.closeSSE()
-    await sse.patchSignals(%*{
+    var reg = Registration()
+    await sse.patchSignals(%reg) # json clear Registration fields
+    await sse.patchSignals(%*{ # clear technical fields
         "emailInvalid": false,
-        "password": "",
-        "country": "",
-        "canSubmit": true,
-        "terms": false,
-        "menuOpen": false,
-        "name": "",
-        "email": "",
-        "message": "",
-        "status": "",
-        "plan": "starter",
-        "selectedId": -1
+        "canSubmit": true
     })
-    await sse.patchElements("<div id='response-message'></div>")
+    await sse.patchElements("<div id='response-message'></div>") # clear response-message
 
-
+# Save Registration
 proc handleSubmit(req: Request) {.async.} =
     let signals = $(parseJson(req.body))
     let rc = Transaction(signals):
         let signals = $cast[cstring](param)
-        var registration = parseJson(signals).to(Registration)
-        echo "submit: registration=", registration
+        var reg = parseJson(signals).to(Registration)
         # assign id to new Registration
-        if registration.id == -1:
-            registration.id = increment ^CNT("registration")
+        if reg.id == -1:
+            reg.id = increment ^CNT("registration")
         # Save to DB
-        bingoser.store(@[$(registration.id)], registration)
+        bingoser.store(@[$(reg.id)], reg)
 
     if rc == YDB_OK:
         let sse = await req.newSSEGenerator(); defer: req.closeSSE()
         await sse.patchElements("<div id='response-message' class='formsuccess'>Thank you,data received!</div>")
         await handleApiGetSubmits(req)
-
 
 # Send the servertime to the client each second
 proc handleServerEvents(req: Request) {.async.} =
@@ -159,38 +149,38 @@ proc handleServerEvents(req: Request) {.async.} =
         await sse.patchSignals(%*{"time": $now()})
         await sleepAsync(1000)
 
-
+# Route requests (static, /api, /others)
 proc router(req: Request) {.async.} =
-    var path, id: string
+    var path: string
+    # handle /api/xxxx/<id>
     if req.url.path.startsWith("/api/"):
         let ss = req.url.path.split("/:")
         path = ss[0]
-        if ss.len >= 2:
-            id = ss[1]
+        let id = if ss.len >= 2: ss[1] else: ""
+        case path
+        of "/api/submits": await handleApiGetSubmits(req)
+        of "/api/select-row": await handleApiSelectRow(req, id)
+        of "/api/delete-row": await handleApiDeleteRow(req, id)
+        of "/api/edit-row": await handleApiEditRow(req, id)
+        of "/api/mark-row": await handleApiMarkRow(req, id)
+        return
     else:
         path = req.url.path
-    echo "path=", path, " id=", id
 
     case path
     of "/server-events": await handleServerEvents(req)
     of "/validate-email": await handleValidateEmail(req) # validate email field
-    of "/submit-form": await handleSubmit(req) # receive formdata
+    of "/submit-form": await handleSubmit(req) # get formdata and save in DB
     of "/clear-form": await handleClearForm(req)
-    of "/api/submits": await handleApiGetSubmits(req)
-    of "/api/select-row": await handleApiSelectRow(req, id)
-    of "/api/delete-row": await handleApiDeleteRow(req, id)
-    of "/api/edit-row": await handleApiEditRow(req, id)
-    of "/api/mark-row": await handleApiMarkRow(req, id)
     else: # static
         var (dir, file, ext) = splitFile(Path(req.url.path))
         if $dir == "/" and ($file).len == 0: 
             file = Path("index")
             ext = ".html"
 
-        if ext.len > 0:
-            await handleStatic(req, file, ext)
+        if not ext.isEmptyOrWhitespace:
+            await handleStatic(req, $file, ext)
         else:
-            echo "Error: Not found: ", $req.url.path
             await req.respond(Http404, "<h1>Request '" & $req.url.path & "' not known</h1>", newHttpHeaders([("Content-Type", "text/html")]))
 
 

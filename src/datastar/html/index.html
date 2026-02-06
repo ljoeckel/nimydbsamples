@@ -24,6 +24,7 @@
         <div class="subnav" data-on:mouseenter="$menuOpen = true" data-on:mouseleave="$menuOpen = false">
             <button class="subnavbtn">Departments<i class="fa fa-caret-down"></i> </button>
             <div class="subnav-content" data-class="{'force-closed': !$menuOpen}">
+                <a href="#form" data-on:click="$menuOpen = false; @get('/form.html')">Form</a>
                 <a href="#sales" data-on:click="$menuOpen = false; @get('/salesdiv.html')">Sales</a>
                 <a href="#admin" data-on:click="$menuOpen = false; @get('/admindiv.html')">Administration</a>
                 <a href="#cards" data-on:click="$menuOpen = false; @get('/cardsdiv.html')">Cards</a>
