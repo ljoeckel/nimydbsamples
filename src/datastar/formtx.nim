@@ -3,9 +3,7 @@
 ## Save formdata with Transaction
 ## 
 import std/[asyncdispatch, asynchttpserver, times, json, strutils, strformat, paths]
-import std/[posix]
-import datastar
-import datastar/asynchttpserver as DATASTAR
+import datastarutils
 import mimetypes
 import yottadb
 
@@ -24,47 +22,26 @@ type
         time: string
 
 # Shutdown
-proc handleSignal() {.noconv.} =
+proc shutdown() {.noconv.} =
     echo "\nShutting down..."
     quit(0)
-setControlCHook(handleSignal)
-
-# Serve static resources (html, css, etc.
-proc handleStatic(req: Request, file: string, ext: string) {.async.} =
-    let path = Path("html/" & file & ext)
-    try:
-        let data = readFile($path)
-        await req.respond(Http200, data, newHttpHeaders([("Content-Type", getMimeType(ext))]))
-    except:
-        await req.respond(Http404, "<h1>File '" & $path & "' not found</h1>", newHttpHeaders([("Content-Type", "text/html")]))
-
-# Reload /
-proc reload(req: Request) {.async.} =
-    let sse = await req.newSSEGenerator(); defer: req.closeSSE()
-    await sse.executeScript("window.location.reload()")
-  
-# Forward to another page
-proc forward(req: Request, url: string) {.async.} =
-    let sse = await req.newSSEGenerator(); defer: req.closeSSE()
-    let data = readFile(url)
-    await sse.patchElements(data)
+setControlCHook(shutdown)
 
 # Validate E-Mail
-proc handleValidateEmail(req: Request) {.async.} =
+proc validateEmail(req: Request) {.async.} =
     let signals = parseJson(req.body)
     let email = signals["email"].getStr()
     let isInvalid = email.len > 0 and not email.contains("@")
-    let sse = await req.newSSEGenerator(); defer: req.closeSSE()
-    await sse.patchSignals(%*{
+    await patchSignals(req, %*{
         "emailInvalid": isInvalid,
         "canSubmit": not isInvalid
     })
 
 # Create a table row
-proc tableRow(msg: Registration): Future[string] {.async.} =
-    let dataclass = "{selected: $selectedId===" & $msg.id & "}"
+proc newTableRow(msg: Registration): Future[string] {.async.} =
+    let dataclass = "{selected: $id===" & $msg.id & "}"
     result = fmt"""
-        <tr data-on:click__stop="$selectedId={msg.id}; @post('/api/select-row/:{msg.id}')" data-class="{dataclass}">
+        <tr data-on:click__stop="$id={msg.id}; @post('/api/select-row/:{msg.id}')" data-class="{dataclass}">
             <td>{msg.formId}</td>
             <td>{msg.id}</td>
             <td>{msg.name}</td>
@@ -80,98 +57,89 @@ proc tableRow(msg: Registration): Future[string] {.async.} =
         """
 
 # Load Tabledata
-proc handleApiGetSubmits(req: Request) {.async.} =
-    let sse = await req.newSSEGenerator(); defer: req.closeSSE()
+proc getTableRows(req: Request) {.async.} =
     var rows = "<tbody id='user-table-body'>"
     for id in orderItr ^Registration:
         var registration: Registration
         bingoser.load(@[id], registration)
-        rows.add(await tableRow(registration))
+        rows.add(await newTableRow(registration))
     rows.add("</tbody>")
-    await sse.patchElements(rows)
+    await patchElements(req, rows)
 
 # Select Row and show data in the form
-proc handleApiSelectRow(req: Request, id: string) {.async.} =
+proc selectRow(req: Request, id: string, close: bool = true) {.async.} =
     var reg = Registration()
     bingoser.load(@[id], reg) # load from DB
-    let sse = await req.newSSEGenerator(); defer: req.closeSSE()
-    await sse.patchSignals(%reg) # json
+    await patchSignals(req, %reg, close) # update gui with attributes from registration
 
 # Delete Row
-proc handleApiDeleteRow(req: Request, id: string) {.async.} =
+proc deleteRow(req: Request, id: string) {.async.} =
     dsl.kill: ^Registration(id)
-    await handleApiGetSubmits(req)
+    await getTableRows(req)
 
 # Edit Row
-proc handleApiEditRow(req: Request, id: string) {.async.} =
+proc editRow(req: Request, id: string) {.async.} =
     setvar: ^Registration(id,"status") = "Edited " & $now()
+    await patchSignals(req, %*{ # clear technical fields
+        "emailInvalid": false,
+        "canSubmit": true,
+        "id": id
+    }, close = false)
+    await selectRow(req, id, close = false)
     await forward(req, "html/form.html")
 
 # Mark Row (Update Timestamp)
-proc handleApiMarkRow(req: Request, id: string) {.async.} =
+proc markRow(req: Request, id: string) {.async.} =
     setvar: ^Registration(id,"status") = "Marked " & $now()
-    await handleApiGetSubmits(req)
+    await getTableRows(req)
 
 # Reset the form, clear response-message on form
-proc handleClearForm(req: Request) {.async.} =
-    let sse = await req.newSSEGenerator(); defer: req.closeSSE()
+proc clearForm(req: Request) {.async.} =
     var reg = Registration()
-    await sse.patchSignals(%reg) # json clear Registration fields
-    await sse.patchSignals(%*{ # clear technical fields
+    await patchSignals(req, %reg, close=false) # json clear Registration fields
+    await patchSignals(req, %*{ # clear technical fields
         "emailInvalid": false,
-        "canSubmit": true
-    })
-    await sse.patchElements("<div id='response-message'></div>") # clear response-message
+        "canSubmit": true,
+        "id": -1
+    }, close=false)
+    await patchElements(req, "<div id='response-message'></div>") # clear response-message
 
 # Save Registration
-proc handleSubmit(req: Request) {.async.} =
+proc submit(req: Request) {.async.} =
     let signals = $(parseJson(req.body))
     let rc = Transaction(signals):
         let signals = $cast[cstring](param)
         var reg = parseJson(signals).to(Registration)
-        # assign id to new Registration
-        if reg.id == -1:
+        if reg.id == -1: # assign new id to new Registration
             reg.id = increment ^CNT("registration")
-        # Save to DB
-        bingoser.store(@[$(reg.id)], reg)
+        bingoser.store(@[$(reg.id)], reg) # Save to DB
 
     if rc == YDB_OK:
-        let sse = await req.newSSEGenerator(); defer: req.closeSSE()
-        await sse.patchElements("<div id='response-message' class='formsuccess'>Thank you,data received!</div>")
-        await handleApiGetSubmits(req)
-
-# Send the servertime to the client each second
-proc handleServerEvents(req: Request) {.async.} =
-    # connection is opened with <head data-init="@get('/server-events')">
-    let sse = await req.newSSEGenerator(); defer: req.closeSSE()
-    while true:
-        await sse.patchElements("<h3 id='clock'>" & $now() & "</h3>")
-        await sse.patchSignals(%*{"time": $now()})
-        await sleepAsync(1000)
+        await patchElements(req, "<div id='response-message' class='formsuccess'>Thank you,data received!</div>", close=false)
+        await getTableRows(req)
 
 # Route requests (static, /api, /others)
 proc router(req: Request) {.async.} =
     var path: string
-    # handle /api/xxxx/<id>
-    if req.url.path.startsWith("/api/"):
+    if req.url.path.startsWith("/api/"):     #  /api/xxxx/<id>
         let ss = req.url.path.split("/:")
         path = ss[0]
         let id = if ss.len >= 2: ss[1] else: ""
         case path
-        of "/api/submits": await handleApiGetSubmits(req)
-        of "/api/select-row": await handleApiSelectRow(req, id)
-        of "/api/delete-row": await handleApiDeleteRow(req, id)
-        of "/api/edit-row": await handleApiEditRow(req, id)
-        of "/api/mark-row": await handleApiMarkRow(req, id)
+        of "/api/submits": await getTableRows(req)
+        of "/api/select-row": await selectRow(req, id)
+        of "/api/delete-row": await deleteRow(req, id)
+        of "/api/edit-row": await editRow(req, id)
+        of "/api/mark-row": await markRow(req, id)
         return
     else:
         path = req.url.path
 
     case path
-    of "/server-events": await handleServerEvents(req)
-    of "/validate-email": await handleValidateEmail(req) # validate email field
-    of "/submit-form": await handleSubmit(req) # get formdata and save in DB
-    of "/clear-form": await handleClearForm(req)
+    of "/update-clock": await updateClock(req)
+    of "/validate-email": await validateEmail(req) # validate email field
+    of "/submit-form": await submit(req) # get formdata and save in DB
+    of "/clear-form": await clearForm(req)
     else: # static
         var (dir, file, ext) = splitFile(Path(req.url.path))
         if $dir == "/" and ($file).len == 0: 
@@ -179,7 +147,7 @@ proc router(req: Request) {.async.} =
             ext = ".html"
 
         if not ext.isEmptyOrWhitespace:
-            await handleStatic(req, $file, ext)
+            await serveStatic(req, $file, ext)
         else:
             await req.respond(Http404, "<h1>Request '" & $req.url.path & "' not known</h1>", newHttpHeaders([("Content-Type", "text/html")]))
 

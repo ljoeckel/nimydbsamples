@@ -63,7 +63,7 @@ proc handleSubmit(req: Request) {.async.} =
 
 # Send the servertime to the client each second
 proc handleServerEvents(req: Request) {.async.} =
-    # connection is opened with <head data-init="@get('/server-events')">
+    # connection is opened with <head data-init="@get('/update-clock')">
     let sse = await req.newSSEGenerator(); defer: req.closeSSE()
     while true:
         let currentDateTime = $now()
@@ -78,7 +78,7 @@ proc router(req: Request) {.async.} =
     of "/favicon.ico": await handleStatic(req, "favicon.ico", "image/x-icon") #await handleIco(req) # deliver CSS
     of "/style.css": await handleStatic(req, "style.css", "text/css") #await handleStyle(req) # deliver CSS
     of "/contact-sales": await handleStatic(req, "sales.html", "text/html") #await handleContactSales(req) # redirect to sales department
-    of "/server-events": await handleServerEvents(req)
+    of "/update-clock": await handleServerEvents(req)
     of "/validate-email": await handleValidateEmail(req) # validate email field
     of "/submit-form": await handleSubmit(req) # receive formdata
     else:
