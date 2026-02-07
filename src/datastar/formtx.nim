@@ -39,6 +39,9 @@ proc validateEmail(req: Request) {.async.} =
 
 # Create a table row
 proc newTableRow(msg: Registration): Future[string] {.async.} =
+    let marked = if msg.status.startsWith("Marked"): "<button>✅</button>" else: "" 
+    let markbtn = fmt"<button data-on:click__stop=""@post('/api/mark-row/:{msg.id}')""><i class='bi bi-alarm'></i></button>"
+    let marker = if marked == "": markbtn else: marked
     let dataclass = "{selected: $id===" & $msg.id & "}"
     result = fmt"""
         <tr data-on:click__stop="$id={msg.id}; @post('/api/select-row/:{msg.id}')" data-class="{dataclass}">
@@ -50,7 +53,7 @@ proc newTableRow(msg: Registration): Future[string] {.async.} =
             <td>{msg.status}</td>
             <td>
                 <button data-on:click__stop="@post('/api/delete-row/:{msg.id}')"><i class="bi bi-trash"></i></button>
-                <button data-on:click__stop="@post('/api/mark-row/:{msg.id}')"><i class="bi bi-alarm"></i></button>
+                {marker}
                 <button data-on:click__stop="@post('/api/edit-row/:{msg.id}')"><i class="bi bi-pencil"></i></button>
             </td>
         </tr>

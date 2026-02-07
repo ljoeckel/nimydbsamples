@@ -20,41 +20,16 @@
 
     <!-- Paginierungs-Steuerung -->
     <div class="pagination">
-        <button id="btn_prev">Zurück</button>
-        <span id="page_info">Seite 1</span>
-        <button id="btn_next">Weiter</button>
+        <button id="btn_prev">Prev</button>
+        <span id="page_info">Page 1</span>
+        <button id="btn_next">Next</button>
     </div>
 
     <form class="form" data-on:submit__prevent="@post('/submit-form')">
-        <!-- Full Name -->
-        <div class="form-group">
-            <label for="name">Full Name</label>
-            <input id="name" data-init="document.getElementById('name').focus()" data-bind:name type="text"
-                placeholder="Your Name" autofocus />
-        </div>
-
-        <div class="form-group">
-            <!-- E-Mail -->
-            <label for="email">Email</label>
-            <input id="email" data-bind:email /* if emailInvalid is true class 'input-error' will be added */
-                data-class="{'input-error': $emailInvalid}" data-on:input__debounce.500ms="@post('/validate-email')"
-                type="email" />
-            <!-- Error text is shown when emailInvalid is true -->
-            <small class="error" data-show="$emailInvalid">Invalid E-Mail address</small>
-        </div>
-
-        <!-- Message -->
-        <div class="form-group full">
-            <label for="message">Message</label>
-            <textarea id="message" data-bind:message name="message" rows="6"
-                placeholder="Write your message..."></textarea>
-        </div>
-
-        <!-- Status -->
-        <div class="form-group full">
-            <label for="status">Status</label>
-            <input id="status" data-bind:status name="status" type="text" />
-        </div>
+        <name-field data-ignore-morph></name-field>
+        <email-field data-ignore-morph></email-field>
+        <message-field data-ignore-morph class="full"></message-field>
+        <status-field data-ignore-morph></status-field>
 
         <!-- Buttons -->
         <div class="actions full">
