@@ -61,9 +61,15 @@ proc newTableRow(msg: Registration): Future[string] {.async.} =
 
 # Load Tabledata
 proc getTableRows(req: Request) {.async.} =
-    let encodedValue = req.url.query.split('=')[1]
-    let decodedJsonStr = decodeUrl(encodedValue)
-    let data = parseJson(decodedJsonStr)
+    var signals: string
+    # Handle Post and Get requests
+    if req.url.query.isEmptyOrWhitespace:  # POST
+        signals = req.body 
+    else: 
+        let encodedValue = req.url.query.split('=')[1]
+        signals = decodeUrl(encodedValue)
+
+    let data = parseJson(signals)
     # Zugriff auf einzelne Felder
     echo "Max Rows: ", data["maxrows"].getInt()
     echo "page: ", data["page"].getInt()
