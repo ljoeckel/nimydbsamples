@@ -1,4 +1,4 @@
-<div id="container" class="card" data-signals="{formId: 'Admin'}">
+<div id="container" class="card" data-signals="{formId: 'Admin', page: 0, maxrows: 5}">
     <div class="header">
         <h1>Administration</h1>
     </div>
@@ -20,9 +20,9 @@
 
     <!-- Paginierungs-Steuerung -->
     <div class="pagination">
-        <button id="btn_prev">Prev</button>
-        <span id="page_info">Page 1</span>
-        <button id="btn_next">Next</button>
+        <button id="btn_prev" data-on:click="$page--; $page = Math.max(0, $page); @get('/api/submits')">Prev</button>
+        <span id="page_info" data-text="'Page ' + $page"></span>
+        <button id="btn_next" data-on:click="$page++; @get('/api/submits')">Next</button>
     </div>
 
     <form class="form" data-on:submit__prevent="@post('/submit-form')">

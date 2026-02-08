@@ -2,7 +2,7 @@
 ## Then open http://localhost:8080 in your browser
 ## Save formdata with Transaction
 ## 
-import std/[asyncdispatch, asynchttpserver, times, json, strutils, strformat, paths]
+import std/[asyncdispatch, asynchttpserver, times, json, strutils, strformat, paths, uri]
 import datastarutils
 import mimetypes
 import yottadb
@@ -61,6 +61,13 @@ proc newTableRow(msg: Registration): Future[string] {.async.} =
 
 # Load Tabledata
 proc getTableRows(req: Request) {.async.} =
+    let encodedValue = req.url.query.split('=')[1]
+    let decodedJsonStr = decodeUrl(encodedValue)
+    let data = parseJson(decodedJsonStr)
+    # Zugriff auf einzelne Felder
+    echo "Max Rows: ", data["maxrows"].getInt()
+    echo "page: ", data["page"].getInt()
+
     var rows = "<tbody id='user-table-body'>"
     for id in orderItr ^Registration:
         var registration: Registration
@@ -86,7 +93,8 @@ proc editRow(req: Request, id: string) {.async.} =
     await patchSignals(req, %*{ # clear technical fields
         "emailInvalid": false,
         "canSubmit": true,
-        "id": id
+        "id": id,
+        "page": 1
     }, close = false)
     await selectRow(req, id, close = false)
     await forward(req, "html/form.html")
