@@ -61,18 +61,10 @@ proc newTableRow(msg: Registration): Future[string] {.async.} =
 
 # Load Tabledata
 proc getTableRows(req: Request) {.async.} =
-    var signals: string
-    # Handle Post and Get requests
-    if req.url.query.isEmptyOrWhitespace:  # POST
-        signals = req.body 
-    else: 
-        let encodedValue = req.url.query.split('=')[1]
-        signals = decodeUrl(encodedValue)
-
-    let data = parseJson(signals)
+    let signals = getSignals(req)
     # Zugriff auf einzelne Felder
-    echo "Max Rows: ", data["maxrows"].getInt()
-    echo "page: ", data["page"].getInt()
+    echo "Max Rows: ", signals["maxrows"].getInt()
+    echo "page: ", signals["page"].getInt()
 
     var rows = "<tbody id='user-table-body'>"
     for id in orderItr ^Registration:
@@ -174,4 +166,11 @@ if isMainModule:
 
     let server = newAsyncHttpServer()
     echo "Server running at http://localhost:8080 (Ctrl+C to stop)"
-    waitFor server.serve(Port(8080), router)
+
+# proc serve*(server: AsyncHttpServer, port: Port,
+#             callback: proc (request: Request): Future[void] {.closure, gcsafe.},
+#             address = "";
+#             assumedDescriptorsPerRequest = -1;
+#             domain = AF_INET) {.async.} =
+
+    waitFor server.serve(Port(8080), router, "192.168.1.159")

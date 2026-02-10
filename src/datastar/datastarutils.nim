@@ -1,7 +1,19 @@
-import std/[asyncdispatch, asynchttpserver, times, json, strutils, paths]
+import std/[asyncdispatch, asynchttpserver, times, json, strutils, paths, uri]
 import datastar
 import datastar/asynchttpserver # as DATASTAR
 import mimetypes
+
+proc getSignals*(req: Request): JsonNode =
+    var signals: string
+    # Handle Post and Get requests
+    if req.url.query.isEmptyOrWhitespace:  # POST
+        signals = req.body 
+    else: 
+        let encodedValue = req.url.query.split('=')[1]
+        signals = decodeUrl(encodedValue)
+
+    result = parseJson(signals)
+
 
 proc executeScript*(req: Request, script: string, close: bool = true) {.async.} =
     let sse = await req.newSSEGenerator()
