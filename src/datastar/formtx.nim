@@ -1,10 +1,8 @@
 ## Run in the src/datastar directory: nim c -r form.nim
 ## Then open http://localhost:8080 in your browser
-## Save formdata with Transaction
-## 
-import std/[asyncdispatch, asynchttpserver, times, json, strutils, strformat, paths, uri]
-import datastarutils
-import mimetypes
+
+import std/[os, times, json, strutils, strformat, paths, uri, atomics]
+import mummy, mummy/routers, mummy/datastar, mummy/mimetypes
 import yottadb
 
 type 
@@ -21,30 +19,31 @@ type
         status: string
         time: string
 
-# Shutdown
-proc shutdown() {.noconv.} =
-    echo "\nShutting down..."
-    quit(0)
-setControlCHook(shutdown)
 
 # Validate E-Mail
-proc validateEmail(req: Request) {.async.} =
+proc validateEmail(req: Request) =
     let signals = parseJson(req.body)
     let email = signals["email"].getStr()
     let isInvalid = email.len > 0 and not email.contains("@")
-    await patchSignals(req, %*{
+
+    var sse = req.respondSSE(); defer: sse.close()
+    patchSignals(sse, %*{
         "emailInvalid": isInvalid,
         "canSubmit": not isInvalid
     })
 
+proc getRowId(req: Request):int =
+    let signals = getSignals(req)
+    result = signals["id"].getInt()
+
 # Create a table row
-proc newTableRow(msg: Registration): Future[string] {.async.} =
+proc newTableRow(msg: Registration): string =
     let marked = if msg.status.startsWith("Marked"): "<button>✅</button>" else: "" 
-    let markbtn = fmt"<button data-on:click__stop=""@post('/api/mark-row/:{msg.id}')""><i class='bi bi-alarm'></i></button>"
+    let markbtn = fmt"<button data-on:click__stop=""$id={msg.id}; @post('/api-mark-row')""><i class='bi bi-alarm'></i></button>"
     let marker = if marked == "": markbtn else: marked
     let dataclass = "{selected: $id===" & $msg.id & "}"
     result = fmt"""
-        <tr data-on:click__stop="$id={msg.id}; @post('/api/select-row/:{msg.id}')" data-class="{dataclass}">
+        <tr data-on:click__stop="$id={msg.id}; @post('/api-select-row')" data-class="{dataclass}">
             <td>{msg.formId}</td>
             <td>{msg.id}</td>
             <td>{msg.name}</td>
@@ -52,125 +51,140 @@ proc newTableRow(msg: Registration): Future[string] {.async.} =
             <td>{msg.message}</td>
             <td>{msg.status}</td>
             <td>
-                <button data-on:click__stop="@post('/api/delete-row/:{msg.id}')"><i class="bi bi-trash"></i></button>
+                <button data-on:click__stop="$id={msg.id}; @post('/api-delete-row')"><i class="bi bi-trash"></i></button>
                 {marker}
-                <button data-on:click__stop="@post('/api/edit-row/:{msg.id}')"><i class="bi bi-pencil"></i></button>
+                <button data-on:click__stop="$id={msg.id}; @post('/api-edit-row')"><i class="bi bi-pencil"></i></button>
             </td>
         </tr>
         """
 
 # Load Tabledata
-proc getTableRows(req: Request) {.async.} =
-    let signals = getSignals(req)
+proc getTableRows(sse: SSEConnection) =
+    let signals = getSignals(sse.request)
     # Zugriff auf einzelne Felder
     echo "Max Rows: ", signals["maxrows"].getInt()
     echo "page: ", signals["page"].getInt()
 
     var rows = "<tbody id='user-table-body'>"
-    for id in orderItr ^Registration:
+    for id in OrderItr ^Registration:
         var registration: Registration
         bingoser.load(@[id], registration)
-        rows.add(await newTableRow(registration))
+        rows.add(newTableRow(registration))
     rows.add("</tbody>")
-    await patchElements(req, rows)
+    patchElements(sse, rows)
+
+# Load Tabledata
+proc handleGetTableRows(req: Request) =
+    var sse = req.respondSSE(); defer: sse.close()
+    getTableRows(sse)
+
+
+proc selectRow(sse: SSEConnection) =
+    var reg = Registration()
+    let id = getRowId(sse.request)
+    bingoser.load(@[$id], reg) # load from DB
+    patchSignals(sse, %reg) # update gui with attributes from registration
 
 # Select Row and show data in the form
-proc selectRow(req: Request, id: string, close: bool = true) {.async.} =
-    var reg = Registration()
-    bingoser.load(@[id], reg) # load from DB
-    await patchSignals(req, %reg, close) # update gui with attributes from registration
+proc handleSelectRow(req: Request) =
+    var sse = req.respondSSE(); defer: sse.close()
+    selectRow(sse)
+
+proc deleteRow(sse: SSEConnection) =
+    let id = getRowId(sse.request)
+    Kill: ^Registration(id)
 
 # Delete Row
-proc deleteRow(req: Request, id: string) {.async.} =
-    dsl.kill: ^Registration(id)
-    await getTableRows(req)
+proc handleDeleteRow(req: Request) =
+    var sse = req.respondSSE(); defer: sse.close()
+    deleteRow(sse)
+    getTableRows(sse)
 
 # Edit Row
-proc editRow(req: Request, id: string) {.async.} =
-    setvar: ^Registration(id,"status") = "Edited " & $now()
-    await patchSignals(req, %*{ # clear technical fields
+proc handleEditRow(req: Request) =
+    let id = getRowId(req)
+    Set: ^Registration(id, "status") = "Edited " & $now()
+
+    var sse = req.respondSSE(); defer: sse.close()
+    patchSignals(sse, %*{ # clear technical fields
         "emailInvalid": false,
         "canSubmit": true,
         "id": id,
         "page": 1
-    }, close = false)
-    await selectRow(req, id, close = false)
-    await forward(req, "html/form.html")
+    })
+    selectRow(sse)
+    forward(sse, "html/form.html")
 
 # Mark Row (Update Timestamp)
-proc markRow(req: Request, id: string) {.async.} =
-    setvar: ^Registration(id,"status") = "Marked " & $now()
-    await getTableRows(req)
+proc handleMarkRow(req: Request) =
+    let id = getRowId(req)
+    Set: ^Registration(id,"status") = "Marked " & $now()
+    handleGetTableRows(req)
 
 # Reset the form, clear response-message on form
-proc clearForm(req: Request) {.async.} =
+proc clearForm(req: Request) =
+    var sse = req.respondSSE(); defer: sse.close()
     var reg = Registration()
-    await patchSignals(req, %reg, close=false) # json clear Registration fields
-    await patchSignals(req, %*{ # clear technical fields
+    patchSignals(sse, %reg) # json clear Registration fields
+    patchSignals(sse, %*{ # clear technical fields
         "emailInvalid": false,
         "canSubmit": true,
         "id": -1
-    }, close=false)
-    await patchElements(req, "<div id='response-message'></div>") # clear response-message
+    })
+    patchElements(sse, "<div id='response-message'></div>") # clear response-message
+
 
 # Save Registration
-proc submit(req: Request) {.async.} =
+proc submitForm(req: Request) =
     let signals = $(parseJson(req.body))
-    let rc = Transaction(signals):
-        let signals = $cast[cstring](param)
-        var reg = parseJson(signals).to(Registration)
-        if reg.id == -1: # assign new id to new Registration
-            reg.id = increment ^CNT("registration")
-        bingoser.store(@[$(reg.id)], reg) # Save to DB
+    # create Registration object from signals
+    var reg = parseJson(signals).to(Registration)
+    if reg.id == -1: # assign new id to new Registration
+        reg.id = Increment ^CNT("registration")
+    # Serialize to YottaDB
+    bingoser.store(@[$(reg.id)], reg)
 
-    if rc == YDB_OK:
-        await patchElements(req, "<div id='response-message' class='formsuccess'>Thank you,data received!</div>", close=false)
-        await getTableRows(req)
+    # Update browser
+    var sse = req.respondSSE(); defer: sse.close()
+    patchElements(sse, "<div id='response-message' class='formsuccess'>Thank you,data received!</div>")
+    getTableRows(sse)
 
-# Route requests (static, /api, /others)
-proc router(req: Request) {.async.} =
-    var path: string
-    if req.url.path.startsWith("/api/"):     #  /api/xxxx/<id>
-        let ss = req.url.path.split("/:")
-        path = ss[0]
-        let id = if ss.len >= 2: ss[1] else: ""
-        case path
-        of "/api/submits": await getTableRows(req)
-        of "/api/select-row": await selectRow(req, id)
-        of "/api/delete-row": await deleteRow(req, id)
-        of "/api/edit-row": await editRow(req, id)
-        of "/api/mark-row": await markRow(req, id)
-        return
-    else:
-        path = req.url.path
 
-    case path
-    of "/update-clock": await updateClock(req)
-    of "/validate-email": await validateEmail(req) # validate email field
-    of "/submit-form": await submit(req) # get formdata and save in DB
-    of "/clear-form": await clearForm(req)
-    else: # static
-        var (dir, file, ext) = splitFile(Path(req.url.path))
-        if $dir == "/" and ($file).len == 0: 
-            file = Path("index")
-            ext = ".html"
-
-        if not ext.isEmptyOrWhitespace:
-            await serveStatic(req, $file, ext)
-        else:
-            await req.respond(Http404, "<h1>Request '" & $req.url.path & "' not known</h1>", newHttpHeaders([("Content-Type", "text/html")]))
+# /update-clock (Do not close the connection)
+proc handleUpdateClock(request: Request) =
+  var sse = request.respondSSE()
+  while true:
+    let tm = $now()
+    try:
+      patchElements(sse, fmt"<h3 id='clock'>{tm}</h3>")
+      patchSignals(sse, %*{"time": $now()})
+    except:
+      echo "Leaving handleUpdateClock: ", getCurrentExceptionMsg()
+      break
+    sleep(1000)
 
 
 if isMainModule:
-    initMimeTable()
+    ## Handler für Ctrl+C (SIGINT)
+    proc shutdown() {.noconv.} =
+        echo "\nShutting down..."
+        quit(0)
+    setControlCHook(shutdown)
 
-    let server = newAsyncHttpServer()
-    echo "Server running at http://localhost:8080 (Ctrl+C to stop)"
+    var router = Router()
+    router.get("/api-submits", handleGetTableRows)
+    router.post("/api-select-row", handleSelectRow)
+    router.post("/api-delete-row", handleDeleteRow)
+    router.post("/api-edit-row", handleEditRow)
+    router.post("/api-mark-row", handleMarkRow)
+    router.get("/update-clock", handleUpdateClock)
+    router.get("/clear-form", clearForm)
+    router.post("/validate-email", validateEmail)
+    router.post("/submit-form", submitForm)
+    router.notFoundHandler = serveStatic
 
-# proc serve*(server: AsyncHttpServer, port: Port,
-#             callback: proc (request: Request): Future[void] {.closure, gcsafe.},
-#             address = "";
-#             assumedDescriptorsPerRequest = -1;
-#             domain = AF_INET) {.async.} =
+    let (host, port) = ("192.168.1.159", 8080)
+    let server = newServer(router)
+    echo fmt"Simple SSE / Datastar server - Open http://{host}:{port} in your browser"
 
-    waitFor server.serve(Port(8080), router, "192.168.1.159")
+    server.serve(Port(port), host)

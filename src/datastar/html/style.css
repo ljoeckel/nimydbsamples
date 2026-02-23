@@ -166,6 +166,25 @@ button:focus-visible {
     background-color: rgb(253, 221, 213) !important;
 }
 
+
+input:not([type="checkbox"]):read-only {
+    border-color: transparent;
+    background-color: transparent;
+    padding-left: 0;
+    /* Align text with labels if border is gone */
+    cursor: default;
+    box-shadow: none;
+    color: cadetblue
+}
+
+/* Ensure it doesn't react to focus */
+input:not([type="checkbox"]):read-only:focus {
+    border-color: transparent;
+    box-shadow: none;
+}
+
+
+
 /* ✅ helper text */
 .hint {
     margin: -2px 0 0;

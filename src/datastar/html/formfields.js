@@ -134,7 +134,7 @@ class StatusField extends HTMLElement {
         this.innerHTML = `
         <div class="form-group">
             <label for="status">Status</label>
-            <input id="status" data-bind:status name="status" type="text" />
+            <input id="status" data-bind:status name="status" type="text" readonly />
         </div>
         `;
     }

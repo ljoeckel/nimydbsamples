@@ -3,7 +3,7 @@
         <h1>Administration</h1>
     </div>
 
-    <table class="styled-table" data-init="@get('/api/submits')">
+    <table class="styled-table" data-init="@get('/api-submits')">
         <thead>
             <tr>
                 <th>Form</th>
@@ -20,9 +20,9 @@
 
     <!-- Paginierungs-Steuerung -->
     <div class="pagination">
-        <button id="btn_prev" data-on:click="$page--; $page = Math.max(0, $page); @get('/api/submits')">Prev</button>
+        <button id="btn_prev" data-on:click="$page--; $page = Math.max(0, $page); @get('/api-submits')">Prev</button>
         <span id="page_info" data-text="'Page ' + $page"></span>
-        <button id="btn_next" data-on:click="$page++; @get('/api/submits')">Next</button>
+        <button id="btn_next" data-on:click="$page++; @get('/api-submits')">Next</button>
     </div>
 
     <form class="form" data-on:submit__prevent="@post('/submit-form')">

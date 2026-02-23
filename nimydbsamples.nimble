@@ -9,9 +9,9 @@ srcDir        = "src"
 # Dependencies
 
 requires "nim >= 2.2.6"
-requires "datastar"
-requires "nimyottadb"
-requires "https://github.com/gokr/mummyx.git"
+#requires "nimyottadb"
+requires "file://../nim-yottadb/src"
+requires "https://github.com/ljoeckel/mummyDS.git"
 
 # Tasks
 task form, "Run http server on http://localhost:8080 and fill out a form":
