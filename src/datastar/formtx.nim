@@ -1,9 +1,13 @@
-## Run in the src/datastar directory: nim c -r form.nim
-## Then open http://localhost:8080 in your browser
+## Run 'nimble demo'
 
-import std/[os, times, json, strutils, strformat, paths, uri, atomics]
-import mummy, mummy/routers, mummy/datastar, mummy/mimetypes
+import std/[os, times, json, strutils, strformat]
+import mummy, mummy/routers, mummy/datastar
 import yottadb
+
+type
+    RowStatus = enum 
+        EDIT = "Edit"
+        MARKED = "Marked"
 
 type 
     Registration = object of RootObj
@@ -20,6 +24,21 @@ type
         time: string
 
 
+proc clearFormFields(sse: SSEConnection) =
+    # create empty Registration
+    var reg = Registration()
+    patchSignals(sse, %reg) # json clear Registration fields
+
+proc clearTechFields(sse: SSEConnection) =
+    patchSignals(sse, %*{ # clear technical fields
+        "emailInvalid": false,
+        "canSubmit": true,
+        "id": -1,
+        "page": 1
+    })
+    patchElements(sse, "<div id='response-message'></div>") # clear response-message
+
+
 # Validate E-Mail
 proc validateEmail(req: Request) =
     let signals = parseJson(req.body)
@@ -32,9 +51,11 @@ proc validateEmail(req: Request) =
         "canSubmit": not isInvalid
     })
 
+
 proc getRowId(req: Request):int =
     let signals = getSignals(req)
     result = signals["id"].getInt()
+
 
 # Create a table row
 proc newTableRow(msg: Registration): string =
@@ -58,20 +79,24 @@ proc newTableRow(msg: Registration): string =
         </tr>
         """
 
+
 # Load Tabledata
 proc getTableRows(sse: SSEConnection) =
     let signals = getSignals(sse.request)
-    # Zugriff auf einzelne Felder
-    echo "Max Rows: ", signals["maxrows"].getInt()
-    echo "page: ", signals["page"].getInt()
+    # Table paging (todo)
+    let maxrows = signals["maxrows"].getInt()
+    let page = signals["page"].getInt()
 
+    # Create the table from DB data
     var rows = "<tbody id='user-table-body'>"
     for id in OrderItr ^Registration:
         var registration: Registration
         bingoser.load(@[id], registration)
         rows.add(newTableRow(registration))
     rows.add("</tbody>")
+    # Update Browser
     patchElements(sse, rows)
+
 
 # Load Tabledata
 proc handleGetTableRows(req: Request) =
@@ -85,14 +110,17 @@ proc selectRow(sse: SSEConnection) =
     bingoser.load(@[$id], reg) # load from DB
     patchSignals(sse, %reg) # update gui with attributes from registration
 
+
 # Select Row and show data in the form
 proc handleSelectRow(req: Request) =
     var sse = req.respondSSE(); defer: sse.close()
     selectRow(sse)
 
+
 proc deleteRow(sse: SSEConnection) =
     let id = getRowId(sse.request)
     Kill: ^Registration(id)
+
 
 # Delete Row
 proc handleDeleteRow(req: Request) =
@@ -100,38 +128,34 @@ proc handleDeleteRow(req: Request) =
     deleteRow(sse)
     getTableRows(sse)
 
+
+proc setRowStatus(sse: SSEConnection, status: RowStatus) =
+    let id = getRowId(sse.request)
+    Set: ^Registration(id, "status") = $status & " " & $now()
+
+
 # Edit Row
 proc handleEditRow(req: Request) =
-    let id = getRowId(req)
-    Set: ^Registration(id, "status") = "Edited " & $now()
-
     var sse = req.respondSSE(); defer: sse.close()
-    patchSignals(sse, %*{ # clear technical fields
-        "emailInvalid": false,
-        "canSubmit": true,
-        "id": id,
-        "page": 1
-    })
+    setRowStatus(sse, EDIT)
+    getTableRows(sse)
     selectRow(sse)
     forward(sse, "html/form.html")
 
+
 # Mark Row (Update Timestamp)
 proc handleMarkRow(req: Request) =
-    let id = getRowId(req)
-    Set: ^Registration(id,"status") = "Marked " & $now()
-    handleGetTableRows(req)
+    var sse = req.respondSSE(); defer: sse.close()
+    setRowStatus(sse, MARKED)
+    getTableRows(sse)
+    selectRow(sse)
+
 
 # Reset the form, clear response-message on form
-proc clearForm(req: Request) =
+proc handleClearForm(req: Request) =
     var sse = req.respondSSE(); defer: sse.close()
-    var reg = Registration()
-    patchSignals(sse, %reg) # json clear Registration fields
-    patchSignals(sse, %*{ # clear technical fields
-        "emailInvalid": false,
-        "canSubmit": true,
-        "id": -1
-    })
-    patchElements(sse, "<div id='response-message'></div>") # clear response-message
+    clearFormFields(sse)
+    clearTechFields(sse)
 
 
 # Save Registration
@@ -178,7 +202,7 @@ if isMainModule:
     router.post("/api-edit-row", handleEditRow)
     router.post("/api-mark-row", handleMarkRow)
     router.get("/update-clock", handleUpdateClock)
-    router.get("/clear-form", clearForm)
+    router.get("/clear-form", handleClearForm)
     router.post("/validate-email", validateEmail)
     router.post("/submit-form", submitForm)
     router.notFoundHandler = serveStatic

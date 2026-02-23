@@ -9,12 +9,9 @@ srcDir        = "src"
 # Dependencies
 
 requires "nim >= 2.2.6"
-#requires "nimyottadb"
-requires "file://../nim-yottadb/src"
+requires "nimyottadb >= 0.4.4"
 requires "https://github.com/ljoeckel/mummyDS.git"
 
 # Tasks
-task form, "Run http server on http://localhost:8080 and fill out a form":
-  exec "cd src/datastar && nim c -r -d:release --threads:off --hints:off --verbosity:0 form.nim"
-task formtx, "Run http server on http://localhost:8080 and fill out a form (Save in Transaction)":
-  exec "cd src/datastar && nim c -r -d:release --threads:off --hints:off --verbosity:0 formtx.nim"
+task demo, "formtx":
+  exec "cd src/datastar && nim c -r -d:release --threads:on --hints:off --verbosity:0 formtx.nim"
