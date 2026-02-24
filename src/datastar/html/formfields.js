@@ -7,6 +7,7 @@ class NameField extends HTMLElement {
                 id="name"
                 data-init="document.getElementById('name').focus()" 
                 data-bind:name type="text"
+                required
                 placeholder="Your Name" autofocus />
         </div>`;
     }
@@ -18,13 +19,14 @@ class EmailField extends HTMLElement {
             <div class="form-group">
                 <div>
                     <label for="email">Email</label>
-                    <small class="error" data-show="$emailInvalid">Invalid E-Mail address</small>
+                    <small class="error" data-show="$emailInvalid">E-Mail address already used!</small>
                 </div>
                 <input 
                     id="email" 
                     data-bind:email /* if emailInvalid is true class 'input-error' will be added */
                     data-class="{'input-error': $emailInvalid}" data-on:input__debounce.500ms="@post('/validate-email')"
-                    type="email" />
+                    type="email"
+                    required />
                 <small class="hint">Enter a valid E-Mail address</small>
             </div>
         `;
@@ -40,13 +42,33 @@ class PasswordField extends HTMLElement {
                     id="password" 
                     name="password" 
                     data-bind:password type="password" 
+                    pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
                     placeholder="••••••••"
                     autocomplete="new-password" />
-                <small class="hint">Use at least 8 characters.</small>
+                    <!-- Der Stärken-Balken -->
+                    <div class="strength-meter"></div>
+                    <small class="hint">Use at least 8 characters with upercase and number.</small>
             </div>
         `;
     }
 }
+
+// class PasswordField extends HTMLElement {
+//     connectedCallback() {
+//         this.innerHTML = `
+//             <div class="form-group">
+//                 <label for="password">Password</label>
+//                 <input 
+//                     id="password" 
+//                     name="password" 
+//                     data-bind:password type="password" 
+//                     placeholder="••••••••"
+//                     autocomplete="new-password" />
+//                 <small class="hint">Use at least 8 characters.</small>
+//             </div>
+//         `;
+//     }
+// }
 
 class CountryField extends HTMLElement {
     connectedCallback() {

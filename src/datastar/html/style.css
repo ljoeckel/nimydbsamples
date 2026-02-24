@@ -441,3 +441,11 @@ input[type="radio"] {
 .subnav:hover .subnav-content {
     display: block;
 }
+
+/* disable submit button */
+form:has(:invalid) button[type="submit"] {
+    opacity: 0.5;
+    filter: grayscale(1);
+    /* pointer-events: none;   dont allow click submit button */
+    cursor: not-allowed;
+}

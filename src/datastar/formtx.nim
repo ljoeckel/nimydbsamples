@@ -9,6 +9,10 @@ type
         EDIT = "Edit"
         MARKED = "Marked"
 
+    DBOperation = enum 
+        UPDATE = "Update"
+        DELETE = "Delete"
+
 type 
     Registration = object of RootObj
         id: int = -1
@@ -23,6 +27,30 @@ type
         status: string
         time: string
 
+proc deleteRegistration(id: int) =
+    let oldEmail = Get ^RegistrationEmail(id)
+    Kill: 
+        ^RegistrationEmail(oldEmail)
+        ^RegistrationEmail(id)
+        ^Registration(id)
+
+proc updateIndex(op: DBOperation, reg: Registration) =
+    let id = reg.id
+    let email = reg.email
+    case op
+    of UPDATE:
+        let oldEmail = Get ^RegistrationEmail(id)
+        if oldEmail != "":
+            Kill: ^RegistrationEmail(oldEmail)
+        Set:
+            ^RegistrationEmail(email) = id
+            ^RegistrationEmail(id) = email
+    of DELETE:
+        let oldEmail = Get ^RegistrationEmail(id)
+        Kill: 
+            ^RegistrationEmail(oldEmail)
+            ^RegistrationEmail(id)
+        
 
 proc clearFormFields(sse: SSEConnection) =
     # create empty Registration
@@ -43,14 +71,17 @@ proc clearTechFields(sse: SSEConnection) =
 # Validate E-Mail
 proc validateEmail(req: Request) =
     let signals = parseJson(req.body)
-    let email = signals["email"].getStr()
-    let isInvalid = email.len > 0 and not email.contains("@")
+    let id = signals["id"].getInt()
+    # validate only for new entries
+    if id == -1:
+        let email = signals["email"].getStr()
+        let isInvalid = "" != Get ^RegistrationEmail(email)
 
-    var sse = req.respondSSE(); defer: sse.close()
-    patchSignals(sse, %*{
-        "emailInvalid": isInvalid,
-        "canSubmit": not isInvalid
-    })
+        var sse = req.respondSSE(); defer: sse.close()
+        patchSignals(sse, %*{
+            "emailInvalid": isInvalid,
+            "canSubmit": not isInvalid
+        })
 
 
 proc getRowId(req: Request):int =
@@ -120,7 +151,7 @@ proc handleSelectRow(req: Request) =
 
 proc deleteRow(sse: SSEConnection) =
     let id = getRowId(sse.request)
-    Kill: ^Registration(id)
+    deleteRegistration(id)
 
 
 # Delete Row
@@ -172,6 +203,7 @@ proc submitForm(req: Request) =
         reg.id = Increment ^CNT("registration")
     # Serialize to YottaDB
     bingoser.store(@[$(reg.id)], reg)
+    updateIndex(UPDATE, reg)
 
     # Update browser
     var sse = req.respondSSE(); defer: sse.close()
