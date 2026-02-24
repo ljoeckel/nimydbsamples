@@ -12,7 +12,7 @@ type
 type 
     Registration = object of RootObj
         id: int = -1
-        formId: string = "Form"
+        formId: string = "form"
         name: string
         password: string
         email: string
@@ -31,6 +31,7 @@ proc clearFormFields(sse: SSEConnection) =
 
 proc clearTechFields(sse: SSEConnection) =
     patchSignals(sse, %*{ # clear technical fields
+        "lastFormId": "",
         "emailInvalid": false,
         "canSubmit": true,
         "id": -1,
@@ -137,10 +138,14 @@ proc setRowStatus(sse: SSEConnection, status: RowStatus) =
 # Edit Row
 proc handleEditRow(req: Request) =
     var sse = req.respondSSE(); defer: sse.close()
+    # remember the form
+    let signals = getSignals(req)
+    patchSignals(sse, %*{"lastFormId": "admin"})
+    # update and edit the row
     setRowStatus(sse, EDIT)
     getTableRows(sse)
     selectRow(sse)
-    forward(sse, "html/form.html")
+    forward(sse, fmt"html/form.html")
 
 
 # Mark Row (Update Timestamp)
@@ -160,9 +165,9 @@ proc handleClearForm(req: Request) =
 
 # Save Registration
 proc submitForm(req: Request) =
-    let signals = $(parseJson(req.body))
+    let signals = getSignals(req)
     # create Registration object from signals
-    var reg = parseJson(signals).to(Registration)
+    var reg = signals.to(Registration)
     if reg.id == -1: # assign new id to new Registration
         reg.id = Increment ^CNT("registration")
     # Serialize to YottaDB
@@ -172,6 +177,13 @@ proc submitForm(req: Request) =
     var sse = req.respondSSE(); defer: sse.close()
     patchElements(sse, "<div id='response-message' class='formsuccess'>Thank you,data received!</div>")
     getTableRows(sse)
+   
+    # jump back to calling page (if any)    
+    let lastFormId = signals["lastFormId"].getStr()
+    let formId = signals["formId"].getStr()
+    if lastFormId != "" and lastFormId != formId:
+        let path = fmt"html/{lastFormId}.html"
+        forward(sse, path)
 
 
 # /update-clock (Do not close the connection)
