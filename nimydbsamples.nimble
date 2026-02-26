@@ -9,7 +9,9 @@ srcDir        = "src"
 # Dependencies
 
 requires "nim >= 2.2.6"
-requires "nimyottadb >= 0.4.4"
+#requires "nimyottadb >= 0.4.5"
+requires "https://github.com/ljoeckel/nim-yottadb.git"
+requires "file://home/ljoeckel/git/nim-yottadb/src"
 requires "https://github.com/ljoeckel/mummyDS.git"
 
 # Tasks

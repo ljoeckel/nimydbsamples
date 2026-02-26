@@ -9,53 +9,25 @@ type
         EDIT = "Edit"
         MARKED = "Marked"
 
-    DBOperation = enum 
-        UPDATE = "Update"
-        DELETE = "Delete"
-
-type 
     Registration = object of RootObj
         id: int = -1
         formId: string = "form"
         name: string
         password: string
-        email: string
+        email {.INDEX: "id".} : string
         message: string
-        country: string
+        country {.INDEX: "id".} : string
         plan: string = "starter"
-        terms: bool
+        terms : bool
         status: string
         time: string
 
-proc deleteRegistration(id: int) =
-    let oldEmail = Get ^RegistrationEmail(id)
-    Kill: 
-        ^RegistrationEmail(oldEmail)
-        ^RegistrationEmail(id)
-        ^Registration(id)
-
-proc updateIndex(op: DBOperation, reg: Registration) =
-    let id = reg.id
-    let email = reg.email
-    case op
-    of UPDATE:
-        let oldEmail = Get ^RegistrationEmail(id)
-        if oldEmail != "":
-            Kill: ^RegistrationEmail(oldEmail)
-        Set:
-            ^RegistrationEmail(email) = id
-            ^RegistrationEmail(id) = email
-    of DELETE:
-        let oldEmail = Get ^RegistrationEmail(id)
-        Kill: 
-            ^RegistrationEmail(oldEmail)
-            ^RegistrationEmail(id)
-        
 
 proc clearFormFields(sse: SSEConnection) =
     # create empty Registration
     var reg = Registration()
     patchSignals(sse, %reg) # json clear Registration fields
+
 
 proc clearTechFields(sse: SSEConnection) =
     patchSignals(sse, %*{ # clear technical fields
@@ -72,11 +44,10 @@ proc clearTechFields(sse: SSEConnection) =
 proc validateEmail(req: Request) =
     let signals = parseJson(req.body)
     let id = signals["id"].getInt()
+    let email = signals["email"].getStr()
     # validate only for new entries
-    if id == -1:
-        let email = signals["email"].getStr()
-        let isInvalid = "" != Get ^RegistrationEmail(email)
-
+    if email != "":
+        let isInvalid = 0 < Data ^RegistrationEMAIL(email)
         var sse = req.respondSSE(); defer: sse.close()
         patchSignals(sse, %*{
             "emailInvalid": isInvalid,
@@ -87,7 +58,6 @@ proc validateEmail(req: Request) =
 proc getRowId(req: Request):int =
     let signals = getSignals(req)
     result = signals["id"].getInt()
-
 
 # Create a table row
 proc newTableRow(msg: Registration): string =
@@ -111,7 +81,6 @@ proc newTableRow(msg: Registration): string =
         </tr>
         """
 
-
 # Load Tabledata
 proc getTableRows(sse: SSEConnection) =
     let signals = getSignals(sse.request)
@@ -122,13 +91,11 @@ proc getTableRows(sse: SSEConnection) =
     # Create the table from DB data
     var rows = "<tbody id='user-table-body'>"
     for id in OrderItr ^Registration:
-        var registration: Registration
-        bingoser.load(@[id], registration)
+        var registration = loadObject[Registration](@[id])
         rows.add(newTableRow(registration))
     rows.add("</tbody>")
     # Update Browser
     patchElements(sse, rows)
-
 
 # Load Tabledata
 proc handleGetTableRows(req: Request) =
@@ -137,11 +104,9 @@ proc handleGetTableRows(req: Request) =
 
 
 proc selectRow(sse: SSEConnection) =
-    var reg = Registration()
     let id = getRowId(sse.request)
-    bingoser.load(@[$id], reg) # load from DB
+    var reg = loadObject[Registration](@[$id]) # load from DB
     patchSignals(sse, %reg) # update gui with attributes from registration
-
 
 # Select Row and show data in the form
 proc handleSelectRow(req: Request) =
@@ -151,8 +116,7 @@ proc handleSelectRow(req: Request) =
 
 proc deleteRow(sse: SSEConnection) =
     let id = getRowId(sse.request)
-    deleteRegistration(id)
-
+    deleteObject[Registration](@[$id])
 
 # Delete Row
 proc handleDeleteRow(req: Request) =
@@ -165,19 +129,16 @@ proc setRowStatus(sse: SSEConnection, status: RowStatus) =
     let id = getRowId(sse.request)
     Set: ^Registration(id, "status") = $status & " " & $now()
 
-
 # Edit Row
 proc handleEditRow(req: Request) =
     var sse = req.respondSSE(); defer: sse.close()
     # remember the form
-    let signals = getSignals(req)
     patchSignals(sse, %*{"lastFormId": "admin"})
     # update and edit the row
     setRowStatus(sse, EDIT)
     getTableRows(sse)
     selectRow(sse)
     forward(sse, fmt"html/form.html")
-
 
 # Mark Row (Update Timestamp)
 proc handleMarkRow(req: Request) =
@@ -202,8 +163,7 @@ proc submitForm(req: Request) =
     if reg.id == -1: # assign new id to new Registration
         reg.id = Increment ^CNT("registration")
     # Serialize to YottaDB
-    bingoser.store(@[$(reg.id)], reg)
-    updateIndex(UPDATE, reg)
+    saveObject(@[$(reg.id)], reg)
 
     # Update browser
     var sse = req.respondSSE(); defer: sse.close()
