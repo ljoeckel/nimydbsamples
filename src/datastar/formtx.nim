@@ -19,7 +19,6 @@ type
 
     Registration = object of RootObj
         id: int = -1
-        formId: string = "form"
         name: string
         password: string
         email {.INDEX: "id".} : string
@@ -69,6 +68,7 @@ proc getRowId(req: Request):int =
     result = signals["id"].getInt()
 
 # Create a table row
+            #<td>{msg.formId}</td>
 proc newTableRow(msg: Registration): string =
     let marked = if msg.status.startsWith("Marked"): "<button>✅</button>" else: "" 
     let markbtn = fmt"<button data-on:click__stop=""$id={msg.id}; @post('/api-mark-row')""><i class='bi bi-alarm'></i></button>"
@@ -76,7 +76,6 @@ proc newTableRow(msg: Registration): string =
     let dataclass = "{selected: $id===" & $msg.id & "}"
     result = fmt"""
         <tr data-on:click__stop="$id={msg.id}; @post('/api-select-row')" data-class="{dataclass}">
-            <td>{msg.formId}</td>
             <td>{msg.id}</td>
             <td>{msg.name}</td>
             <td>{msg.email}</td>
@@ -180,8 +179,10 @@ proc submitForm(req: Request) =
         setRowStatus(sse, EDIT)
         let path = fmt"html/{lastFormId}.html"
         forward(sse, path)
+    else:
+        getTableRows(sse)
 
-    clearFormFields(sse)
+    if formId == "form": clearFormFields(sse)
 
 
 # Save Country
