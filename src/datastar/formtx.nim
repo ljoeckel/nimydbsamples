@@ -3,11 +3,19 @@
 import std/[os, times, json, strutils, strformat]
 import mummy, mummy/routers, mummy/datastar
 import yottadb
+import macros
+
 
 type
     RowStatus = enum 
         EDIT = "Edit"
         MARKED = "Marked"
+
+    Country = object of RootObj
+        id: int = -1
+        cname: string
+        ccode: string
+        cprefix: string
 
     Registration = object of RootObj
         id: int = -1
@@ -27,6 +35,8 @@ proc clearFormFields(sse: SSEConnection) =
     # create empty Registration
     var reg = Registration()
     patchSignals(sse, %reg) # json clear Registration fields
+    var country = Country()
+    patchSignals(sse, %country)
 
 
 proc clearTechFields(sse: SSEConnection) =
@@ -45,7 +55,6 @@ proc validateEmail(req: Request) =
     let signals = parseJson(req.body)
     let id = signals["id"].getInt()
     let email = signals["email"].getStr()
-    # validate only for new entries
     if email != "":
         let isInvalid = 0 < Data ^RegistrationEMAIL(email)
         var sse = req.respondSSE(); defer: sse.close()
@@ -132,11 +141,7 @@ proc setRowStatus(sse: SSEConnection, status: RowStatus) =
 # Edit Row
 proc handleEditRow(req: Request) =
     var sse = req.respondSSE(); defer: sse.close()
-    # remember the form
     patchSignals(sse, %*{"lastFormId": "admin"})
-    # update and edit the row
-    setRowStatus(sse, EDIT)
-    getTableRows(sse)
     selectRow(sse)
     forward(sse, fmt"html/form.html")
 
@@ -158,24 +163,49 @@ proc handleClearForm(req: Request) =
 # Save Registration
 proc submitForm(req: Request) =
     let signals = getSignals(req)
-    # create Registration object from signals
-    var reg = signals.to(Registration)
+    let formId = signals["formId"].getStr()
+    let lastFormId = signals["lastFormId"].getStr()  
+    var reg: Registration
+    reg.fillFrom(signals)
     if reg.id == -1: # assign new id to new Registration
         reg.id = Increment ^CNT("registration")
-    # Serialize to YottaDB
     saveObject(@[$(reg.id)], reg)
 
     # Update browser
     var sse = req.respondSSE(); defer: sse.close()
-    patchElements(sse, "<div id='response-message' class='formsuccess'>Thank you,data received!</div>")
-    getTableRows(sse)
+    patchElements(sse, "<div id='response-message' class='formsuccess'>Registration saved!</div>")
    
     # jump back to calling page (if any)    
-    let lastFormId = signals["lastFormId"].getStr()
-    let formId = signals["formId"].getStr()
     if lastFormId != "" and lastFormId != formId:
+        setRowStatus(sse, EDIT)
         let path = fmt"html/{lastFormId}.html"
         forward(sse, path)
+
+    clearFormFields(sse)
+
+
+# Save Country
+proc submitCountry(req: Request) =
+    let signals = getSignals(req)
+    let formId = signals["formId"].getStr()
+    let lastFormId = signals["lastFormId"].getStr()
+    var country: Country
+    country.fillFrom(signals)
+    if country.id == -1: # assign new id to new Registration
+        country.id = Increment ^CNT("country")
+    saveObject(@[$(country.id)], country)
+
+    # Update browser
+    var sse = req.respondSSE(); defer: sse.close()
+    patchElements(sse, "<div id='response-message' class='formsuccess'>Country saved!</div>")
+   
+    # jump back to calling page (if any)    
+    if lastFormId != "" and lastFormId != formId:
+        setRowStatus(sse, EDIT)
+        let path = fmt"html/{lastFormId}.html"
+        forward(sse, path)
+
+    clearFormFields(sse)
 
 
 # /update-clock (Do not close the connection)
@@ -209,6 +239,7 @@ if isMainModule:
     router.get("/clear-form", handleClearForm)
     router.post("/validate-email", validateEmail)
     router.post("/submit-form", submitForm)
+    router.post("/submit-country", submitCountry)
     router.notFoundHandler = serveStatic
 
     let (host, port) = ("192.168.1.159", 8080)

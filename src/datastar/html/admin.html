@@ -3,7 +3,7 @@
         <h1>Administration</h1>
     </div>
 
-    <table class="styled-table" data-init="@get('/api-submits')">
+    <table class="styled-table">
         <thead>
             <tr>
                 <th>Form</th>
@@ -15,7 +15,7 @@
             </tr>
         </thead>
         <!-- The backend will target this ID to insert rows -->
-        <tbody id="user-table-body"></tbody>
+        <tbody id="user-table-body" data-init="@get('/api-submits')"></tbody>
     </table>
 
     <!-- Paginierungs-Steuerung -->

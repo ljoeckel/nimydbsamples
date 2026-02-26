@@ -19,7 +19,7 @@ class EmailField extends HTMLElement {
             <div class="form-group">
                 <div>
                     <label for="email">Email</label>
-                    <small class="error" data-show="$emailInvalid">E-Mail address already used!</small>
+                    <small class="error" data-show="$emailInvalid">E-Mail address. </small>
                 </div>
                 <input 
                     id="email" 
