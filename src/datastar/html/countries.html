@@ -3,6 +3,27 @@
         <h1>Countries</h1>
     </div>
 
+    <table class="styled-table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Code</th>
+                <th>Prefix</th>
+            </tr>
+        </thead>
+        <!-- The backend will target this ID to insert rows -->
+        <tbody id="user-table-body" data-init="@get('/country-submits')"></tbody>
+    </table>
+
+    <!-- Paginierungs-Steuerung -->
+    <div class="pagination">
+        <button id="btn_prev"
+            data-on:click="$page--; $page = Math.max(0, $page); @get('/country-submits')">Prev</button>
+        <span id="page_info" data-text="'Page ' + $page"></span>
+        <button id="btn_next" data-on:click="$page++; @get('/country-submits')">Next</button>
+    </div>
+
     <form class="form" data-on:submit__prevent="@post('/submit-country')">
         <country-name data-ignore-morph></country-name>
         <country-code data-ignore-morph></country-code>

@@ -24,17 +24,16 @@ A lightweight web application demonstrating how to capture, validate, and persis
 ### Technical Highlights
 * **Pure Backend Logic:** All validation, persistence, and UI updates are handled strictly on the server side.
 * **Real-time Feedback:** Uses Server-Sent Events (SSE) to stream updates instantly to the browser.
-* **Efficient Web Server:** Powered by Nim’s native `asyncHttpServer` for high concurrency.
+* **Efficient Web Server:** Powered by mummyDS multi-threaded HTTP server with Datastar extensions for high concurrency.
 
 
 ### 🚀 Quick Start
 
-Launch the server directly using [Nimble](https://github.com):
-
-| Mode | Command | Description |
-| :--- | :--- | :--- |
-| **Standard** | `nimble form` | Updates the database (non-transactional). |
-| **Transactional** | `nimble formtx` | Atomic update via YottaDB transaction. |
+Launch the server directly using:
+`nimble demo`
+or go to `src/datastar` and run 
+```nim
+nim c -r --mm:arc --threads:on --passL:"-L/usr/local/lib/yottadb/r203 -lyottadb" formtx.nim
 
 ---
 

@@ -68,7 +68,6 @@ proc getRowId(req: Request):int =
     result = signals["id"].getInt()
 
 # Create a table row
-            #<td>{msg.formId}</td>
 proc newTableRow(msg: Registration): string =
     let marked = if msg.status.startsWith("Marked"): "<button>✅</button>" else: "" 
     let markbtn = fmt"<button data-on:click__stop=""$id={msg.id}; @post('/api-mark-row')""><i class='bi bi-alarm'></i></button>"
@@ -151,6 +150,67 @@ proc handleMarkRow(req: Request) =
     getTableRows(sse)
     selectRow(sse)
 
+#-----------------------------
+# Country Table
+#-----------------------------
+# Create a table row
+proc newCountryRow(msg: Country): string =
+    let dataclass = "{selected: $id===" & $msg.id & "}"
+    result = fmt"""
+        <tr data-on:click__stop="$id={msg.id}; @post('/country-select-row')" data-class="{dataclass}">
+            <td>{msg.id}</td>
+            <td>{msg.cname}</td>
+            <td>{msg.ccode}</td>
+            <td>{msg.cprefix}</td>
+            <td>
+                <button data-on:click__stop="$id={msg.id}; @post('/country-delete-row')"><i class="bi bi-trash"></i></button>
+            </td>
+        </tr>
+        """
+
+# Load Tabledata
+proc getCountryRows(sse: SSEConnection) =
+    let signals = getSignals(sse.request)
+    # Table paging (todo)
+    let maxrows = signals["maxrows"].getInt()
+    let page = signals["page"].getInt()
+
+    # Create the table from DB data
+    var rows = "<tbody id='user-table-body'>"
+    for id in OrderItr ^Country:
+        var country = loadObject[Country](@[id])
+        rows.add(newCountryRow(country))
+    rows.add("</tbody>")
+    # Update Browser
+    patchElements(sse, rows)
+
+# Load Tabledata
+proc handleGetCountryRows(req: Request) =
+    var sse = req.respondSSE(); defer: sse.close()
+    getCountryRows(sse)
+
+
+proc selectCountryRow(sse: SSEConnection) =
+    let id = getRowId(sse.request)
+    let country = loadObject[Country](@[$id]) # load from DB
+    patchSignals(sse, %country) # update gui with attributes from registration
+
+# Select Row and show data in the form
+proc handleSelectCountryRow(req: Request) =
+    var sse = req.respondSSE(); defer: sse.close()
+    selectCountryRow(sse)
+
+
+proc deleteCountryRow(sse: SSEConnection) =
+    let id = getRowId(sse.request)
+    deleteObject[Country](@[$id])
+
+# Delete Row
+proc handleDeleteCountryRow(req: Request) =
+    var sse = req.respondSSE(); defer: sse.close()
+    deleteCountryRow(sse)
+    getCountryRows(sse)
+
 
 # Reset the form, clear response-message on form
 proc handleClearForm(req: Request) =
@@ -205,6 +265,8 @@ proc submitCountry(req: Request) =
         setRowStatus(sse, EDIT)
         let path = fmt"html/{lastFormId}.html"
         forward(sse, path)
+    else:
+        getCountryRows(sse)
 
     clearFormFields(sse)
 
@@ -236,6 +298,11 @@ if isMainModule:
     router.post("/api-delete-row", handleDeleteRow)
     router.post("/api-edit-row", handleEditRow)
     router.post("/api-mark-row", handleMarkRow)
+
+    router.get("/country-submits", handleGetCountryRows)
+    router.post("/country-select-row", handleSelectCountryRow)
+    router.post("/country-delete-row", handleDeleteCountryRow)
+
     router.get("/update-clock", handleUpdateClock)
     router.get("/clear-form", handleClearForm)
     router.post("/validate-email", validateEmail)

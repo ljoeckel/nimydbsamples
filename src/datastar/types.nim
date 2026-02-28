@@ -1,0 +1,66 @@
+import yottadb
+
+type 
+    Country* = object
+        id*: string
+        country*: string
+        demonym*: string
+        iso2*: string
+        iso3* {.INDEX: "id".}: string
+        numeric*: int
+        tld*: string
+        currency*: string
+        population*: int
+        density*: float
+        area*: float
+        gdp*: int
+        median_age*: float
+        language*: string
+        website*: string
+        calling_code*: string
+        driving_side*: string
+        un_member*: bool
+        religion*: string
+        continent*: string
+        subRegion*: string
+        intermediateRegion*: string
+        regionCode*: int
+        subregionCode*: int
+        intermediateregionCode*: int
+        ar*: string
+        bg*: string
+        br*: string
+        cs*: string
+        da*: string
+        de*: string
+        el*: string
+        en*: string
+        eo*: string
+        es*: string
+        et*: string
+        eu*: string
+        fa*: string
+        fi*: string
+        fr*: string
+        hr*: string
+        hu*: string
+        hy*: string
+        it*: string
+        ja*: string
+        ko*: string
+        lt*: string
+        nl*: string
+        no*: string
+        pl*: string
+        pt*: string
+        ro*: string
+        ru*: string
+        sk*: string
+        sl*: string
+        sr*: string
+        svv*: string
+        th*: string
+        trv*: string
+        ukv*: string
+        zhv*: string
+        zh_tw*: string
