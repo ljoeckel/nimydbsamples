@@ -110,43 +110,43 @@ proc loadCsvData() =
         if country.id == "":
             echo "No data for ", toUpper(world.alpha2)
         else:
-            country.ar = world.ar
-            country.bg = world.bg
-            country.br = world.br
-            country.cs = world.cs
-            country.da = world.da
-            country.de = world.de
-            country.el = world.el
-            country.en = world.en
-            country.eo = world.eo
-            country.es = world.es
-            country.et = world.et
-            country.eu = world.eu
-            country.fa = world.fa
-            country.fi = world.fi
-            country.fr = world.fr
-            country.hr = world.hr
-            country.hu = world.hu
-            country.hy = world.hy
-            country.it = world.it
-            country.ja = world.ja
-            country.ko = world.ko
-            country.lt = world.lt
-            country.nl = world.nl
-            country.no = world.no
-            country.pl = world.pl
-            country.pt = world.pt
-            country.ro = world.ro
-            country.ru = world.ru
-            country.sk = world.sk
-            country.sl = world.sl
-            country.sr = world.sr
-            country.svv = world.svv
-            country.th = world.th
-            country.trv = world.trv
-            country.ukv = world.ukv
-            country.zhv = world.zhv
-            country.zh_tw = world.zh_tw
+            country.lang_ar = world.ar
+            country.lang_bg = world.bg
+            country.lang_br = world.br
+            country.lang_cs = world.cs
+            country.lang_da = world.da
+            country.lang_de = world.de
+            country.lang_el = world.el
+            country.lang_en = world.en
+            country.lang_eo = world.eo
+            country.lang_es = world.es
+            country.lang_et = world.et
+            country.lang_eu = world.eu
+            country.lang_fa = world.fa
+            country.lang_fi = world.fi
+            country.lang_fr = world.fr
+            country.lang_hr = world.hr
+            country.lang_hu = world.hu
+            country.lang_hy = world.hy
+            country.lang_it = world.it
+            country.lang_ja = world.ja
+            country.lang_ko = world.ko
+            country.lang_lt = world.lt
+            country.lang_nl = world.nl
+            country.lang_no = world.no
+            country.lang_pl = world.pl
+            country.lang_pt = world.pt
+            country.lang_ro = world.ro
+            country.lang_ru = world.ru
+            country.lang_sk = world.sk
+            country.lang_sl = world.sl
+            country.lang_sr = world.sr
+            country.lang_svv = world.svv
+            country.lang_th = world.th
+            country.lang_trv = world.trv
+            country.lang_ukv = world.ukv
+            country.lang_zhv = world.zhv
+            country.lang_zh_tw = world.zh_tw
             saveObject(@[country.id], country)
 
 
@@ -161,4 +161,4 @@ if isMainModule:
             echo "delete global ", global
             deleteGlobal(global)
     loadCsvData()
-    listCountries()
+    #listCountries()

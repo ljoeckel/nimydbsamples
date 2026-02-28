@@ -4,31 +4,12 @@ import std/[os, times, json, strutils, strformat]
 import mummy, mummy/routers, mummy/datastar
 import yottadb
 import macros
-
+import types
 
 type
     RowStatus = enum 
         EDIT = "Edit"
         MARKED = "Marked"
-
-    Country = object of RootObj
-        id: int = -1
-        cname: string
-        ccode: string
-        cprefix: string
-
-    Registration = object of RootObj
-        id: int = -1
-        name: string
-        password: string
-        email {.INDEX: "id".} : string
-        message: string
-        country {.INDEX: "id".} : string
-        plan: string = "starter"
-        terms : bool
-        status: string
-        time: string
-
 
 proc clearFormFields(sse: SSEConnection) =
     # create empty Registration
@@ -63,9 +44,14 @@ proc validateEmail(req: Request) =
         })
 
 
-proc getRowId(req: Request):int =
+proc getRowId[T](req: Request):T =
     let signals = getSignals(req)
-    result = signals["id"].getInt()
+    when T is int:
+        result = signals["id"].getInt()
+    elif T is string:
+        result = signals["id"].getStr()
+    else:
+        echo "nil"
 
 # Create a table row
 proc newTableRow(msg: Registration): string =
@@ -111,9 +97,10 @@ proc handleGetTableRows(req: Request) =
 
 
 proc selectRow(sse: SSEConnection) =
-    let id = getRowId(sse.request)
+    let id = getRowId[int](sse.request)
     var reg = loadObject[Registration](@[$id]) # load from DB
     patchSignals(sse, %reg) # update gui with attributes from registration
+    echo "selectRow id:", id
 
 # Select Row and show data in the form
 proc handleSelectRow(req: Request) =
@@ -122,7 +109,7 @@ proc handleSelectRow(req: Request) =
 
 
 proc deleteRow(sse: SSEConnection) =
-    let id = getRowId(sse.request)
+    let id = getRowId[int](sse.request)
     deleteObject[Registration](@[$id])
 
 # Delete Row
@@ -133,7 +120,7 @@ proc handleDeleteRow(req: Request) =
 
 
 proc setRowStatus(sse: SSEConnection, status: RowStatus) =
-    let id = getRowId(sse.request)
+    let id = getRowId[int](sse.request)
     Set: ^Registration(id, "status") = $status & " " & $now()
 
 # Edit Row
@@ -150,20 +137,18 @@ proc handleMarkRow(req: Request) =
     getTableRows(sse)
     selectRow(sse)
 
-#-----------------------------
-# Country Table
-#-----------------------------
-# Create a table row
+#------------------------
+# Country table
+#------------------------
 proc newCountryRow(msg: Country): string =
-    let dataclass = "{selected: $id===" & $msg.id & "}"
+    let dataclass = "{selected: $id==='" & $msg.id & "'}"
     result = fmt"""
-        <tr data-on:click__stop="$id={msg.id}; @post('/country-select-row')" data-class="{dataclass}">
+        <tr data-on:click__stop="$id='{msg.id}'; @post('/select-country-row')" data-class="{dataclass}">
             <td>{msg.id}</td>
-            <td>{msg.cname}</td>
-            <td>{msg.ccode}</td>
-            <td>{msg.cprefix}</td>
+            <td>{msg.country}</td>
+            <td>{msg.calling_code}</td>
             <td>
-                <button data-on:click__stop="$id={msg.id}; @post('/country-delete-row')"><i class="bi bi-trash"></i></button>
+                <button data-on:click__stop="$id='{msg.id}'; @post('/delete-country-row')"><i class="bi bi-trash"></i></button>
             </td>
         </tr>
         """
@@ -189,26 +174,21 @@ proc handleGetCountryRows(req: Request) =
     var sse = req.respondSSE(); defer: sse.close()
     getCountryRows(sse)
 
-
-proc selectCountryRow(sse: SSEConnection) =
-    let id = getRowId(sse.request)
+proc selectCountryRow(sse: SSEConnection, id: string) =
     let country = loadObject[Country](@[$id]) # load from DB
     patchSignals(sse, %country) # update gui with attributes from registration
 
 # Select Row and show data in the form
 proc handleSelectCountryRow(req: Request) =
+    let id = getRowId[string](req)
     var sse = req.respondSSE(); defer: sse.close()
-    selectCountryRow(sse)
-
-
-proc deleteCountryRow(sse: SSEConnection) =
-    let id = getRowId(sse.request)
-    deleteObject[Country](@[$id])
+    selectCountryRow(sse, id)
 
 # Delete Row
 proc handleDeleteCountryRow(req: Request) =
+    let id = getRowId[string](req)
     var sse = req.respondSSE(); defer: sse.close()
-    deleteCountryRow(sse)
+    deleteObject[Country](@[$id])
     getCountryRows(sse)
 
 
@@ -252,9 +232,9 @@ proc submitCountry(req: Request) =
     let lastFormId = signals["lastFormId"].getStr()
     var country: Country
     country.fillFrom(signals)
-    if country.id == -1: # assign new id to new Registration
-        country.id = Increment ^CNT("country")
-    saveObject(@[$(country.id)], country)
+    if country.id == "": # assign new id to new Registration
+        country.id = "X" & $(Increment ^CNT("country"))
+    saveObject(@[country.id], country)
 
     # Update browser
     var sse = req.respondSSE(); defer: sse.close()
@@ -300,8 +280,8 @@ if isMainModule:
     router.post("/api-mark-row", handleMarkRow)
 
     router.get("/country-submits", handleGetCountryRows)
-    router.post("/country-select-row", handleSelectCountryRow)
-    router.post("/country-delete-row", handleDeleteCountryRow)
+    router.post("/select-country-row", handleSelectCountryRow)
+    router.post("/delete-country-row", handleDeleteCountryRow)
 
     router.get("/update-clock", handleUpdateClock)
     router.get("/clear-form", handleClearForm)

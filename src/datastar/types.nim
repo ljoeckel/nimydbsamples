@@ -1,6 +1,18 @@
 import yottadb
 
-type 
+type
+    Registration* = object of RootObj
+        id*: int = -1
+        name*: string
+        password*: string
+        email* {.INDEX: "id".} : string
+        message*: string
+        country* {.INDEX: "id".} : string
+        plan*: string = "starter"
+        terms* : bool
+        status*: string
+        time*: string
+
     Country* = object
         id*: string
         country*: string
@@ -27,40 +39,41 @@ type
         regionCode*: int
         subregionCode*: int
         intermediateregionCode*: int
-        ar*: string
-        bg*: string
-        br*: string
-        cs*: string
-        da*: string
-        de*: string
-        el*: string
-        en*: string
-        eo*: string
-        es*: string
-        et*: string
-        eu*: string
-        fa*: string
-        fi*: string
-        fr*: string
-        hr*: string
-        hu*: string
-        hy*: string
-        it*: string
-        ja*: string
-        ko*: string
-        lt*: string
-        nl*: string
-        no*: string
-        pl*: string
-        pt*: string
-        ro*: string
-        ru*: string
-        sk*: string
-        sl*: string
-        sr*: string
-        svv*: string
-        th*: string
-        trv*: string
-        ukv*: string
-        zhv*: string
-        zh_tw*: string
+        lang_ar*: string
+        lang_bg*: string
+        lang_br*: string
+        lang_cs*: string
+        lang_da*: string
+        lang_de*: string
+        lang_el*: string
+        lang_en*: string
+        lang_eo*: string
+        lang_es*: string
+        lang_et*: string
+        lang_eu*: string
+        lang_fa*: string
+        lang_fi*: string
+        lang_fr*: string
+        lang_hr*: string
+        lang_hu*: string
+        lang_hy*: string
+        lang_it*: string
+        lang_ja*: string
+        lang_ko*: string
+        lang_lt*: string
+        lang_nl*: string
+        lang_no*: string
+        lang_pl*: string
+        lang_pt*: string
+        lang_ro*: string
+        lang_ru*: string
+        lang_sk*: string
+        lang_sl*: string
+        lang_sr*: string
+        lang_svv*: string
+        lang_th*: string
+        lang_trv*: string
+        lang_ukv*: string
+        lang_zhv*: string
+        lang_zh_tw*: string
+        time*: string

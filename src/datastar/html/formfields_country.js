@@ -1,42 +1,43 @@
-class CountryNameField extends HTMLElement {
-    connectedCallback() {
-        this.innerHTML = `
-        <div class="form-group">
-            <label for="cname">Name</label>
-            <input
-                id="cname"
-                data-init="document.getElementById('cname').focus()" 
-                data-bind:cname type="text"
-                required
-                autofocus />
-        </div>`;
-    }
-}
-
 class CountryCodeField extends HTMLElement {
     connectedCallback() {
         this.innerHTML = `
         <div class="form-group">
-            <label for="ccode">Code</label>
+            <label for="id">Code</label>
             <input
-                id="ccode"
-                data-init="document.getElementById('ccode').focus()" 
-                data-bind:ccode type="text"
+                id="id"
+                data-init="document.getElementById('id')" 
+                data-bind:id type="text"
                 required
                 />
         </div>`;
     }
 }
 
+class CountryNameField extends HTMLElement {
+    connectedCallback() {
+        this.innerHTML = `
+        <div class="form-group">
+            <label for="country">Country</label>
+            <input
+                id="country"
+                data-init="document.getElementById('country')" 
+                data-bind:country type="text"
+                required
+                />
+        </div>`;
+    }
+}
+
+
 class CountryPrefixField extends HTMLElement {
     connectedCallback() {
         this.innerHTML = `
         <div class="form-group">
-            <label for="cprefix">Prefix</label>
+            <label for="calling_code">Prefix</label>
             <input
-                id="cprefix"
-                data-init="document.getElementById('cprefix').focus()" 
-                data-bind:cprefix type="text"
+                id="calling_code"
+                data-init="document.getElementById('calling_code')" 
+                data-bind:calling_code type="text"
                 required
                 />
         </div>`;
