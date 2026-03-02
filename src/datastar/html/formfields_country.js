@@ -3,7 +3,6 @@ class CountryCodeField extends HTMLElement {
         this.innerHTML = `
         <div class="form-group">
             <label for="id">Code</label>
-            </div>
             <input
                 id="id"
                 data-init="document.getElementById('id')" 
