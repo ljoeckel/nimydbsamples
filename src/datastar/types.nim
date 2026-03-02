@@ -2,7 +2,7 @@ import yottadb
 
 type
     Registration* = object of RootObj
-        id*: int = -1
+        id*: string
         name*: string
         password*: string
         email* {.INDEX: "id".} : string

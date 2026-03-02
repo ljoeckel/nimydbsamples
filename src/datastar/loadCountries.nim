@@ -5,7 +5,9 @@ import tabbylj
 
 import types
 
-
+# Create one big 'Country' dataset which is created from
+# 4 different csv datasets.
+# Country is saved in YottaDB
 
 type 
     Country2 = object

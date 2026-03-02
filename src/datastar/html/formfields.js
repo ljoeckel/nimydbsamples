@@ -24,7 +24,8 @@ class EmailField extends HTMLElement {
                 <input 
                     id="email" 
                     data-bind:email /* if emailInvalid is true class 'input-error' will be added */
-                    data-class="{'input-error': $emailInvalid}" data-on:input__debounce.500ms="@post('/validate-email')"
+                    data-class="{'input-error': $emailInvalid}"
+                    data-on:input__debounce.500ms="@post('/validate-email')"
                     type="email"
                     required />
                 <small class="hint">Enter a valid E-Mail address</small>
