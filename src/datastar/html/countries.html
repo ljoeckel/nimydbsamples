@@ -1,9 +1,10 @@
-<div id="container" class="card" data-signals="{formId: 'countries', country_code: ''}" data-init="@get('/init-form')">
+<div id="container" class="card">
     <div class="header">
         <h1>Countries</h1>
     </div>
 
-    <form class="form" data-on:submit__prevent="@post('/submit-country')">
+    <form class="form" data-signals="{formId: 'countries', country_code: ''}"
+        data-on:submit__prevent="@post('/submit-country')">
         <country-code data-ignore-morph></country-code>
         <country-name data-ignore-morph></country-name>
         <country-prefix data-ignore-morph></country-prefix>
@@ -26,15 +27,14 @@
             </tr>
         </thead>
         <!-- The backend will target this ID to insert rows -->
-        <tbody id="user-table-body" data-init="@get('/country-submits')"></tbody>
+        <tbody id="user-table-body" data-init="@get('/get-countries')"></tbody>
     </table>
 
     <!-- Paginierungs-Steuerung -->
     <div class="pagination">
-        <button id="btn_prev"
-            data-on:click="$page--; $page = Math.max(0, $page); @get('/country-submits')">Prev</button>
+        <button id="btn_prev" data-on:click="$page--; $page = Math.max(0, $page); @get('/get-countries')">Prev</button>
         <span id="page_info" data-text="'Page ' + $page"></span>
-        <button id="btn_next" data-on:click="$page++; @get('/country-submits')">Next</button>
+        <button id="btn_next" data-on:click="$page++; @get('/get-countries')">Next</button>
     </div>
 
 </div>

@@ -6,10 +6,13 @@ import yottadb
 import macros
 import types
 
-const COUNTRY_FORM_FIELDS = @["id", "country", "calling_code"]
+const 
+    HTML_DIR = "html/"
+    COUNTRY_FORM_FIELDS = @["id", "country", "calling_code"]
 
 type
     RowStatus = enum 
+        NEW = "New"
         EDIT = "Edit"
         MARKED = "Marked"
 
@@ -32,7 +35,6 @@ proc filterPatch*[T](obj: T, fields:seq[string]): JsonNode =
             if nm == name: json[name] = %value
     return json
 
-
 proc clearForm[T](sse: SSEConnection) =
     # clear form fields from given class T
     var obj: T
@@ -54,7 +56,6 @@ proc clearTechFields(sse: SSEConnection) =
     })
     patchElements(sse, "<div id='response-message'></div>") # clear response-message
 
-
 proc isRegisteredEmail(req: Request) =
     # check if email is already registered
     let signals = getSignals(req)
@@ -67,7 +68,6 @@ proc isRegisteredEmail(req: Request) =
             "canSubmit": not isInvalid
         })
 
-
 proc getId(req: Request):string =
     # get the Id field from the current form
     let signals = getSignals(req)
@@ -76,20 +76,20 @@ proc getId(req: Request):string =
 proc newRegistrationRow(msg: Registration): string =
     # Create a table row for class Registration
     let marked = if msg.status.startsWith("Marked"): "<button>✅</button>" else: "" 
-    let markbtn = fmt"<button data-on:click__stop=""$id={msg.id}; @post('/api-mark-row')""><i class='bi bi-alarm'></i></button>"
+    let markbtn = fmt"<button data-on:click__stop=""$id={msg.id}; @post('/mark-row')""><i class='bi bi-alarm'></i></button>"
     let marker = if marked == "": markbtn else: marked
     let dataclass = "{" & fmt"selected: $id==='{$msg.id}'" & "}"
     result = fmt"""
-        <tr data-on:click__stop="$id='{msg.id}'; @post('/api-select-row')" data-class="{dataclass}">
+        <tr data-on:click__stop="$id='{msg.id}'; @post('/select-row')" data-class="{dataclass}">
             <td>{msg.id}</td>
             <td>{msg.name}</td>
             <td>{msg.email}</td>
             <td>{msg.message}</td>
             <td>{msg.status}</td>
             <td>
-                <button data-on:click__stop="$id='{msg.id}'; @post('/api-delete-row')"><i class="bi bi-trash"></i></button>
+                <button data-on:click__stop="$id='{msg.id}'; @post('/delete-row')"><i class="bi bi-trash"></i></button>
                 {marker}
-                <button data-on:click__stop="$id='{msg.id}'; @post('/api-edit-row')"><i class="bi bi-pencil"></i></button>
+                <button data-on:click__stop="$id='{msg.id}'; @post('/edit-row')"><i class="bi bi-pencil"></i></button>
             </td>
         </tr>
         """
@@ -114,38 +114,29 @@ proc getTableRows[T](sse: SSEConnection) =
     # Update Browser
     patchElements(sse, rows)
 
-
-# Load Tabledata
-proc handleGetTableRows(req: Request) =
+proc handleGetRegistrations(req: Request) =
+    # Load Tabledata
     var sse = req.respondSSE(); defer: sse.close()
     getTableRows[Registration](sse)
-
 
 proc selectRow(sse: SSEConnection) =
     let id = getId(sse.request)
     var reg = loadObject[Registration](@[$id]) # load from DB
     patchSignals(sse, %reg) # update gui with attributes from registration
-    echo "selectRow id:", id
 
 # Select Row and show data in the form
 proc handleSelectRow(req: Request) =
     var sse = req.respondSSE(); defer: sse.close()
     selectRow(sse)
 
-
-proc deleteRow(sse: SSEConnection) =
-    let id = getId(sse.request)
-    deleteObject[Registration](@[$id])
-
 # Delete Row
 proc handleDeleteRow(req: Request) =
+    let id = getId(req)
+    deleteObject[Registration](@[$id])
     var sse = req.respondSSE(); defer: sse.close()
-    deleteRow(sse)
     getTableRows[Registration](sse)
 
-
-proc setRowStatus(sse: SSEConnection, status: RowStatus) =
-    let id = getId(sse.request)
+proc setRowStatus(sse: SSEConnection, id: string, status: RowStatus) =
     Set: ^Registration(id, "status") = $status & " " & $now()
 
 # Edit Row
@@ -153,12 +144,13 @@ proc handleEditRow(req: Request) =
     var sse = req.respondSSE(); defer: sse.close()
     patchSignals(sse, %*{"lastFormId": "admin"})
     selectRow(sse)
-    forward(sse, fmt"html/form.html")
+    forward(sse, HTML_DIR & "form.html")
 
 # Mark Row (Update Timestamp)
 proc handleMarkRow(req: Request) =
     var sse = req.respondSSE(); defer: sse.close()
-    setRowStatus(sse, MARKED)
+    let id = getId(sse.request)
+    setRowStatus(sse, id, MARKED)
     getTableRows[Registration](sse)
     selectRow(sse)
 
@@ -179,7 +171,7 @@ proc newCountryRow(msg: Country): string =
         """
 
 # Load Tabledata
-proc handleGetCountryRows(req: Request) =
+proc handleGetCountries(req: Request) =
     var sse = req.respondSSE(); defer: sse.close()
     getTableRows[Country](sse)
 
@@ -196,18 +188,19 @@ proc handleDeleteCountryRow(req: Request) =
     let id = getId(req)
     var sse = req.respondSSE(); defer: sse.close()
     deleteObject[Country](@[$id])
+    clearForm[Country](sse)
     getTableRows[Country](sse)
 
 
 # Reset the form, clear response-message on form
 proc handleClearForm(req: Request) =
+    let signals = getSignals(req)
     var sse = req.respondSSE(); defer: sse.close()
     clearFormFields(sse)
     clearTechFields(sse)
 
-
 # Save Registration
-proc submitForm(req: Request) =
+proc submitRegistration(req: Request) =
     let signals = getSignals(req)
     let formId = signals["formId"].getStr()
     let lastFormId = signals["lastFormId"].getStr()  
@@ -215,26 +208,27 @@ proc submitForm(req: Request) =
     reg.fillFrom(signals)
     if reg.id == "": # assign new id to new Registration
         reg.id = $(Increment ^CNT("registration"))
+        reg.status = fmt"{NEW} {now()}"
     saveObject(@[$(reg.id)], reg)
 
     # Update browser
     var sse = req.respondSSE(); defer: sse.close()
     patchElements(sse, "<div id='response-message' class='formsuccess'>Registration saved!</div>")
    
-    # jump back to calling page (if any)    
-    if lastFormId != "" and lastFormId != formId:
-        setRowStatus(sse, EDIT)
-        let path = fmt"html/{lastFormId}.html"
+    # jump back to 'admin' if from there    
+    if lastFormId == "admin" and lastFormId != formId:
+        setRowStatus(sse, reg.id, EDIT)
+        let path = fmt"{HTML_DIR}{lastFormId}.html"
         forward(sse, path)
     else:
         getTableRows[Registration](sse)
-
-    echo "formId:" , formId
-    if formId == "form": 
         clearForm[Registration](sse)
 
-# Get Country data
+# -------------------
+# Country
+# -------------------
 proc getCountry(req: Request) =
+    # Get Country data
     var sse = req.respondSSE(); defer: sse.close()
     let signals = getSignals(req)
     let id = toUpper(signals["id"].getStr())
@@ -243,29 +237,19 @@ proc getCountry(req: Request) =
     # Update form fields
     patchSignals(sse, %filterPatch(country, COUNTRY_FORM_FIELDS))
     
-# Save Country
 proc submitCountry(req: Request) =
+    # Save Country
     let signals = getSignals(req)
-    let formId = signals["formId"].getStr()
-    let lastFormId = signals["lastFormId"].getStr()
     var country: Country
     country.fillFrom(signals)
-    if country.id == "": # assign new id to new Registration
+    if country.id == "": # assign new id to new Country
         country.id = "X" & $(Increment ^CNT("country"))
     saveObject(@[country.id], country)
 
     # Update browser
     var sse = req.respondSSE(); defer: sse.close()
     patchElements(sse, "<div id='response-message' class='formsuccess'>Country saved!</div>")
-   
-    # jump back to calling page (if any)    
-    if lastFormId != "" and lastFormId != formId:
-        setRowStatus(sse, EDIT)
-        let path = fmt"html/{lastFormId}.html"
-        forward(sse, path)
-    else:
-        getTableRows[Country](sse)
-
+    getTableRows[Country](sse)
     clearForm[Country](sse)
 
 proc handleUpdateClock(req: Request) =
@@ -283,9 +267,13 @@ proc handleUpdateClock(req: Request) =
       echo "Leaving handleUpdateClock: ", getCurrentExceptionMsg()
       break
 
-proc handleInitForm(req: Request) {.gcsafe.} =
-    var sse = req.respondSSE(); defer: sse.close()        
+proc handleGotoForm(req: Request) =
+    # process menu links
+    # <a href="#form" data-on:click="$menuOpen = false; @get('goto/form.html')">Registration</a>
+    let page = req.path.split("/goto/")[1]
+    let sse = req.respondSSE()
     clearFormFields(sse)
+    forward(sse, HTML_DIR & page)
 
 if isMainModule:
     ## Handler für Ctrl+C (SIGINT)
@@ -295,24 +283,24 @@ if isMainModule:
     setControlCHook(shutdown)
 
     var router = Router()
-    router.get("/api-submits", handleGetTableRows)
-    router.post("/api-select-row", handleSelectRow)
-    router.post("/api-delete-row", handleDeleteRow)
-    router.post("/api-edit-row", handleEditRow)
-    router.post("/api-mark-row", handleMarkRow)
+    router.get("/get-registrations", handleGetRegistrations)
+    router.post("/select-row", handleSelectRow)
+    router.post("/delete-row", handleDeleteRow)
+    router.post("/edit-row", handleEditRow)
+    router.post("/mark-row", handleMarkRow)
+    router.post("/submit-registration", submitRegistration)
 
-    router.get("/country-submits", handleGetCountryRows)
+    router.get("/get-countries", handleGetCountries)
     router.post("/select-country-row", handleSelectCountryRow)
     router.post("/delete-country-row", handleDeleteCountryRow)
+    router.post("/submit-country", submitCountry)
+    router.post("/get-country", getCountry)
 
     router.get("/update-clock", handleUpdateClock)
     router.get("/clear-form", handleClearForm)
     router.post("/validate-email", isRegisteredEmail)
-    router.post("/submit-form", submitForm)
-    router.post("/submit-country", submitCountry)
-    router.post("/get-country", getCountry)
     # Standard handlers
-    router.get("/init-form", handleInitForm)
+    router.get("/goto/**", handleGotoForm)
     router.notFoundHandler = serveStatic
 
     let (host, port) = ("192.168.1.159", 8080)

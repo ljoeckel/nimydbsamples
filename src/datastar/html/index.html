@@ -4,7 +4,7 @@
 <head data-init="@get('/update-clock')">
     <meta charset="UTF-8">
     <script type="module"
-        src="https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js"></script>
+        src="https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.8/bundles/datastar.js"></script>
     <link rel="stylesheet" href="/style.css">
     <link rel="stylesheet" href="/productcard.css">
     <link rel="shortcut icon" href="/favicon.ico" />
@@ -17,16 +17,16 @@
     data-signals="{formId: '', lastFormId: '', name: '', email: '', emailInvalid: false, password: '', message: '', country: '', plan: 'starter', status: '', canSubmit: true, terms: false, menuOpen: false, id: '', maxrows: 0, page: 0}">
     <!-- The navigation menu -->
     <div class="navbar">
-        <a href="#home" id="home" data-on:click="@get('/form.html')">Home</a>
+        <a href="#home" id="home" data-on:click="@get('goto/form.html')">Home</a>
 
         <div class="subnav" data-on:mouseenter="$menuOpen = true" data-on:mouseleave="$menuOpen = false">
             <button class="subnavbtn">Departments<i class="fa fa-caret-down"></i> </button>
             <div class="subnav-content" data-class="{'force-closed': !$menuOpen}">
-                <a href="#form" data-on:click="$menuOpen = false; @get('/form.html')">Registration</a>
-                <a href="#sales" data-on:click="$menuOpen = false; @get('/sales.html')">Sales</a>
-                <a href="#admin" data-on:click="$menuOpen = false; @get('/admin.html')">Administration</a>
-                <a href="#countries" data-on:click="$menuOpen = false; @get('/countries.html')">Countries</a>
-                <!-- a href="#cards" data-on:click="$menuOpen = false; @get('/cards.html')">Cards</a-->
+                <a href="#form" data-on:click="$menuOpen = false; @get('goto/form.html')">Registration</a>
+                <a href="#sales" data-on:click="$menuOpen = false; @get('goto/sales.html')">Sales</a>
+                <a href="#admin" data-on:click="$menuOpen = false; @get('goto/admin.html')">Administration</a>
+                <a href="#countries" data-on:click="$menuOpen = false; @get('goto/countries.html')">Countries</a>
+                <a href="#cards" data-on:click="$menuOpen = false; @get('goto/cards.html')">Cards</a>
             </div>
         </div>
 
