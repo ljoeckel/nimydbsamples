@@ -81,7 +81,7 @@ proc loadCsvData() =
     let csvData = readFile("data/countries.csv")
     let countries = csvData.fromCsv(seq[Country], separator = ",")
     for country in countries:
-        saveObject(@[country.id], country)
+        saveObject(country.id, country)
 
     let data2 = readFile("data/ISO 3166-1 Country Codes.csv")
     for iso3 in data2.fromCsv(seq[Country2], separator = ","):
@@ -91,7 +91,7 @@ proc loadCsvData() =
         else:
             country.iso3 = iso3.alpha3
             country.numeric = getInt(iso3.numeric)
-            saveObject(@[country.id], country)
+            saveObject(country.id, country)
 
     let data3 = readFile("data/regions.csv")
     for region in data3.fromCsv(seq[Country3], separator = ","):
@@ -104,7 +104,7 @@ proc loadCsvData() =
             country.regionCode = getInt(region.region_code)
             country.subregionCode = getInt(region.sub_region_code)
             country.intermediateregionCode = getInt(region.intermediate_region_code)
-            saveObject(@[country.id], country)
+            saveObject(country.id, country)
 
     let data4 = readFile("data/world.csv")
     for world in data4.fromCsv(seq[World], separator = ","):
@@ -149,7 +149,7 @@ proc loadCsvData() =
             country.lang_ukv = world.ukv
             country.lang_zhv = world.zhv
             country.lang_zh_tw = world.zh_tw
-            saveObject(@[country.id], country)
+            saveObject(country.id, country)
 
 
 proc listCountries() =

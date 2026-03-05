@@ -73,14 +73,14 @@ proc getId(req: Request):string =
     let signals = getSignals(req)
     trimString($signals["id"])
 
-proc newRegistrationRow(msg: Registration): string =
+proc getRegistrationRow(msg: Registration): string =
     # Create a table row for class Registration
     let marked = if msg.status.startsWith("Marked"): "<button>✅</button>" else: "" 
     let markbtn = fmt"<button data-on:click__stop=""$id={msg.id}; @post('/mark-row')""><i class='bi bi-alarm'></i></button>"
     let marker = if marked == "": markbtn else: marked
     let dataclass = "{" & fmt"selected: $id==='{$msg.id}'" & "}"
     result = fmt"""
-        <tr data-on:click__stop="$id='{msg.id}'; @post('/select-row')" data-class="{dataclass}">
+        <tr id='Registration{msg.id}' data-on:click__stop="$id='{msg.id}'; @post('/select-row')" data-class="{dataclass}">
             <td>{msg.id}</td>
             <td>{msg.name}</td>
             <td>{msg.email}</td>
@@ -105,11 +105,11 @@ proc getTableRows[T](sse: SSEConnection) =
     var rows = "<tbody id='user-table-body'>"
     let gbl = "^" & $T
     for id in OrderItr @gbl:
-        var obj = loadObject[T](@[id])
+        var obj = loadObject[T](id)
         when T is Registration:
-            rows.add(newRegistrationRow(obj))
+            rows.add(getRegistrationRow(obj))
         elif T is Country:
-            rows.add(newCountryRow(obj))
+            rows.add(getCountryRow(obj))
     rows.add("</tbody>")
     # Update Browser
     patchElements(sse, rows)
@@ -119,31 +119,41 @@ proc handleGetRegistrations(req: Request) =
     var sse = req.respondSSE(); defer: sse.close()
     getTableRows[Registration](sse)
 
-proc selectRow(sse: SSEConnection) =
-    let id = getId(sse.request)
-    var reg = loadObject[Registration](@[$id]) # load from DB
+proc selectRow(sse: SSEConnection, id: string) =
+    var reg = loadObject[Registration](id) # load from DB
     patchSignals(sse, %reg) # update gui with attributes from registration
 
 # Select Row and show data in the form
 proc handleSelectRow(req: Request) =
+    let id = getId(req)
     var sse = req.respondSSE(); defer: sse.close()
-    selectRow(sse)
+    selectRow(sse, id)
 
 # Delete Row
 proc handleDeleteRow(req: Request) =
     let id = getId(req)
-    deleteObject[Registration](@[$id])
+    deleteObject[Registration](id)
     var sse = req.respondSSE(); defer: sse.close()
     getTableRows[Registration](sse)
 
 proc setRowStatus(sse: SSEConnection, id: string, status: RowStatus) =
-    Set: ^Registration(id, "status") = $status & " " & $now()
+    # update Registration in DB
+    var reg = loadObject[Registration](id)
+    reg.status = $status
+    reg.time = $now()
+    saveObject(id, reg)
+    # Update table and form fields
+    let row = getRegistrationRow(reg)
+    patchElements(sse, row)
+    patchSignals(sse, %reg)
 
 # Edit Row
 proc handleEditRow(req: Request) =
     var sse = req.respondSSE(); defer: sse.close()
+    let id = getId(req)
+    setRowStatus(sse, id, EDIT)
     patchSignals(sse, %*{"lastFormId": "admin"})
-    selectRow(sse)
+    selectRow(sse, id)
     forward(sse, HTML_DIR & "form.html")
 
 # Mark Row (Update Timestamp)
@@ -151,13 +161,12 @@ proc handleMarkRow(req: Request) =
     var sse = req.respondSSE(); defer: sse.close()
     let id = getId(sse.request)
     setRowStatus(sse, id, MARKED)
-    getTableRows[Registration](sse)
-    selectRow(sse)
+    selectRow(sse, id)
 
 #------------------------
 # Country table
 #------------------------
-proc newCountryRow(msg: Country): string =
+proc getCountryRow(msg: Country): string =
     let dataclass = "{" & fmt"selected: $id==='{$msg.id}'" & "}"
     result = fmt"""
         <tr data-on:click__stop="$id='{msg.id}'; @post('/select-country-row')" data-class="{dataclass}">
@@ -178,7 +187,7 @@ proc handleGetCountries(req: Request) =
 # Select Row and show data in the form
 proc handleSelectCountryRow(req: Request) =
     let id = getId(req)
-    let country = loadObject[Country](@[id]) # load from DB
+    let country = loadObject[Country](id) # load from DB
     let filter = filterPatch(country, COUNTRY_FORM_FIELDS)
     var sse = req.respondSSE(); defer: sse.close()
     patchSignals(sse, %filter) # update gui with attributes from registration
@@ -187,7 +196,7 @@ proc handleSelectCountryRow(req: Request) =
 proc handleDeleteCountryRow(req: Request) =
     let id = getId(req)
     var sse = req.respondSSE(); defer: sse.close()
-    deleteObject[Country](@[$id])
+    deleteObject[Country](id)
     clearForm[Country](sse)
     getTableRows[Country](sse)
 
@@ -207,9 +216,10 @@ proc submitRegistration(req: Request) =
     var reg: Registration
     reg.fillFrom(signals)
     if reg.id == "": # assign new id to new Registration
-        reg.id = $(Increment ^CNT("registration"))
-        reg.status = fmt"{NEW} {now()}"
-    saveObject(@[$(reg.id)], reg)
+        reg.id = $Increment ^CNT("registration")
+        reg.status = $NEW
+    reg.time = $now()
+    saveObject(reg.id, reg)
 
     # Update browser
     var sse = req.respondSSE(); defer: sse.close()
@@ -217,7 +227,6 @@ proc submitRegistration(req: Request) =
    
     # jump back to 'admin' if from there    
     if lastFormId == "admin" and lastFormId != formId:
-        setRowStatus(sse, reg.id, EDIT)
         let path = fmt"{HTML_DIR}{lastFormId}.html"
         forward(sse, path)
     else:
@@ -232,7 +241,7 @@ proc getCountry(req: Request) =
     var sse = req.respondSSE(); defer: sse.close()
     let signals = getSignals(req)
     let id = toUpper(signals["id"].getStr())
-    var country = loadObject[Country](@[id])
+    var country = loadObject[Country](id)
     if country.id == "": country.id = id # hold back the last 'id' field
     # Update form fields
     patchSignals(sse, %filterPatch(country, COUNTRY_FORM_FIELDS))
@@ -244,7 +253,8 @@ proc submitCountry(req: Request) =
     country.fillFrom(signals)
     if country.id == "": # assign new id to new Country
         country.id = "X" & $(Increment ^CNT("country"))
-    saveObject(@[country.id], country)
+    country.time = $now()
+    saveObject(country.id, country)
 
     # Update browser
     var sse = req.respondSSE(); defer: sse.close()
@@ -260,8 +270,7 @@ proc handleUpdateClock(req: Request) =
     let msToNextMinute = 60000 - (nowTime.second * 1000 + nowTime.nanosecond div 1_000_000)
     let msg = nowTime.format("dd.MM.yyyy - HH:mm")
     try:
-      patchElements(sse, fmt"<h3 id='clock'>{msg}</h3>")
-      patchSignals(sse, %*{"time": msg})
+      patchElements(sse, fmt"<h3 id='wallclock'>{msg}</h3>")
       sleep(msToNextMinute)
     except:
       echo "Leaving handleUpdateClock: ", getCurrentExceptionMsg()

@@ -163,6 +163,17 @@ class StatusField extends HTMLElement {
     }
 }
 
+class TimeField extends HTMLElement {
+    connectedCallback() {
+        this.innerHTML = `
+        <div class="form-group">
+            <label for="time">Last update</label>
+            <input id="time" data-bind:time name="time" type="text" readonly />
+        </div>
+        `;
+    }
+}
+
 customElements.define('name-field', NameField);
 customElements.define('email-field', EmailField);
 customElements.define('password-field', PasswordField);
@@ -171,3 +182,4 @@ customElements.define('message-field', MessageField);
 customElements.define('terms-field', TermsField);
 customElements.define('plan-field', PlanField);
 customElements.define('status-field', StatusField);
+customElements.define('time-field', TimeField);
