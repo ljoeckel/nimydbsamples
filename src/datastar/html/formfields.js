@@ -19,7 +19,7 @@ class EmailField extends HTMLElement {
             <div class="form-group">
                 <div>
                     <label for="email">Email</label>
-                    <small class="error" data-show="$emailInvalid">E-Mail address. </small>
+                    <small class="error" data-show="$emailInvalid">E-Mail address already registered. </small>
                 </div>
                 <input 
                     id="email" 
@@ -174,6 +174,21 @@ class TimeField extends HTMLElement {
     }
 }
 
+class StatusCountField extends HTMLElement {
+    connectedCallback() {
+        this.innerHTML = `
+        <div class="form-group">
+            <label for="statusNew">New</label>
+            <input id="statusNew" data-bind:statusNew name="statusNew" type="text" readonly />
+            <label for="statusMarked">Marked</label>
+            <input id="statusMarked" data-bind:statusMarked name="statusMarked" type="text" readonly />
+            <label for="statusEdit">Edit</label>
+            <input id="statusEdit" data-bind:statusEdit name="statusEdit" type="text" readonly />
+        </div>
+        `;
+    }
+}
+
 customElements.define('name-field', NameField);
 customElements.define('email-field', EmailField);
 customElements.define('password-field', PasswordField);
@@ -183,3 +198,4 @@ customElements.define('terms-field', TermsField);
 customElements.define('plan-field', PlanField);
 customElements.define('status-field', StatusField);
 customElements.define('time-field', TimeField);
+customElements.define('statuscount-field', StatusCountField);

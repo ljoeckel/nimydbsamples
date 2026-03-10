@@ -1,0 +1,28 @@
+<div id="container" class="card">
+    <div class="header">
+        <h1>About</h1>
+    </div>
+
+    <h2 id="sample-srcdatastar-contact-manager">📂 Sample: src/datastar
+        (Registration Manager)</h2>
+    <p>A lightweight web application demonstrating how to capture, validate,
+        and persist form data directly into YottaDB.</p>
+    </p>
+    <h3 id="technical-highlights">Technical Highlights</h3>
+    <ul>
+        <li><strong>Pure Backend Logic:</strong> All validation, persistence,
+            and UI updates are handled strictly on the server side.</li>
+        <li><strong>Real-time Feedback:</strong> Uses Server-Sent Events (SSE)
+            to stream updates instantly to the browser.</li>
+        <li><strong>Efficient Web Server:</strong> Powered by mummyDS
+            multi-threaded HTTP server with Datastar extensions for high
+            concurrency.</li>
+    </ul>
+    <h3 id="quick-start">🚀 Quick Start</h3>
+    <p>Launch the server directly using: <code>nimble demo</code> or go to
+        <code>src/datastar</code> and run nim c -r –mm:arc –threads:on
+        –passL:“-L/usr/local/lib/yottadb/r203 -lyottadb” formtx.nim
+    </p>
+    <hr />
+
+</div>

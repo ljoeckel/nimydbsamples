@@ -1,6 +1,8 @@
 <div id="container" class="card" data-signals="{formId: 'admin', page: 1, maxrows: 5}">
     <div class="header">
-        <h1>Administration</h1>
+        <h1>Edit Registrations</h1>
+        <div id="registration-stats" data-init="@get('/get-registration-stats')"></div>
+        <div id="country-stats" data-init="@get('/get-country-stats')"></div>
     </div>
 
     <table class="styled-table">
@@ -11,6 +13,7 @@
                 <th>Email</th>
                 <th>Request</th>
                 <th>Status</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <!-- The backend will target this ID to insert rows -->

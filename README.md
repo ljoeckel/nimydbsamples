@@ -14,7 +14,7 @@ Ensure you have YottaDB and Nim installed. For detailed setup instructions, plea
 
 ---
 
-## 📂 Sample: src/datastar (Contact Manager)
+## 📂 Sample: src/datastar (Registration Manager)
 
 A lightweight web application demonstrating how to capture, validate, and persist form data directly into YottaDB.
 
@@ -25,29 +25,3 @@ A lightweight web application demonstrating how to capture, validate, and persis
 * **Pure Backend Logic:** All validation, persistence, and UI updates are handled strictly on the server side.
 * **Real-time Feedback:** Uses Server-Sent Events (SSE) to stream updates instantly to the browser.
 * **Efficient Web Server:** Powered by mummyDS multi-threaded HTTP server with Datastar extensions for high concurrency.
-
-
-### 🚀 Quick Start
-
-Launch the server directly using:
-`nimble demo`
-or go to `src/datastar` and run 
-```nim
-nim c -r --mm:arc --threads:on --passL:"-L/usr/local/lib/yottadb/r203 -lyottadb" formtx.nim
-
----
-
-### 🔄 Transaction Logic
-
-When using transactions, data must be passed from the main thread to the transaction thread using YottaDB variables (e.g., `context`). This ensures thread safety and data consistency within the [YottaDB Transaction](https://yottadb.com) lifecycle.
-
-```nim
-# 1. Map data to the YottaDB context variable
-for key in signals.keys:
-    setvar: context(key) = $signals[key]
-
-# 2. Execute the atomic transaction block
-let rc = Transaction:
-    let id = increment ^datastar("submits")
-    for (key, value) in queryItr context.kv:
-        setvar: ^datastar(id, key) = value

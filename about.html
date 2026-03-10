@@ -1,0 +1,58 @@
+<h1 id="nim---yottadb-samples">Nim - YottaDB Samples</h1>
+<p>This repository contains sample applications for the <a
+href="https://github.com/ljoeckel/nim-yottadb">nim-yottadb</a> library.
+It demonstrates how to leverage <a href="https://nim-lang.org">Nim’s</a>
+performance to interact seamlessly with the <a
+href="https://yottadb.com">YottaDB</a> NoSQL database.</p>
+<h2 id="key-features">🚀 Key Features</h2>
+<ul>
+<li><strong>High-Performance Database Access:</strong> Direct
+manipulation of globals, local variables, and transactions from
+Nim.</li>
+<li><strong>Modern Web Integration:</strong> Features examples using <a
+href="https://data-star.dev">Datastar</a> for building reactive UIs
+without heavy JavaScript.</li>
+<li><strong>Hypermedia-Driven:</strong> Support for
+<code>text/html</code> and Server-Sent Events (SSE) for real-time
+backend-to-frontend updates.</li>
+</ul>
+<h2 id="prerequisites">🛠 Prerequisites</h2>
+<p>Ensure you have YottaDB and Nim installed. For detailed setup
+instructions, please refer to the main repository: 👉 <a
+href="https://github.com">Installation Guide for YottaDB &amp;
+Nim</a></p>
+<hr />
+<h2 id="sample-srcdatastar-contact-manager">📂 Sample: src/datastar
+(Contact Manager)</h2>
+<p>A lightweight web application demonstrating how to capture, validate,
+and persist form data directly into YottaDB.</p>
+<p><img src="screenshot_home.png" alt="Form Screenshot" /> <img
+src="screenshot_admin.png" alt="Admin Screenshot" /></p>
+<h3 id="technical-highlights">Technical Highlights</h3>
+<ul>
+<li><strong>Pure Backend Logic:</strong> All validation, persistence,
+and UI updates are handled strictly on the server side.</li>
+<li><strong>Real-time Feedback:</strong> Uses Server-Sent Events (SSE)
+to stream updates instantly to the browser.</li>
+<li><strong>Efficient Web Server:</strong> Powered by mummyDS
+multi-threaded HTTP server with Datastar extensions for high
+concurrency.</li>
+</ul>
+<h3 id="quick-start">🚀 Quick Start</h3>
+<p>Launch the server directly using: <code>nimble demo</code> or go to
+<code>src/datastar</code> and run ```nim nim c -r –mm:arc –threads:on
+–passL:“-L/usr/local/lib/yottadb/r203 -lyottadb” formtx.nim</p>
+<hr />
+<h3 id="transaction-logic">🔄 Transaction Logic</h3>
+<p>When using transactions, data must be passed from the main thread to
+the transaction thread using YottaDB variables (e.g.,
+<code>context</code>). This ensures thread safety and data consistency
+within the <a href="https://yottadb.com">YottaDB Transaction</a>
+lifecycle.</p>
+<p>```nim # 1. Map data to the YottaDB context variable for key in
+signals.keys: setvar: context(key) = $signals[key]</p>
+<h1 id="execute-the-atomic-transaction-block">2. Execute the atomic
+transaction block</h1>
+<p>let rc = Transaction: let id = increment ^datastar(“submits”) for
+(key, value) in queryItr context.kv: setvar: ^datastar(id, key) =
+value</p>

@@ -17,16 +17,13 @@
     data-signals="{formId: '', lastFormId: '', name: '', email: '', emailInvalid: false, password: '', message: '', country: '', plan: 'starter', status: '', canSubmit: true, terms: false, menuOpen: false, id: '', maxrows: 0, page: 0}">
     <!-- The navigation menu -->
     <div class="navbar">
-        <a href="#home" id="home" data-on:click="@get('goto/form.html')">Home</a>
+        <a href="#home" id="home" data-on:click="@get('goto/form.html')">Registration</a>
 
         <div class="subnav" data-on:mouseenter="$menuOpen = true" data-on:mouseleave="$menuOpen = false">
-            <button class="subnavbtn">Departments<i class="fa fa-caret-down"></i> </button>
+            <button class="subnavbtn">Administration<i class="fa fa-caret-down"></i> </button>
             <div class="subnav-content" data-class="{'force-closed': !$menuOpen}">
-                <a href="#form" data-on:click="$menuOpen = false; @get('goto/form.html')">Registration</a>
-                <a href="#sales" data-on:click="$menuOpen = false; @get('goto/sales.html')">Sales</a>
-                <a href="#admin" data-on:click="$menuOpen = false; @get('goto/admin.html')">Administration</a>
+                <a href="#admin" data-on:click="$menuOpen = false; @get('goto/admin.html')">Edit Registrations</a>
                 <a href="#countries" data-on:click="$menuOpen = false; @get('goto/countries.html')">Countries</a>
-                <a href="#cards" data-on:click="$menuOpen = false; @get('goto/cards.html')">Cards</a>
             </div>
         </div>
 
@@ -40,12 +37,7 @@
             </div>
         </div>
 
-        <div class="subnav">
-            <button class="subnavbtn">About <i class="fa fa-caret-down"></i></button>
-            <div id="sub3" class="subnav-content">
-                <a href="#home" data-on:click="$menuOpen = false; @get('/about.html')">This Demo</a>
-            </div>
-        </div>
+        <a href="#about" data-on:click="$menuOpen = false; @get('/about.html')">About</a>
 
         <h3 id="wallclock"></h3>
     </div>

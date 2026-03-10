@@ -1,6 +1,12 @@
 import yottadb
 
 type
+    RowStatus* = enum 
+        NEW = "New"
+        EDIT = "Edit"
+        MARKED = "Marked"
+
+type
     Registration* = object of RootObj
         id*: string
         name*: string
@@ -10,7 +16,7 @@ type
         country* {.INDEX: "id".} : string
         plan*: string = "starter"
         terms* : bool
-        status*: string
+        status* {.INDEX: "id".} : string
         time*: string
 
     Country* = object
