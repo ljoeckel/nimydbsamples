@@ -20,6 +20,7 @@ A lightweight web application demonstrating how to capture, validate, and persis
 
 ![Form Screenshot](screenshot_home.png)
 ![Admin Screenshot](screenshot_admin.png)
+![Country Screenshot](screenshot_country.png)
 
 ### Technical Highlights
 * **Pure Backend Logic:** All validation, persistence, and UI updates are handled strictly on the server side.
