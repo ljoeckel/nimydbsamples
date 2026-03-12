@@ -14,8 +14,8 @@ type
         email* {.INDEX: "id".} : string
         message*: string
         country* {.INDEX: "id".} : string
-        plan*: string = "starter"
-        terms* : bool
+        plan* {.INDEX: "id".} : string = "starter"
+        terms* {.INDEX: "id".} : bool
         status* {.INDEX: "id".} : string
         time*: string
 

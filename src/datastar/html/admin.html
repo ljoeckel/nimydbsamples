@@ -1,19 +1,29 @@
-<div id="container" class="card" data-signals="{formId: 'admin', page: 1, maxrows: 5}">
+<div id="container" class="card" data-signals="{formId: 'admin'}">
     <div class="header">
         <h1>Edit Registrations</h1>
-        <div id="registration-stats" data-init="@get('/get-registration-stats')"></div>
-        <div id="country-stats" data-init="@get('/get-country-stats')"></div>
     </div>
 
-    <table class="styled-table">
+    <div class="stats-grid">
+        <div class="label">Status:</div>
+        <div data-signals="{stats: 'status'}" id="status-stats" data-init="@get('/get-stats')"></div>
+        <div class="label">Countries:</div>
+        <div data-signals="{stats: 'country'}" id="country-stats" data-init="@get('/get-stats')"></div>
+        <div class="label">Terms:</div>
+        <div data-signals="{stats: 'terms'}" id="terms-stats" data-init="@get('/get-stats')"></div>
+        <div class="label">Plan:</div>
+        <div data-signals="{stats: 'plan'}" id="plan-stats" data-init="@get('/get-stats')">term</div>
+        <div class="label"></div>
+    </div>
+
+    <table class="ljtable" height="300px" data-signals="{page: 1, maxrows: 6}">
         <thead>
             <tr>
-                <th>Id</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Request</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th width="50px">Id</th>
+                <th width="150px">Name</th>
+                <th width="200px">Email</th>
+                <th width="250px">Request</th>
+                <th width="50px">Status</th>
+                <th width="50px">Actions</th>
             </tr>
         </thead>
         <!-- The backend will target this ID to insert rows -->
@@ -23,7 +33,7 @@
     <!-- Paginierungs-Steuerung -->
     <div class="pagination">
         <button id="btn_prev"
-            data-on:click="$page--; $page = Math.max(0, $page); @get('/get-registrations')">Prev</button>
+            data-on:click="$page--; $page = Math.max(1, $page); @get('/get-registrations')">Prev</button>
         <span id="page_info" data-text="'Page ' + $page"></span>
         <button id="btn_next" data-on:click="$page++; @get('/get-registrations')">Next</button>
     </div>

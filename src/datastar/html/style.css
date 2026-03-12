@@ -15,12 +15,6 @@
     --radius: 14px;
 }
 
-
-/* ✅ BASE RESET */
-* {
-    box-sizing: border-box;
-}
-
 body {
     /* font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; */
     font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji";
@@ -29,12 +23,11 @@ body {
     line-height: 1.0;
     color: var(--gray-900);
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    /* background: var(--bg); */
     min-height: 100vh;
 }
 
-/* ✅ DEMO CONTAINER */
 .container {
+    flex: 1;
     border-bottom-left-radius: 22px;
     border-bottom-right-radius: 22px;
     max-width: 900px;
@@ -72,13 +65,9 @@ body {
 #clock {
     font-family: 'Lucida Console', Monaco, monospace;
     margin: auto auto;
-    /* Zentriert die h3-Box selbst (erfordert feste Breite) */
     width: 100%;
-    /* Beispielbreite */
     text-align: right;
-    /* Richtet den Text innerhalb dieser 50% rechts aus */
 }
-
 
 /* ✅ FORM LAYOUT (GRID + GAP) */
 .form {
@@ -248,7 +237,7 @@ input[type="radio"] {
     color: #fff;
     font-weight: 700;
     cursor: pointer;
-    transition: transform 120ms ease, opacity 180ms ease;
+    transition: transform 1020ms ease, opacity 180ms ease;
 }
 
 .btn:hover {
@@ -313,49 +302,6 @@ input[type="radio"] {
     background-color: #cccccc;
     cursor: not-allowed;
 }
-
-/* Styling für die Kopfzeile (thead) und deren Zellen (th) */
-.styled-table thead tr {
-    background: #3b82f6;
-    /* Deine Hauptfarbe */
-    color: #ffffff;
-    text-align: left;
-}
-
-.styled-table th {
-    padding: 6px 5px;
-    /* Angenehmer Abstand in den Zellen */
-    font-size: 14px;
-    position: sticky;
-    top: 0;
-    /*font-weight: bold;*/
-}
-
-.styled-table tbody tr {
-    cursor: pointer;
-    font-size: 14px;
-    color: black;
-}
-
-/* Hover-Effekt */
-.styled-table tbody tr:hover {
-    background: #aec0ed;
-    color: black;
-}
-
-/* Die Klasse für die aktive Auswahl */
-.styled-table tbody tr.selected {
-    background: #1756de !important;
-    color: yellow;
-}
-
-
-/*
-.styled-table tbody tr.selected {
-    background-color: #009879 !important;
-    color: white;
-}
-*/
 
 /* NAVBAR */
 .force-closed {
@@ -448,4 +394,21 @@ form:has(:invalid) button[type="submit"] {
     filter: grayscale(1);
     /* pointer-events: none;   dont allow click submit button */
     cursor: not-allowed;
+}
+
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 8px 20px;
+    /*font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;*/
+    align-items: baseline;
+
+    .label {
+        font-weight: bold;
+    }
+
+    .stats-content {
+        color: #0e13a2;
+    }
 }

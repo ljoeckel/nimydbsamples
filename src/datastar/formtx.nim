@@ -13,10 +13,11 @@ template SSE(req: Request, body: untyped) =
 
 const
     HTML_DIR = "html/"
+    ALL_STATS = @["status", "country", "terms", "plan"]
 
 proc handleUpdateClock(req: Request) =
     # /update-clock (Do not close the connection)
-    var sse = req.respondSSE(); defer: sse.close()
+    var sse = req.respondSSE()
     while true:
         let nowTime = now()
         let msToNextMinute = 60000 - (nowTime.second * 1000 + nowTime.nanosecond div 1_000_000)
@@ -26,6 +27,7 @@ proc handleUpdateClock(req: Request) =
             sleep(msToNextMinute)
         except:
             echo "Leaving handleUpdateClock: ", getCurrentExceptionMsg()
+            sse.close()
             break
 
 proc getIndexStats[T](indexName: string): string =
@@ -41,16 +43,18 @@ proc getIndexStats[T](indexName: string): string =
         inc(total, v)
     result.add(fmt" - Total({total})")
 
-proc getStats(sse: SSEConnection) =
+proc getStats(sse: SSEConnection, names: seq[string] = ALL_STATS) =
     # Get Status and Country statistics
-    let registrationStats = getIndexStats[Registration]("Status")
-    patchElements(sse, fmt"<div id='registration-stats'>{registrationStats}</div>")
-    let countryStats = getIndexStats[Registration]("Country")
-    patchElements(sse, fmt"<div id='country-stats'>{countryStats}</div>")
+    for name in names:
+        let stats = getIndexStats[Registration](name)
+        patchElements(sse, fmt"<div class='stats-content' id='{name}-stats'>{stats}</div>")
 
-proc handleGetRegistrationStats(req: Request) =
+proc handleGetStats(req: Request) =
+    let signals = getSignals(req)
+    let statsname = signals["stats"].getStr()
     SSE(req):
-        getStats(sse)
+        getStats(sse, @[statsname])
+
 
 proc clearForm[T](sse: SSEConnection) =
     # clear form fields from given class T
@@ -79,11 +83,12 @@ proc handleClearForm(req: Request) =
         clearFormFields(sse)
         clearTechFields(sse)
 
-proc handleGotoForm(req: Request) =
+proc handleGoto(req: Request) =
     # process menu links g.E. <a href="#form" data-on:click="$menuOpen = false; @get('goto/form.html')">Registration</a>
     let page = req.path.split("/goto/")[1]
     SSE(req):
         clearFormFields(sse)
+        clearTechFields(sse)
         forward(sse, HTML_DIR & page)
 
 proc getId(req: Request):string =
@@ -91,22 +96,42 @@ proc getId(req: Request):string =
     let signals = getSignals(req)
     trimString($signals["id"])
 
-proc getTableRows[T](sse: SSEConnection) =
-    # Load Tabledata 
-    let signals = getSignals(sse.request)
-    # Table paging (todo)
-    let maxrows = signals["maxrows"].getInt()
-    let page = signals["page"].getInt()
+proc getRow[T](id: string): string =
+    let obj = loadObject[T](id)
+    when T is Registration:
+        result = getRegistrationRow(obj)
+    elif T is Country:
+        result = getCountryRow(obj)
 
-    # Create the table from DB data
+proc getTableRows[T](sse: SSEConnection) =
     var rows = "<tbody id='user-table-body'>"
     let gbl = "^" & $T
-    for id in OrderItr @gbl:
-        var obj = loadObject[T](id)
-        when T is Registration:
-            rows.add(getRegistrationRow(obj))
-        elif T is Country:
-            rows.add(getCountryRow(obj))
+
+    # Load Tabledata 
+    let signals = getSignals(sse.request)
+    let maxrows = if signals.contains("maxrows"): signals["maxrows"].getInt() else: 0
+    if maxrows > 0:  # table paging
+        var rowcount = maxrows
+        var page = signals["page"].getInt()
+        var skipcount = (page-1) * maxrows
+
+        for id in OrderItr @gbl:
+            if skipcount > 0:
+                dec skipcount
+                continue
+            rows.add(getRow[T](id))
+            dec rowcount
+            if rowcount <= 0: break
+    
+        # Add Spacer rowx to preserve row-height
+        while rowcount > 0:
+            rows.add("""<tr></tr>""")
+            dec rowcount
+
+    else:  # all rows at once
+        for id in OrderItr @gbl:
+            rows.add(getRow[T](id))
+
     rows.add("</tbody>")
     # Update Browser
     patchElements(sse, rows)
@@ -120,11 +145,11 @@ proc isEmailRegistered(req: Request) =
     let email = signals["email"].getStr()
     if email != "":
         let isInvalid = 0 < Data ^RegistrationEMAIL(email)
-        var sse = req.respondSSE(); defer: sse.close()
-        patchSignals(sse, %*{
-            "emailInvalid": isInvalid,
-            "canSubmit": not isInvalid
-        })
+        SSE(req):
+            patchSignals(sse, %*{
+                "emailInvalid": isInvalid,
+                "canSubmit": not isInvalid
+            })
 
 proc getRegistrationRow(msg: Registration): string =
     # Create a table row for class Registration
@@ -230,7 +255,7 @@ proc submitRegistration(req: Request) =
 proc getCountryRow(msg: Country): string =
     let dataclass = "{" & fmt"selected: $id==='{$msg.id}'" & "}"
     result = fmt"""
-        <tr data-on:click__stop="$id='{msg.id}'; @post('/select-country-row')" data-class="{dataclass}">
+        <tr id='Country{msg.id}' data-on:click__stop="$id='{msg.id}'; @post('/select-country-row')" data-class="{dataclass}">
             <td>{msg.id}</td>
             <td>{msg.country}</td>
             <td>{msg.calling_code}</td>
@@ -269,6 +294,7 @@ proc handleGetCountry(req: Request) =
     # Update form fields
     SSE(req):
         patchSignals(sse, %country)
+        executeScript(sse, fmt"reveal('Country{country.id}')")
    
 proc handleSubmitCountry(req: Request) =
     # Save Country
@@ -296,7 +322,7 @@ if isMainModule:
 
     var router = Router()
     router.get("/get-registrations", handleGetRegistrations)
-    router.get("/get-registration-stats", handleGetRegistrationStats)
+    router.get("/get-stats", handleGetStats)
 
     router.post("/select-registration-row", handleSelectRegistrationRow)
     router.post("/delete-registration-row", handleDeleteRegistrationRow)
@@ -314,7 +340,7 @@ if isMainModule:
     router.get("/clear-form", handleClearForm)
     router.post("/validate-email", isEmailRegistered)
     # Standard handlers
-    router.get("/goto/**", handleGotoForm)
+    router.get("/goto/**", handleGoto)
     router.notFoundHandler = serveStatic
 
     let (host, port) = ("192.168.1.159", 8080)
