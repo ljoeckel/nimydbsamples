@@ -78,7 +78,6 @@ proc clearTechFields(sse: SSEConnection) =
 
 proc handleClearForm(req: Request) =
     # Reset the form, clear response-message on form
-    let signals = getSignals(req)
     SSE(req):
         clearFormFields(sse)
         clearTechFields(sse)
@@ -197,11 +196,19 @@ proc handleDeleteRegistrationRow(req: Request) =
 
 proc setRowStatus(sse: SSEConnection, id: string, status: RowStatus) =
     # update Registration in DB
+    Set:
+        ctx("id") = id
+        ctx("status") = $status
+
+    discard Transaction:
+        let id = Get ctx("id")
+        var reg = loadObject[Registration](id)
+        reg.status = Get ctx("status")
+        reg.time = $now()
+        saveObject(id, reg)
+    
+    # Read Updated Registration and update the form fields
     var reg = loadObject[Registration](id)
-    reg.status = $status
-    reg.time = $now()
-    saveObject(id, reg)
-    # Update table and form fields
     let row = getRegistrationRow(reg)
     patchElements(sse, row)
     patchSignals(sse, %reg)
@@ -210,7 +217,6 @@ proc handleEditRow(req: Request) =
     # Edit Row
     let id = getId(req)
     SSE(req):
-        setRowStatus(sse, id, EDIT)
         patchSignals(sse, %*{"lastFormId": "admin"})
         selectRegistrationRow(sse, id)
         forward(sse, HTML_DIR & "form.html")
@@ -226,20 +232,27 @@ proc handleMarkRow(req: Request) =
 proc submitRegistration(req: Request) =
     # Save Registration
     let signals = getSignals(req)
-    let formId = signals["formId"].getStr()
-    let lastFormId = signals["lastFormId"].getStr()  
-    var reg: Registration
-    reg.fillFrom(signals)
-    if reg.id == "": # assign new id to new Registration
-        reg.id = $Increment ^CNT("registration")
-        reg.status = $NEW
-    reg.time = $now()
-    saveObject(reg.id, reg)
+    Set: ctx("signals") = $signals
+
+    discard Transaction:
+        let signals = parseJson(Get ctx("signals"))
+        var reg: Registration
+        reg.fillFrom(signals)
+        reg.time = $now()
+        if reg.id == "": # assign new id to new Registration
+            reg.id = $Increment ^CNT("registration")
+            reg.status = $NEW
+        else:
+            reg.status = $EDIT
+            
+        saveObject(reg.id, reg)
 
     # Update browser
     SSE(req):
         patchElements(sse, "<div id='response-message' class='formsuccess'>Registration saved!</div>")
 
+        let formId = signals["formId"].getStr()
+        let lastFormId = signals["lastFormId"].getStr()  
         # jump back to 'admin' if from there    
         if lastFormId == "admin" and lastFormId != formId:
             let path = fmt"{HTML_DIR}{lastFormId}.html"
@@ -279,8 +292,11 @@ proc handleSelectCountryRow(req: Request) =
 
 proc handleDeleteCountryRow(req: Request) =
     # Delete Row
-    let id = getId(req)
-    deleteObject[Country](id)
+    Set: ctx("id") = getId(req)
+    discard Transaction:
+        let id = Get ctx("id")
+        deleteObject[Country](id)
+
     SSE(req):
         clearForm[Country](sse)
         getTableRows[Country](sse)
@@ -298,13 +314,16 @@ proc handleGetCountry(req: Request) =
    
 proc handleSubmitCountry(req: Request) =
     # Save Country
-    let signals = getSignals(req)
-    var country: Country
-    country.fillFrom(signals)
-    if country.id == "": # assign new id to new Country
-        country.id = "X" & $(Increment ^CNT("country"))
-    country.time = $now()
-    saveObject(country.id, country)
+    Set: ctx("signals") = $getSignals(req)
+    discard Transaction:
+        let signals = parseJson(Get ctx("signals"))
+        var country: Country
+        country.fillFrom(signals)
+        if country.id == "": # assign new id to new Country
+            country.id = "X" & $(Increment ^CNT("country"))
+        
+        country.time = $now()
+        saveObject(country.id, country)
 
     # Update browser
     SSE(req):
