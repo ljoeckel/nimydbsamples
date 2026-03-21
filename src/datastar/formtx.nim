@@ -44,16 +44,17 @@ proc getIndexStats[T](indexName: string): string =
     result.add(fmt" - Total({total})")
 
 proc getStats(sse: SSEConnection, names: seq[string] = ALL_STATS) =
-    # Get Status and Country statistics
-    for name in names:
-        let stats = getIndexStats[Registration](name)
-        patchElements(sse, fmt"<div class='stats-content' id='{name}-stats'>{stats}</div>")
+    # Get statistics
+    patchSignals(sse, %*{
+        "statusStats": getIndexStats[Registration]("status"),
+        "countryStats": getIndexStats[Registration]("country"),
+        "termsStats": getIndexStats[Registration]("terms"),
+        "planStats": getIndexStats[Registration]("plan")
+    })
 
 proc handleGetStats(req: Request) =
-    let signals = getSignals(req)
-    let statsname = signals["stats"].getStr()
     SSE(req):
-        getStats(sse, @[statsname])
+        getStats(sse)
 
 
 proc clearForm[T](sse: SSEConnection) =
@@ -362,7 +363,7 @@ if isMainModule:
     router.get("/goto/**", handleGoto)
     router.notFoundHandler = serveStatic
 
-    let (host, port) = ("192.168.1.159", 8080)
+    let (host, port) = ("localhost", 8080)
     let server = newServer(router)
     echo fmt"Simple SSE / Datastar server - Open http://{host}:{port} in your browser"
 

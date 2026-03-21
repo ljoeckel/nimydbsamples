@@ -3,15 +3,15 @@
         <h1>Edit Registrations</h1>
     </div>
 
-    <div class="stats-grid">
+    <div class="stats-grid" data-init="@get('/get-stats')">
         <div class="label">Status:</div>
-        <div data-signals="{stats: 'status'}" id="status-stats" data-init="@get('/get-stats')"></div>
+        <input data-bind="statusStats" readonly>
         <div class="label">Countries:</div>
-        <div data-signals="{stats: 'country'}" id="country-stats" data-init="@get('/get-stats')"></div>
+        <input data-bind="countryStats" readonly>
         <div class="label">Terms:</div>
-        <div data-signals="{stats: 'terms'}" id="terms-stats" data-init="@get('/get-stats')"></div>
+        <input data-bind="termsStats" readonly>
         <div class="label">Plan:</div>
-        <div data-signals="{stats: 'plan'}" id="plan-stats" data-init="@get('/get-stats')">term</div>
+        <input data-bind="planStats" readonly>
         <div class="label"></div>
     </div>
 
@@ -21,13 +21,20 @@
                 <th width="50px">Id</th>
                 <th width="150px">Name</th>
                 <th width="200px">Email</th>
-                <th width="250px">Request</th>
+                <th width="200px">Request</th>
                 <th width="50px">Status</th>
                 <th width="50px">Actions</th>
             </tr>
         </thead>
         <!-- The backend will target this ID to insert rows -->
-        <tbody id="user-table-body" data-init="@get('/get-registrations')"></tbody>
+        <tbody id="user-table-body" data-init="@get('/get-registrations')">
+            <tr></tr>
+            <tr></tr>
+            <tr></tr>
+            <tr></tr>
+            <tr></tr>
+            <tr></tr>
+        </tbody>
     </table>
 
     <!-- Paginierungs-Steuerung -->

@@ -163,7 +163,7 @@ input:not([type="checkbox"]):read-only {
     /* Align text with labels if border is gone */
     cursor: default;
     box-shadow: none;
-    color: cadetblue
+    color: rgb(38, 62, 169)
 }
 
 /* Ensure it doesn't react to focus */
@@ -400,12 +400,11 @@ form:has(:invalid) button[type="submit"] {
 .stats-grid {
     display: grid;
     grid-template-columns: max-content 1fr;
-    gap: 8px 20px;
-    /*font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;*/
+    gap: 0px 10px;
     align-items: baseline;
 
     .label {
-        font-weight: bold;
+        font-weight: 500;
     }
 
     .stats-content {
