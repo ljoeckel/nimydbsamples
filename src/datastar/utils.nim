@@ -12,13 +12,27 @@ proc getClearPatch*[T](obj: T): JsonNode =
       if value:
         result[name] = newJNull()
 
+# proc extractFields*(node: JsonNode, fields: seq[string] = @[]): JsonNode =
+#     if fields.len == 0:
+#         return node
+#     else:
+#         result = %* {}
+#         for field in fields:
+#             try:
+#               if node.contains(field):
+#                   result.add(field, node[field])            
+#             except:
+#               echo "Error when adding field ", field, " to JsonNode"
+
 proc filterPatch*[T](obj: T, fields:seq[string]): JsonNode =
     # add only fields from 'obj' which are also in 'fields'
-    var json = newJObject()
-    for name, value in obj.fieldPairs: 
-        for nm in fields:
-            if nm == name: json[name] = %value
-    return json
+    if fields.len == 0:
+      return %obj
+    else:
+      result = newJObject()
+      for name, value in obj.fieldPairs: 
+          for nm in fields:
+              if nm == name: result[name] = %value
 
 
 macro getFieldAsString*(obj: auto, fieldName: string): string =

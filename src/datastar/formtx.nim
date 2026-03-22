@@ -5,6 +5,7 @@ import mummy, mummy/routers, mummy/datastar
 import yottadb
 import types
 import macros
+import utils
 
 template SSE(req: Request, body: untyped) =
     var sse {.inject.} = req.respondSSE() # sse for body
@@ -14,6 +15,7 @@ template SSE(req: Request, body: untyped) =
 const
     HTML_DIR = "html/"
     ALL_STATS = @["status", "country", "terms", "plan"]
+    COUNTRY_UI_FIELDS = @["id", "country", "calling_code"]
 
 proc handleUpdateClock(req: Request) =
     # /update-clock (Do not close the connection)
@@ -57,14 +59,15 @@ proc handleGetStats(req: Request) =
         getStats(sse)
 
 
-proc clearForm[T](sse: SSEConnection) =
+proc clearForm[T](sse: SSEConnection, fields: seq[string] = @[]) =
     # clear form fields from given class T
-    patchSignals(sse, %T())
+    var t:T
+    patchSignals(sse, filterPatch(t, fields))
 
 proc clearFormFields(sse: SSEConnection) =
     # clear all fields from all form classes
     clearForm[Registration](sse)
-    clearForm[Country](sse)
+    clearForm[Country](sse, COUNTRY_UI_FIELDS)
 
 proc clearTechFields(sse: SSEConnection) =
     # clear technical form fields
@@ -289,7 +292,7 @@ proc handleSelectCountryRow(req: Request) =
     let id = getId(req)
     let country = loadObject[Country](id) # load from DB
     SSE(req):
-        patchSignals(sse, %country) # update gui with attributes
+        patchSignals(sse, filterPatch(country, COUNTRY_UI_FIELDS))
 
 proc handleDeleteCountryRow(req: Request) =
     # Delete Row
@@ -299,7 +302,7 @@ proc handleDeleteCountryRow(req: Request) =
         deleteObject[Country](id)
 
     SSE(req):
-        clearForm[Country](sse)
+        clearForm[Country](sse, COUNTRY_UI_FIELDS)
         getTableRows[Country](sse)
 
 proc handleGetCountry(req: Request) =
@@ -310,7 +313,7 @@ proc handleGetCountry(req: Request) =
     if country.id == "": country.id = id # hold back the last 'id' field
     # Update form fields
     SSE(req):
-        patchSignals(sse, %country)
+        patchSignals(sse, filterPatch(country, COUNTRY_UI_FIELDS))
         executeScript(sse, fmt"reveal('Country{country.id}')")
    
 proc handleSubmitCountry(req: Request) =
@@ -330,7 +333,7 @@ proc handleSubmitCountry(req: Request) =
     SSE(req):
         patchElements(sse, "<div id='response-message' class='formsuccess'>Country saved!</div>")
         getTableRows[Country](sse)
-        clearForm[Country](sse)
+        clearForm[Country](sse, COUNTRY_UI_FIELDS)
 
 
 if isMainModule:
