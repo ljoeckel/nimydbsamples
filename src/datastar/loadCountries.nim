@@ -158,9 +158,6 @@ proc listCountries() =
 
 
 if isMainModule:
-    for global in getGlobals():
-        if global.startsWith("^Country"):
-            echo "delete global ", global
-            deleteGlobal(global)
+    Kill: ^Country
     loadCsvData()
     #listCountries()
