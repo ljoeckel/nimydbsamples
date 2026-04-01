@@ -1,0 +1,145 @@
+/* Grundstyling */
+/*
+body {
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  background-color: #f4f7f6;
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+}
+*/
+
+.showcase {
+  color: #570ec5;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.rsscard-container {
+  display: grid;
+  /* Erstellt automatisch so viele Spalten wie Platz ist (mind. 300px breit) */
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  
+  /* Abstand zwischen den Karten (Horizontal & Vertikal) */
+  gap: 24px;
+  
+  /* Padding für den gesamten Container */
+  padding: 10px;
+  max-width: 1200px; /* Optional: Begrenzt die Gesamtbreite */
+  margin: 0 auto;    /* Zentriert den Container auf der Seite */
+}
+
+.rsscard {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 350px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease;
+}
+
+.rsscard:hover {
+  transform: translateY(-5px);
+}
+
+/* Kategorie / Tags */
+.rsscard-tags {
+  margin-bottom: 12px;
+}
+
+.tag {
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  margin-right: 6px;
+  text-transform: uppercase;
+}
+
+/* Titelzeile */
+.rsscard-title {
+  margin: 0 0 12px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #472e73;
+}
+ 
+.rsscard-title a:hover {
+    color: #9b323f;
+    font-weight: 600;
+}
+
+/* Anzeigetext */
+.rsscard-text {
+  color: #4b5563;
+  line-height: 1.1;
+  font-size: 1.0rem;
+  font-weight: 500;
+  margin-bottom: 5px;
+}
+
+.XXrsscard-text {
+  color: #4b5563;
+  line-height: 1.25; /* Erhöht für bessere Lesbarkeit */
+  font-size: 1.0rem;
+  margin-bottom: 15px;
+
+  /* Das Zaubermittel: */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;    /* Anzahl der Zeilen, bevor abgekürzt wird */
+  -webkit-box-orient: vertical;  
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.feed-title {
+  display: block;       
+  color: #5a98e5;
+  font-size: 0.8rem;
+  overflow: hidden;
+  white-space: nowrap; /* Verhindert den Zeilenumbruch */
+  text-overflow: ellipsis;
+}
+
+/* Footer mit Icon */
+.rsscard-footer {
+  margin-top: auto;
+  border-top: 1px solid #f3f4f6;
+  padding-top: 10px;
+}
+
+.footer-link {
+  display: flex;
+  align-items: center;
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.75rem;
+  gap: 8px;
+}
+
+.icon {
+  width: 24px;
+  height: 16px;
+}
+
+.rssimage {
+  width: 128px
+
+}
+.rsspubdate {
+  color: #2563eb;
+  font-weight: 400;
+  font-size: 0.60rem;
+}
+
+.footer-link:hover {
+  text-decoration: underline;
+}

@@ -16,6 +16,8 @@ Ensure you have YottaDB and Nim installed. For detailed setup instructions, plea
 
 ## 📂 Sample: src/datastar (Registration Manager)
 
+Check [nimetic.com](https://nimetic.com) for a live demo
+
 A lightweight web application demonstrating how to capture, validate, and persist form data directly into YottaDB.
 
 ![Form Screenshot](screenshot_home.png)

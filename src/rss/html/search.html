@@ -1,0 +1,63 @@
+<div id="container" class="card" data-signals="{formId: 'admin'}">
+    <div class="header">
+        <h1>Edit Registrations</h1>
+    </div>
+
+    <div class="stats-grid" data-init="@get('/get-stats')">
+        <div class="label">Status:</div>
+        <input data-bind="statusStats" readonly>
+        <div class="label">Countries:</div>
+        <input data-bind="countryStats" readonly>
+        <div class="label">Terms:</div>
+        <input data-bind="termsStats" readonly>
+        <div class="label">Plan:</div>
+        <input data-bind="planStats" readonly>
+        <div class="label"></div>
+    </div>
+
+    <table class="ljtable" height="300px" data-signals="{page: 1, maxrows: 6}">
+        <thead>
+            <tr>
+                <th width="50px">Id</th>
+                <th width="150px">Name</th>
+                <th width="200px">Email</th>
+                <th width="200px">Request</th>
+                <th width="50px">Status</th>
+                <th width="50px">Actions</th>
+            </tr>
+        </thead>
+        <!-- The backend will target this ID to insert rows -->
+        <tbody id="user-table-body" data-init="@get('/get-registrations')">
+            <tr></tr>
+            <tr></tr>
+            <tr></tr>
+            <tr></tr>
+            <tr></tr>
+            <tr></tr>
+        </tbody>
+    </table>
+
+    <!-- Paginierungs-Steuerung -->
+    <div class="pagination">
+        <button id="btn_prev"
+            data-on:click="$page--; $page = Math.max(1, $page); @get('/get-registrations')">Prev</button>
+        <span id="page_info" data-text="'Page ' + $page"></span>
+        <button id="btn_next" data-on:click="$page++; @get('/get-registrations')">Next</button>
+    </div>
+
+    <form class="form" data-on:submit__prevent="@post('/submit-registration')">
+        <name-field data-ignore-morph></name-field>
+        <email-field data-ignore-morph></email-field>
+        <message-field data-ignore-morph class="full"></message-field>
+        <status-field data-ignore-morph></status-field>
+        <time-field data-ignore-morph></time-field>
+
+        <!-- Buttons -->
+        <div class="actions full">
+            <button class="btn" type="submit" data-attr:disabled="!$canSubmit">Submit</button>
+            <button class="btn btn-secondary" type="button" data-on:click="@get('/clear-form')">Clear</button>
+            <!-- Response from server is here -->
+            <div id="response-message"></div>
+        </div>
+    </form>
+</div>

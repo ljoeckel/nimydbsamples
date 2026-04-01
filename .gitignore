@@ -6,3 +6,5 @@ src/datastar/formtx
 nimble.develop
 nimble.paths
 nimbledeps
+src/rss/xml
+src/rss/demo.txt

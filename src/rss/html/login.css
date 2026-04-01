@@ -1,0 +1,106 @@
+/* Container & Wrapper */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Segoe UI', Roboto, sans-serif;
+    background: #f0f2f5;
+}
+
+.login-form {
+    background: #ffffff;
+    padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+/* Texte */
+.login-title {
+    color: #1a1a1a;
+    margin-bottom: 0.5rem;
+    font-size: 1.5rem;
+}
+
+.login-subtitle {
+    color: #666;
+    margin-bottom: 2rem;
+    font-size: 0.9rem;
+}
+
+/* Eingabefelder */
+.login-group {
+    margin-bottom: 1.25rem;
+}
+
+.login-input {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 1px solid #dce0e4;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.login-input:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+/* Buttons */
+.login-btn {
+    width: 100%;
+    padding: 0.8rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: filter 0.2s, transform 0.1s;
+    border: none;
+}
+
+.login-btn:active {
+    transform: scale(0.98);
+}
+
+.login-btn--primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.login-btn--primary:hover {
+    filter: brightness(1.1);
+}
+
+.login-btn--secondary {
+    background-color: transparent;
+    color: #007bff;
+    border: 2px solid #007bff;
+    margin-top: 0.5rem;
+}
+
+.login-btn--secondary:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+/* Trenner */
+.login-divider {
+    margin: 1.5rem 0;
+    color: #888;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+}
+
+.login-divider::before,
+.login-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #eee;
+    margin: 0 10px;
+}

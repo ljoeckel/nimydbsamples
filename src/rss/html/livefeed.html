@@ -1,0 +1,35 @@
+<body data-signals="{formId: 'livefeed'}"  data-init="@get('/update-clock')">
+
+    <!-- The navigation menu -->
+    <div class="navbar">
+        <a href="#home" id="home" data-on:click="@get('goto/livefeed.html')">RSS Live</a>
+        <image src="rss.png" height="24" width="24"></image>
+
+        <div class="subnav" data-on:mouseenter="$menuOpen = true" data-on:mouseleave="$menuOpen = false">
+            <button class="subnavbtn">Configuration<i class="fa fa-caret-down"></i></button>
+            <div class="subnav-content" data-class="{'force-closed': !$menuOpen}">
+                <a href="#search" data-on:click="$menuOpen = false; @get('goto/search.html')">Search</a>
+                <a href="#feeds" data-on:click="$menuOpen = false; @get('goto/feeds.html')">Feeds</a>
+            </div>
+        </div>
+
+        <div class="subnav">
+            <button class="subnavbtn">Technologies<i class="fa fa-caret-down"></i></button>
+            <div class="subnav-content">
+                <a href="https://nim-lang.org">Nim</a>
+                <a href="https://data-star.dev/">Datastar</a>
+                <a href="https://yottadb.com">YottaDB</a>
+                <a href="https://icons.getbootstrap.com/">bootstrap icons</a>
+            </div>
+        </div>
+
+        <a href="#about" data-on:click="$menuOpen = false; @get('/about.html')">About</a>
+        <a href="#about" class="showcase" data-on:click="$menuOpen = false; @get('/about.html')">A SHOWCASE DEMO</a>
+        <h3 id="wallclock"></h3>
+    </div>
+
+    
+    <div id="container" class="card" data-init="@get('/livefeed')"></div>
+
+</body>
+

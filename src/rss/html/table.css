@@ -1,0 +1,88 @@
+:root {
+    --row-height: 35px;
+    /* Höhe einer Tabellenzeile */
+    --header-height: 40px;
+    /* Höhe des Tabellenkopfes */
+    --visible-rows: 16;
+    /* Wie viele Zeilen ohne Scrollen sichtbar sein sollen */
+    --shadow-height: 3px;
+}
+
+/* The wrapper handles the scrollbar */
+.table-container {
+    /*height: 300px;*/
+    height: calc((var(--row-height) * var(--visible-rows)) + var(--header-height) + var(--shadow-height));
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+    border: 1px solid #e5e7eb;
+    width: max-content;
+}
+
+.feedtable {
+    --visible-rows: 25;
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: max-content;
+    /* Table fills the container */
+}
+
+.feedtable th {
+    position: sticky;
+    top: 0;
+    background: #e4e3e3;
+    color: darkslategrey;
+    z-index: 10;
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+    /*height: 30px;*/
+    height: var(--header-height);
+}
+
+.feedtable tr {
+    height: var(--row-height);
+}
+
+.feedtable table {
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: 100%;
+}
+
+.feedtable thead tr {
+    background: #3b82f6;
+    color: #ffffff;
+    text-align: left;
+}
+
+.feedtable td {
+    max-width: 100px;
+    border: 1px solid #ddd;
+    padding: 8px;
+    overflow: auto;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+}
+
+.feedtable tbody tr {
+    cursor: pointer;
+    font-size: 14px;
+    color: black;
+}
+
+.feedtable tr:hover {
+    outline: 2px solid darkgray;
+    outline-offset: -2px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    transition: box-shadow 0.3s ease;
+}
+
+.feedtable tbody tr.selected {
+    background: #e0f2fe;
+}
+
+.highlighted {
+    background-color: yellow !important;
+    transition: background-color 0.3s ease;
+}
