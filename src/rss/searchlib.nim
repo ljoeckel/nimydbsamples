@@ -32,14 +32,14 @@ proc normalizeUrl*(url: string): string =
 
 proc normalizeChannelTitle*(title: string): string =
     result = title.toUpper
-    result = result.multiReplace(
-        ("RSS CHANNEL", ""), 
-        ("AKTUELLE", ""), ("WWW", ""), ("ONLINE", ""),
-        ("TICKER", ""), ("SCHLAGZEILEN", ""), ("NEUIGKEITEN", ""), ("NEWS", ""),
-        ("DIE", ""), ("DER", ""), ("IM", ""), ("VON",""), ("UND",""), ("AUS",""),
-        ("  "," "), ("-", ""), (",", ""),
-        ("SECTION", ""),
-    )
+    # result = result.multiReplace(
+    #     ("RSS CHANNEL", ""), 
+    #     ("AKTUELLE", ""), ("WWW", ""), ("ONLINE", ""),
+    #     ("TICKER", ""), ("SCHLAGZEILEN", ""), ("NEUIGKEITEN", ""), ("NEWS", ""),
+    #     ("DIE", ""), ("DER", ""), ("IM", ""), ("VON",""), ("UND",""), ("AUS",""),
+    #     ("  "," "), ("-", ""), (",", ""),
+    #     ("SECTION", ""),
+    # )
     while find(result,"  ") > 0:
         result = result.replace("  "," ")
     while result.len > 40:
@@ -102,37 +102,24 @@ proc showRSSItem*(keys: string) =
 
 
 proc getLatestRSSItems*(max: int, feeds: seq[Feed]): seq[RSSItem] =
-    echo "getLatestRSSItems max=", max
-
     var cnt = max
     var rsss: seq[RSS]
 
-    timed:
-        var feedtable : seq[string]
-        for feed in feeds:
-            if feed.enabled:
-                feedtable.add(feed.rssid)
-        echo "setup feedtable"
+    var feedtable : seq[string]
+    for feed in feeds:
+        if feed.enabled:
+            feedtable.add(feed.rssid)
 
-    timed("getLatestRSSItems"):
-        var keys: seq[string]
-        # Get the RSSItem keys
-        for key  in QueryItr ^RSSItemPUBDATE.reverse.keys:
-            # Get the RSS and extract the RSSItem
-            # # @["1647963827", "42,6"] -> "42,6"
-            let parts = key[1].split(',') # 6
-            let rssId = parts[0]
-            let itemNr = parseInt(parts[1])
-            let rss = loadObject[RSS](rssId)
-            let id = if rss.id.isSome: rss.id.get() else: ","
-            let refid = id.split(",")[0]
-            if refid in feedtable:
-                result.add(rss.items[itemNr])
-                dec cnt
-                if cnt == 0: break
-
-        # return result
-        echo "have ", result.len, " results"
+    for key  in QueryItr ^RSSItemPUBDATE.reverse.keys:  # youngest first
+        let idxKey = key[1]
+        let feedId = Order ^RSSItemIDXREF(idxkey,"")
+        if feedId in feedtable:
+            let verify = Data ^RSSItemIDXREF(idxkey, feedId)
+            let itemKey = idxKey.split(",")
+            let rssItem = loadObject[RSSItem](itemKey)
+            result.add(rssItem)
+            dec cnt
+            if cnt == 0: break
 
 
 proc getLatestRSSItemKeys*(max: int): seq[string] =

@@ -6,41 +6,41 @@ import std/[sha1, httpclient, times]
 import mummy, mummy/routers, mummy/datastar
 import macros
 import rssatom
-
 import yottadb
-import utils
 import types
 import searchlib
-import locks
-
-# type 
-#     Feed = object of RootObj
-#         id: int
-#         title: string
-#         enabled: bool = true
-
-#     UserFeeds = object of RootObj
-#         userid: string
-#         feeds: seq[Feed]
 
 
 const
     MAXNEWS = 30 # How many news to show in 'latest'
     HTML_DIR = "html/"
 
-# var 
-#     feedsLock: Lock
-#     feeds: seq[Feed]
-
-# template withFeeds(body: untyped) =
-#     {.cast(gcsafe).}:
-#         withLock feedsLock:
-#             body
 
 template SSE(req: Request, body: untyped) =
     var sse {.inject.} = req.respondSSE() # sse for body
     defer: sse.close()
     body
+
+
+proc listSession() =
+    echo "Session:"
+    for k,v in QueryItr Session.kv:
+        echo k, "=", v
+
+
+proc getSignal(req: Request, key: string): string = 
+    let signals = getSignals(req)
+    # Update Session variable
+    if "userid" in signals:
+        let userid = $signals["userid"]
+        for k,v in signals.pairs:
+            Set: Session(userid, k) = v
+
+    if key in signals:
+        result = $signals[key]
+        if result.startsWith("\"") and result.endsWith("\""): # Remove "xxxx" -> xxxx
+            result = result[1..^2]
+
 
 proc handleGoto(req: Request) =
     # process menu links g.E. <a href="#form" data-on:click="$menuOpen = false; @get('goto/form.html')">Registration</a>
@@ -50,15 +50,10 @@ proc handleGoto(req: Request) =
         #clearTechFields(sse)
         forward(sse, HTML_DIR & page)
 
-# proc getId(req: Request):string =
-#     # get the Id field from the current form
-#     let signals = getSignals(req)
-#     trimString($signals["id"])
 
 proc getFeeds(): seq[Feed] =
     for title in OrderItr ^RSSTITLE:
         let id = Order ^RSSTITLE(title, "")
-        #let enabled = Get ^RSSTITLE(title, id).bool
         var feed: Feed
         feed.rssid = id
         feed.title = title
@@ -111,6 +106,8 @@ proc createRSSItemCard(rss: RSSItem): string =
     # load feed RSSImage
     let rssImage = loadObject[RSSImage](rss.idxref.split(',')[0])
     let feedUrl = getOption(rssImage.url)
+    let feedId = getOption(rss.feedId)
+    
     var divimg: string
     if feedUrl.len > 0:
         let feedTitle = getOption(rssImage.title)
@@ -138,7 +135,7 @@ proc createRSSItemCard(rss: RSSItem): string =
             <!-- Icon / Text mit URL -->
             <div class="rsscard-footer">
                 <p>{divimg}</p>
-                <p class="rsspubdate"> {pubDate} / {rss.idxref} </p>
+                <p class="rsspubdate"> {pubDate} / {rss.idxref} / {feedId}</p>
                 {image}
             </div>
         </div>
@@ -146,64 +143,62 @@ proc createRSSItemCard(rss: RSSItem): string =
     return card
 
 proc createLatestCards(max: int, userid: string): string =
-    echo "createLatestCards: userid=", userid
     let userFeeds = loadObject[UserFeeds](userid)
 
     var cards: string
     let items = getLatestRSSItems(max, userFeeds.feeds)
-    echo "createLatestCards: Have ", items.len, " items"
     for rssItem in items:
         # produce cards for output
         cards.add(createRSSItemCard(rssItem))
 
     var container = fmt"""{{
-            <div id="container" class="rsscard-container" data-init="@get('/livefeed')">
+            <div id="livefeed" class="rsscard-container" data-init="@get('/livefeed')">
                 {cards}
             </div>      
         }}"""
     return container
 
 proc getWallClock(req: Request): string =
-    let signals = getSignals(req)
-    let userid = signals["userid"].getStr()
     let nowTime = now()
-    result = userid & " : " & nowTime.format("dd.MM.yyyy - HH:mm")
+    result = nowTime.format("dd.MM.yyyy - HH:mm")
 
 
 proc handleLiveFeed(req: Request) =
-    let signals = getSignals(req)
-    echo "formId=", signals["formId"].getStr
-    let userid = signals["userid"].getStr()
-
-    echo "handelLiveView: signals=", signals
+    let userid = getSignal(req, "userid")
     let wallclock = getWallClock(req)
 
     SSE(req):
         patchElements(sse, fmt"<h3 id='wallclock'>{wallclock}</h3>")
-        #echo "LiveFeed calling createLatestCards"
-        #patchElements(sse, createLatestCards(MAXNEWS, userid))
+        patchElements(sse, createLatestCards(MAXNEWS, userid))
 
 
 
 proc handleUpdateClock(req: Request) =
+    echo "handleUpdateClock"
     # /update-clock and RSSItems (Do not close the connection)
-    let signals = getSignals(req)
-    echo "handleUpdateClock formId=", signals["formId"].getStr
-    let userid = signals["userid"].getStr()
     var sse = req.respondSSE()
+    let userid = getSignal(req, "userid")
 
     while true:
         try:
+            # Update Wall-Clock
             let msg = getWallClock(req)
-            patchElements(sse, fmt"<h3 id='wallclock'>{msg}</h3>")
-            patchElements(sse, createLatestCards(MAXNEWS, userid))
-            let upcount = Increment ^RSSCNT("clock-loop")
-            echo "upcount=", upcount
+            echo "patch wallclock:", msg
+            if userid.len == 0:
+                patchElements(sse, fmt"<h3 id='wallclock'>{msg}</h3>")
+            else:
+                echo "userId:", userid
+                patchElements(sse, fmt"<h3 id='wallclock'>{userid} / {msg}</h3>")
 
-            #let nowTime = now()
-            #let msToNextMinute = 60000 - (nowTime.second * 1000 + nowTime.nanosecond div 1_000_000)
-            sleep(30000)
+                # Update Articles
+                let formId = getSignal(req, "formId")
+                echo "updateclock page:", formId, " signals=", getSignals(req)
+                if formId == "livefeed":
+                    patchElements(sse, createLatestCards(MAXNEWS, userid))
+
+            #let msToNextMinute = 60000 - (now().second * 1000 + now().nanosecond div 1_000_000)
             #sleep(msToNextMinute)
+            sleep(5000)
         except:
             echo "Leaving handleUpdateClock: ", getCurrentExceptionMsg()
             sse.close()
@@ -229,17 +224,14 @@ proc createTRFeed(feed: Feed): string =
 
 
 proc handleGetFeeds(req: Request) {.gcsafe.} =
-    let signals = getSignals(req)
-    echo "handleGetFeeds signals=", signals
-    let userid = signals["userid"].getStr()
+    let userid = getSignal(req, "userid")
     var userFeeds = loadObject[UserFeeds](userid)
-
     if userFeeds.feeds.len == 0: # init user feeds from base config
         userFeeds.userid = userid
         userFeeds.feeds = getFeeds()
         saveObject[UserFeeds](userid, userFeeds)
 
-    # Get Feed's from ^RSSTITLE to present in a table
+    # Create the tbody
     var tbody = fmt"""<tbody id="feed-table" data-init="@get('/get-feeds')">"""
     for feed in userFeeds.feeds:
         tbody.add(createTRFeed(feed))
@@ -251,14 +243,13 @@ proc handleGetFeeds(req: Request) {.gcsafe.} =
 
 proc handleToggleFeed(req: Request) {.gcsafe.} =
     # Toggle Row
-    let signals = getSignals(req)
-    let userid = trimString($signals["userid"])
-    let feedid = trimString($signals["id"])
+    let userid = getSignal(req, "userid")
+    let id = getSignal(req, "id")
 
     # Update DB
     let userFeeds = loadObject[UserFeeds](userid)
     for idx, feed in enumerate(userFeeds.feeds):
-        if feed.rssid == feedid:
+        if feed.rssid == id:
             Set: ^Feed(userid, $idx, "enabled") = (not feed.enabled) # update db
             let row = createTRFeed(feed.rssid, feed.title, (not feed.enabled))
             SSE(req):
@@ -267,15 +258,20 @@ proc handleToggleFeed(req: Request) {.gcsafe.} =
    
 
 proc handleLogin(req: Request) =
-    let signals = getSignals(req)
-    echo "handleLogin signals=", signals
-    let userid = signals["userid"].getStr()
+    let userid = getSignal(req, "userid")
     if userid == "ljoeckel" or userid == "guest":
         SSE(req):
             forward(sse, "./html/livefeed.html")
 
 
+proc handleLogout(req: Request) =
+    SSE(req):
+        forward(sse, "./html/index.html")
+
+
 if isMainModule:
+    Kill: ^Session
+
     ## Handler für Ctrl+C (SIGINT)
     proc shutdown() {.noconv.} =
         echo "\nShutting down..."
@@ -284,6 +280,7 @@ if isMainModule:
 
     var router = Router()
     router.post("/login", handleLogin)
+    router.get("/logout", handleLogout)
     router.get("/livefeed", handleLiveFeed)
     router.get("/get-feeds", handleGetFeeds)
     router.post("/toggle-feed", handleToggleFeed)

@@ -2,7 +2,7 @@
 <html>
 
 <!-- head data-init="@get('/update-clock')"-->
-<head>
+<head data-init="@get('/update-clock')">
     <meta charset="UTF-8">
     <meta name="robots" content="noindex, nofollow" />
     <script type="module"
@@ -20,13 +20,12 @@
 
 </head>
 
-<body
-    data-signals="{formId: 'login', userid:'', password:''}">
+<body data-signals="{formId:'index', userid:'', password:''}">
     <!-- The navigation menu -->
     <div class="navbar">
         <a href="#about" data-on:click="$menuOpen = false; @get('/about.html')">About</a>
         <a href="#about" class="showcase" data-on:click="$menuOpen = false; @get('/about.html')">A SHOWCASE DEMO</a>
-        <h3 id="wallclock"></h3>
+        <h3 id="wallclock">00:00:00</h3>
     </div>
 
     <div class="login-container">

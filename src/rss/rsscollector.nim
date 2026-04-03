@@ -91,20 +91,20 @@ proc processFeed(feed: var RSS): int =
 
     if newItems.len > 0:
         # Create a new id for ^RSS, ^RSSItem, ... used in serialization
-        
         feed.title = normalizeChannelTitle(feed.title)
         let fid = getOption(feed.title)
         var feedId = Order ^RSSTITLE(fid,"")
-        echo "feedId=", feedId, " fid=", fid
         if feedId.len == 0:  # creaete new feedid if not used before
             feedId = $(Increment ^RSSCNT("FeedID"))
-            Set: ^RSSTITLE(fid, feedId) = true
+            Set: ^RSSTITLE(fid, feedId) = ""
+        echo "feedTitle:", fid, " feedId=", feedId, " fid=", fid
         
         let id = Increment ^RSSCNT("RSS")
         feed.id = some($feedId & "," & $id)
 
         for cnt, item in enumerate(newItems.mitems):
             item.idxref = fmt"{id},{cnt}" # idxref="33,1"
+            item.feedId = some(feedId)
         
         # replace items with newItems and save
         feed.items = newItems
@@ -134,8 +134,10 @@ proc processFeeds(feedPath: string) =
 
 proc clearDB() =
     Kill:
-        ^RSSCNT
         ^Author
+        ^Feed
+        ^UserFeeds
+        ^RSSCNT
         ^RSS
         ^RSSTITLE
         ^RSSEnclosure
@@ -146,12 +148,14 @@ proc clearDB() =
         ^RSSItemTOPIC
         ^RSSItemKEYWORDS
         ^RSSItemPUBDATE
+        ^RSSItemIDXREF
 
 if isMainModule:
     var init = false
     var minutes = 0
     var liveFeed = false
     var feedPath = "feeds.rss"
+    var maxItems = 0
 
     var p = initOptParser()
     for kind, key, val in p.getopt():
@@ -163,11 +167,11 @@ if isMainModule:
         of cmdLongOption, cmdShortOption:
             if key == "h" or key == "help":
                 echo "rsscollector -l -i <feeds.rss>"
-                echo " -l, --live     : Get data from RSS feeds for one time"
-                echo " -l=n, --live=n : Get data from RSS and repeat each 'n' minutes."
-                echo " -i, --init.    : Load data from xml-files"
-                echo " -k, --kill.    : Kill all database globals"
-                echo "<feeds.rss>.    : List of RSS adresses"
+                echo " -l, --live         : Get data from RSS feeds for one time"
+                echo " -l=n, --live=n     : Get data from RSS and repeat each 'n' minutes."
+                echo " -i[=n], --init.    : Load data from xml-files. (optional [n] items)" 
+                echo " -k, --kill.        : Kill all database globals"
+                echo "<feeds.rss>.        : List of RSS adresses"
                 quit(0)
             if key == "l" or key == "live": 
                 liveFeed = true
@@ -180,6 +184,7 @@ if isMainModule:
 
             if key == "i" or key == "init": 
                 init = true
+                maxItems = if val.len > 0: parseInt(val) else: 0
             if key == "k" or key == "kill":
                 echo "Kill all Globals"
                 clearDB()
@@ -210,3 +215,6 @@ if isMainModule:
             let nbrNewItms = processFeed(feed)
             if nbrNewItms > 0:
                 echo "url:", url, " nbrNewItms=", nbrNewItms
+                dec maxItems
+                if maxItems == 0:
+                    break

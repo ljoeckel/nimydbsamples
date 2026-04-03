@@ -1,5 +1,4 @@
-<body data-signals="{formId: 'livefeed'}">
-<!--body data-signals="{formId: 'livefeed'}"  data-init="@get('/update-clock')"-->
+<body data-signals="{formId: 'configfeed'}">
 
     <!-- The navigation menu -->
     <div class="navbar">
@@ -30,7 +29,24 @@
         <h3 id="wallclock"></h3>
     </div>
 
-    <div id="livefeed" class="card" data-init="@get('/livefeed')"></div>
+<div id="container" class="card" data-signals="{formId: 'configfeeds'}">
+    <div class=" header">
+        <h1>Select RSS Feeds</h1>
+    </div>
+
+    <div class="table-container">
+        <table class="feedtable">
+            <thead>
+                <tr>
+                    <th width="50px">Id</th>
+                    <th width="500px">Feed-Name</th>
+                    <th width="60px">Enabled</th>
+                </tr>
+            </thead>
+            <!-- The backend will target this ID to insert rows -->
+            <tbody id="feed-table" data-init="@get('/get-feeds')"></tbody>
+        </table>
+    </div>
+</div>
 
 </body>
-
