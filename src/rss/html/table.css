@@ -82,6 +82,11 @@
     background: #e0f2fe;
 }
 
+.feedtable tbody tr.marked {
+    font-weight: 700;
+    color: darkblue;
+}
+
 .highlighted {
     background-color: yellow !important;
     transition: background-color 0.3s ease;

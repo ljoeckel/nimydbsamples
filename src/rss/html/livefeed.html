@@ -1,5 +1,4 @@
-<body data-signals="{formId: 'livefeed'}">
-<!--body data-signals="{formId: 'livefeed'}"  data-init="@get('/update-clock')"-->
+<body data-signals="{formId: 'livefeed'}"  data-init="@get('/update-clock')">
 
     <!-- The navigation menu -->
     <div class="navbar">
@@ -25,11 +24,25 @@
         </div>
 
         <a href="#about" data-on:click="$menuOpen = false; @get('/about.html')">About</a>
-        <a href="#about" class="showcase" data-on:click="$menuOpen = false; @get('/about.html')">A SHOWCASE DEMO</a>
         <a href="#logout" data-on:click="$menuOpen = false; @get('/logout')">Logout</a>
+        <h3 id="info"></h3>
         <h3 id="wallclock"></h3>
     </div>
 
+
+    <div>
+        <input 
+            id="keyword" 
+            data-bind:keyword
+            data-class="{'input-error': $emailInvalid}"
+            data-on:input__debounce.500ms="@post('/search')"
+            placeholder="Search for ..."
+            autofocus
+            type="text"/>
+    </div>
+
+    
+    <div id="keywords"></div>
     <div id="livefeed" class="card" data-init="@get('/livefeed')"></div>
 
 </body>

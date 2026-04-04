@@ -8,3 +8,4 @@ nimble.paths
 nimbledeps
 src/rss/xml
 src/rss/demo.txt
+src/rss/rsscollector

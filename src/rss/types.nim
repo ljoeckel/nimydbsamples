@@ -1,19 +1,15 @@
 import yottadb
 
-type
-    RowStatus* = enum 
-        NEW = "New"
-        EDIT = "Edit"
-        MARKED = "Marked"
-
 type 
     Feed* = object of RootObj
         rssid*: string
+        group*: string
         title*: string
         enabled*: bool = true
 
     UserFeeds* = object of RootObj
         userid*: string
+        group*: string
         feeds*: seq[Feed]
 
 type

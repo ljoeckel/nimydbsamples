@@ -1,13 +1,12 @@
 import std/strformat
-import std/strutils
 import std/wordwrap
 import std/[algorithm, sequtils, tables]
-import std/[options, strutils, strformat, typetraits]
+import std/[options, strutils, typetraits]
 import std/[times]
 import rssatom
 import yottadb
-import ydbutils
 import types
+import sugar
 
 const TIME_FORMATS* = [
     "yyyy-MM-dd'T'HH:mm:sszzz",
@@ -29,6 +28,25 @@ proc normalizeUrl*(url: string): string =
         ("/", ""), (".", ""), ("-", ""), ("!", ""),
         (";", ""), ("_", "")
     )
+
+proc getRSSFeedConfiguration*(): Table[string, seq[string]] =
+    # Get the RSS feeds from feeds.rss
+    # [Section] content content [Section2] content content
+    var currentSection = ""
+    result[currentSection] = @[]
+
+    for line in lines("feeds.rss"):
+        let trimmed = line.strip()
+        if trimmed == "" or trimmed.startsWith("#"): continue
+  
+        if trimmed.startsWith("[") and trimmed.endsWith("]"):
+            currentSection = trimmed[1 .. ^2]
+            result[currentSection] = @[]
+        else:
+            result[currentSection].add(trimmed)
+
+    #config[""]
+    #config["Politik"]
 
 proc normalizeChannelTitle*(title: string): string =
     result = title.toUpper
@@ -103,8 +121,6 @@ proc showRSSItem*(keys: string) =
 
 proc getLatestRSSItems*(max: int, feeds: seq[Feed]): seq[RSSItem] =
     var cnt = max
-    var rsss: seq[RSS]
-
     var feedtable : seq[string]
     for feed in feeds:
         if feed.enabled:
@@ -114,7 +130,6 @@ proc getLatestRSSItems*(max: int, feeds: seq[Feed]): seq[RSSItem] =
         let idxKey = key[1]
         let feedId = Order ^RSSItemIDXREF(idxkey,"")
         if feedId in feedtable:
-            let verify = Data ^RSSItemIDXREF(idxkey, feedId)
             let itemKey = idxKey.split(",")
             let rssItem = loadObject[RSSItem](itemKey)
             result.add(rssItem)
@@ -137,3 +152,14 @@ proc fullDump*(global: string) =
     for key, value in QueryItr @gbl.kv:
         #let rss = loadObject[RSS](key)
         echo key,"=",value
+
+
+if isMainModule:
+    let feeds = getRSSFeedConfiguration()
+    # In Sequenz umwandeln
+    var sortedPairs = collect(newSeq):
+        for k, v in feeds.pairs: (k, v)
+    # Nach dem ersten Element (dem Key) sortieren
+    sortedPairs.sort((a, b) => cmp(a[0], b[0]))
+    for (section, urls) in sortedPairs:
+        echo section, "=", urls

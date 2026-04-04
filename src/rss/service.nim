@@ -10,10 +10,19 @@ import yottadb
 import types
 import searchlib
 
-
 const
     MAXNEWS = 30 # How many news to show in 'latest'
     HTML_DIR = "html/"
+
+
+template meassure(body: untyped): auto =
+    let t0 = getTime()
+    body
+    let td = (getTime() - t0).inMicroseconds
+    if td > 1000:
+        $(td div 1000) & "ms."
+    else:
+        $td & " µs."
 
 
 template SSE(req: Request, body: untyped) =
@@ -131,8 +140,6 @@ proc createRSSItemCard(rss: RSSItem): string =
             </div>
             <div class="rsscard-title">  <a target="_blank" href="{link}">{title}</a> </div>
             <p class="rsscard-text"> {description} </p>
-
-            <!-- Icon / Text mit URL -->
             <div class="rsscard-footer">
                 <p>{divimg}</p>
                 <p class="rsspubdate"> {pubDate} / {rss.idxref} / {feedId}</p>
@@ -159,37 +166,34 @@ proc createLatestCards(max: int, userid: string): string =
     return container
 
 proc getWallClock(req: Request): string =
-    let nowTime = now()
-    result = nowTime.format("dd.MM.yyyy - HH:mm")
+    let userid = getSignal(req, "userid")
+    let nowTime = now().format("dd.MM.yyyy - HH:mm")
+    result = fmt"{userid} / {nowTime}"
 
 
 proc handleLiveFeed(req: Request) =
     let userid = getSignal(req, "userid")
     let wallclock = getWallClock(req)
+    let keywordContainer = fmt"""{{<div id="keywords"></div>}}"""
 
     SSE(req):
         patchElements(sse, fmt"<h3 id='wallclock'>{wallclock}</h3>")
+        patchElements(sse, keywordContainer) # clear keyword search result
         patchElements(sse, createLatestCards(MAXNEWS, userid))
 
 
-
 proc handleUpdateClock(req: Request) =
-    echo "handleUpdateClock"
     # /update-clock and RSSItems (Do not close the connection)
     var sse = req.respondSSE()
     let userid = getSignal(req, "userid")
-
     while true:
         try:
             # Update Wall-Clock
             let msg = getWallClock(req)
-            echo "patch wallclock:", msg
-            if userid.len == 0:
-                patchElements(sse, fmt"<h3 id='wallclock'>{msg}</h3>")
-            else:
-                echo "userId:", userid
-                patchElements(sse, fmt"<h3 id='wallclock'>{userid} / {msg}</h3>")
+            patchElements(sse, fmt"<h3 id='wallclock'>{msg}</h3>")
 
+            # Show articles for logged in users
+            if userid.len > 0:
                 # Update Articles
                 let formId = getSignal(req, "formId")
                 echo "updateclock page:", formId, " signals=", getSignals(req)
@@ -198,7 +202,7 @@ proc handleUpdateClock(req: Request) =
 
             #let msToNextMinute = 60000 - (now().second * 1000 + now().nanosecond div 1_000_000)
             #sleep(msToNextMinute)
-            sleep(5000)
+            sleep(10000)
         except:
             echo "Leaving handleUpdateClock: ", getCurrentExceptionMsg()
             sse.close()
@@ -207,14 +211,15 @@ proc handleUpdateClock(req: Request) =
 
 proc createTRFeed(id: string, title: string, enabled: bool): string =
     # Construct a <TR><TD>Feed with id, title, status
-    let dataclass = "{" & fmt"selected: $id==='{id}'" & "}"
-    let marked = if enabled: "<i class='bi bi-check-square'></i>" else: "<i class='bi-dash-square-dotted'></i></i>"
+    var dataclass = fmt"{{selected: $id==='{id}'}}"
+    var markedclass = if enabled: "class='marked'" else: ""
+    let checkbox = if enabled: "<i class='bi bi-check-square'></i>" else: "<i class='bi-dash-square-dotted'></i></i>"
     result = fmt"""
-        <tr id='Feed{id}' data-on:click__stop="$id='{id}'; @post('/select-feed')" data-class="{dataclass}">
+        <tr {markedclass} id='Feed{id}' data-on:click__stop="$id='{id}'; @post('/select-feed')" data-class="{dataclass}">
             <td>{id}</td>
             <td>{title}</td>
             <td>
-                <button data-on:click__stop="$id='{id}';$title='{title}'; @post('/toggle-feed')">{marked}</button>
+                <button data-on:click__stop="$id='{id}';$title='{title}'; @post('/toggle-feed')">{checkbox}</button>
             </td>
         </tr>
         """
@@ -233,6 +238,9 @@ proc handleGetFeeds(req: Request) {.gcsafe.} =
 
     # Create the tbody
     var tbody = fmt"""<tbody id="feed-table" data-init="@get('/get-feeds')">"""
+    let head = Feed(rssid:" ", title:" Select all", enabled:false)
+    tbody.add(createTRFeed(head))
+
     for feed in userFeeds.feeds:
         tbody.add(createTRFeed(feed))
     tbody.add("</tbody>")
@@ -245,16 +253,25 @@ proc handleToggleFeed(req: Request) {.gcsafe.} =
     # Toggle Row
     let userid = getSignal(req, "userid")
     let id = getSignal(req, "id")
+    let userFeeds = loadObject[UserFeeds](userid)
 
     # Update DB
-    let userFeeds = loadObject[UserFeeds](userid)
+    var init: bool
+    var flip: bool
     for idx, feed in enumerate(userFeeds.feeds):
-        if feed.rssid == id:
+        if id == " ":  # select / deselect all
+            if not init:
+                flip = (not feed.enabled)
+                init = true
+            Set: ^Feed(userid, $idx, "enabled") = flip # update db
+
+        elif feed.rssid == id:
             Set: ^Feed(userid, $idx, "enabled") = (not feed.enabled) # update db
             let row = createTRFeed(feed.rssid, feed.title, (not feed.enabled))
-            SSE(req):
-                patchElements(sse, row) # update gui
-            break
+            SSE(req): patchElements(sse, row) # update gui
+            return
+    
+    handleGetFeeds(req)
    
 
 proc handleLogin(req: Request) =
@@ -267,6 +284,50 @@ proc handleLogin(req: Request) =
 proc handleLogout(req: Request) =
     SSE(req):
         forward(sse, "./html/index.html")
+
+
+proc handleSearch(req: Request) =
+    let keyword = getSignal(req, "keyword")
+    if keyword.len == 0:
+        handleLiveFeed(req)
+        return
+
+    var cards: string
+    var keywords: string
+    var articles: string
+    
+    var info = meassure:
+        let itemkeys = getRSSItemKeys(keyword) # @["1158,4", "118,10"...]
+    
+        if itemkeys.len > 0:
+            for key in itemkeys:
+                let parts = key.split(",")
+                let rssItem = loadObject[RSSItem](@[parts[0], parts[1]])
+                cards.add(createRSSItemCard(rssItem))
+            
+            articles = fmt"{itemkeys.len} articles"
+        else:
+            for word in getKeywords(keyword):
+                keywords.add(word & " ")
+
+    let infotxt = if articles.len > 0: fmt"{articles} in {info}" else: fmt"Indexsearch in {info}"
+    let infoContainer = fmt"""{{
+        <h3 id="info">{infotxt}</h3>
+    }}"""
+
+    let rssContainer = fmt"""{{
+        <div id="livefeed" class="rsscard-container" data-init="@get('/livefeed')">{cards}</div>      
+    }}"""
+
+    let keywordContainer = fmt"""{{
+        <div id="keywords">{$keywords}</div>      
+    }}"""
+
+    SSE(req): 
+        patchElements(sse, infoContainer)
+        patchElements(sse, rssContainer)
+        patchElements(sse, keywordContainer)
+
 
 
 if isMainModule:
@@ -283,6 +344,9 @@ if isMainModule:
     router.get("/logout", handleLogout)
     router.get("/livefeed", handleLiveFeed)
     router.get("/get-feeds", handleGetFeeds)
+
+    router.post("/search", handleSearch)
+    router.post("/select-feed", handleToggleFeed)
     router.post("/toggle-feed", handleToggleFeed)
 
     router.get("/update-clock", handleUpdateClock)

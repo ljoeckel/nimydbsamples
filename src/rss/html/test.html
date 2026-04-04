@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: sans-serif; margin: 30px; line-height: 1.6; }
+        
+        /* Eingabefeld Styling */
+        #searchInput {
+            width: 60%;
+            padding: 12px;
+            border: 2px solid #3498db;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 0px;
+            outline: none;
+        }
+
+        /* Tabelle ist standardmässig unsichtbar */
+        #resultTable {
+            width: 60%;
+            border: 2px solid #3498db;
+            border-collapse: collapse;
+            display: none; /* Versteckt die Tabelle initial */
+        }
+
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        tr:hover { background-color: #f1f1f1; }
+    </style>
+</head>
+<body>
+    <input type="text" id="searchInput" placeholder="Suchen (z.B. Apfel)..." onkeyup="searchAndShow()">
+
+    <table id="resultTable">
+        <tbody>
+            <tr><td>Apfel</td><td>Obst</td></tr>
+            <tr><td>Banane</td><td>Obst</td></tr>
+            <tr><td>Brokkoli</td><td>Gemüse</td></tr>
+            <tr><td>Kirsche</td><td>Obst</td></tr>
+        </tbody>
+    </table>
+
+    <script>
+        function searchAndShow() {
+            const input = document.getElementById("searchInput");
+            const filter = input.value.toLowerCase();
+            const table = document.getElementById("resultTable");
+            const tr = table.getElementsByTagName("tr");
+            
+            // 1. Logik: Tabelle einblenden oder verstecken
+            if (filter.length > 0) {
+                table.style.display = "table";
+            } else {
+                table.style.display = "none";
+                return; // Beendet Funktion, wenn Feld leer ist
+            }
+
+            // 2. Logik: Zeilen filtern
+            for (let i = 1; i < tr.length; i++) {
+                let td = tr[i].getElementsByTagName("td")[0];
+                if (td) {
+                    let txtValue = td.textContent || td.innerText;
+                    tr[i].style.display = txtValue.toLowerCase().includes(filter) ? "" : "none";
+                }
+            }
+        }
+    </script>
+
+</body>
+</html>

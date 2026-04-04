@@ -1,7 +1,7 @@
 #https://feeds2.feedburner.com/ComputerbaseNews
 
 
-# News
+[News]
 https://taz.de/!p4608;rss/
 https://www.n-tv.de/politik/rss
 https://rss.sueddeutsche.de/rss/Alles
@@ -12,43 +12,45 @@ https://www.faz.net/rss/aktuell
 https://www.welt.de/?service=Rss
 https://www.tagesschau.de/xml/rss2
 https://www.spiegel.de/schlagzeilen/rss/0,5291,,00.xml
+https://www.zdf.de/rss/zdf/nachrichten
 
-# Medizin
+[Medizin]
 https://rss.aerzteblatt.de/rss/news.asp
 
-# Computer
-https://www.computerbild.de/rssfeed_2261.html?node=10
-#https://www.chip.de/rss/chip_komplett.xml
+[Computer2]
 #https://www.pcwelt.de/feed?story_types=news%2Cfeature
+#https://www.chip.de/rss/chip_komplett.xml
+
+[Computer]
+https://www.computerbild.de/rssfeed_2261.html?node=10
 https://static.winfuture.de/feeds/WinFuture-News-rss2.0.xml
 https://t3n.de/rss.xml
 https://feeds2.feedburner.com/ComputerbaseNews
 https://feeds.feedburner.com/netzwelt
 https://www.heise.de/newsticker/heise.rdf
 
-# Wirtschaft
+[Wirtschaft2]
+#https://www.finanzen.net/rss/news
+
+[Wirtschaft]
 https://www.welt.de/feeds/section/wirtschaft.rss
 https://newsfeed.zeit.de/wirtschaft/index
 https://www.wallstreet-online.de/rss/nachrichten-alle.xml
-#https://www.finanzen.net/rss/news
 https://www.manager-magazin.de/news/index.rss
 https://www.handelsblatt.com/contentexport/feed/finanzen
 https://www.deraktionaer.de/aktionaer-news.rss
 https://www.capital.de/rss
 https://www.news.de/rss/364371168/wirtschaft/
 
-# Finanznachrichten
+[Finanznachrichten]
 https://www.finanznachrichten.de/service/nachrichten.xml
 https://www.finanznachrichten.de/rss-aktien-nachrichten
 https://www.finanznachrichten.de/rss-marktberichte
 https://www.finanznachrichten.de/rss-aktien-adhoc
 https://www.finanznachrichten.de/rss-nachrichten-medien-dpa-afx
 
-# ZDF
-https://www.zdf.de/rss/zdf/nachrichten
 
-
-# BBC
+[BBC]
 http://feeds.bbci.co.uk/news/rss.xml
 http://feeds.bbci.co.uk/news/world/rss.xml
 http://feeds.bbci.co.uk/news/uk/rss.xml
@@ -60,7 +62,7 @@ http://feeds.bbci.co.uk/news/science_and_environment/rss.xml
 http://feeds.bbci.co.uk/news/technology/rss.xml
 http://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml
 
-# CNN
+[CNN]
 http://rss.cnn.com/rss/cnn_topstories.rss
 http://rss.cnn.com/rss/cnn_world.rss
 http://rss.cnn.com/rss/cnn_us.rss
@@ -71,25 +73,24 @@ http://rss.cnn.com/rss/cnn_health.rss
 http://rss.cnn.com/rss/cnn_showbiz.rss
 http://rss.cnn.com/rss/cnn_travel.rss
 
-# Deutschlandfunk
+[Deutschlandfunk]
 https://www.deutschlandfunk.de/nachrichten-100.rss
 https://www.deutschlandfunk.de/politikportal-100.rss
-https://www.deutschlandfunk.de/wirtschaft-106.rss
-https://www.deutschlandfunk.de/wissen-106.rss
 https://www.deutschlandfunk.de/kulturportal-100.rss
-https://www.deutschlandfunk.de/europa-112.rss
-https://www.deutschlandfunk.de/gesellschaft-106.rss
 https://www.deutschlandfunk.de/sportportal-100.rss
-
-https://www.deutschlandfunkkultur.de/politik-114.rss
-https://www.deutschlandfunkkultur.de/buecher-108.rss
 https://www.deutschlandfunkkultur.de/musikportal-100.rss
-https://www.deutschlandfunkkultur.de/wissenschaft-108.rss
+https://www.deutschlandfunkkultur.de/psychologie-100.rss
+https://www.deutschlandfunkkultur.de/buehne-100.rss
+https://www.deutschlandfunkkultur.de/film-serie-100.rss
 https://www.deutschlandfunkkultur.de/meinung-debatte-100.rss
 https://www.deutschlandfunkkultur.de/umwelt-104.rss
 https://www.deutschlandfunkkultur.de/philosophie-104.rss
-https://www.deutschlandfunkkultur.de/psychologie-100.rss
-https://www.deutschlandfunkkultur.de/geschichte-136.rss
+https://www.deutschlandfunk.de/wirtschaft-106.rss
+https://www.deutschlandfunk.de/wissen-106.rss
+https://www.deutschlandfunk.de/gesellschaft-106.rss
+https://www.deutschlandfunkkultur.de/buecher-108.rss
 https://www.deutschlandfunkkultur.de/leben-108.rss
-https://www.deutschlandfunkkultur.de/buehne-100.rss
-https://www.deutschlandfunkkultur.de/film-serie-100.rss
+https://www.deutschlandfunkkultur.de/wissenschaft-108.rss
+https://www.deutschlandfunk.de/europa-112.rss
+https://www.deutschlandfunkkultur.de/politik-114.rss
+https://www.deutschlandfunkkultur.de/geschichte-136.rss

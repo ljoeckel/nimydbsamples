@@ -1,5 +1,5 @@
 import std/[options, strutils, strformat, typetraits, enumerate, os]
-import std/[sha1, base64, parseopt, httpclient, times]
+import std/[sha1, base64, parseopt, httpclient, times, tables]
 import rssatom
 import yottadb
 import ydbutils
@@ -118,18 +118,20 @@ proc processFeed(feed: var RSS): int =
 
 
 proc processFeeds(feedPath: string) =
+    let feeds = getRSSFeedConfiguration() #: Table[string, seq[string]] =
     # Main entry point for the RSS Feed application (Collector)
-    let urls = readFile(feedPath)
-    for url in urls.split('\n'):
-        if url.len == 0 or url.startsWith('#'): continue
-        echo "Fetching ", url
-        let xml = getXmlFromUrl(url)
-        if xml.len == 0: continue
+    for section, urls in feeds.pairs:
+        echo "Section ", section
+        if section.len == 0: continue
+        for url in urls:
+            echo "Fetching ", url
+            let xml = getXmlFromUrl(url)
+            if xml.len == 0: continue
 
-        var feed = parseRSS(xml)
-        let nbrNewItms = processFeed(feed)
-        if nbrNewItms > 0:
-            saveXmlFile(url, xml) # Save the XMl file
+            var feed = parseRSS(xml)
+            let nbrNewItms = processFeed(feed)
+            if nbrNewItms > 0:
+                saveXmlFile(url, xml) # Save the XMl file
 
 
 proc clearDB() =
