@@ -3,6 +3,7 @@ import std/wordwrap
 import std/[algorithm, sequtils, tables]
 import std/[options, strutils, typetraits]
 import std/[times]
+import std/[sha1, base64, parseopt, httpclient, times]
 import rssatom
 import yottadb
 import types
@@ -20,6 +21,19 @@ const TIME_FORMATS* = [
 
 template getOption*(option: Option): string =
     if option.isSome: option.get() else: ""
+
+
+proc generateSHA1*(input: string, length: int = 16): string =
+  let hash = secureHash(input) # calculate SHA1
+  let bytes = cast[array[20, byte]](hash) # convert distinct type to byte array
+  # 3. Bytes in einen String für den Encoder umwandeln
+  var rawData = ""
+  for b in bytes: 
+    rawData.add(char(b))
+  # 4. Base64-Encoding (URL-safe)
+  let b64 = encode(rawData, safe = true)
+  # 5. Kürzen auf die gewünschte Länge
+  return b64[0 ..< min(length, b64.len)]
 
 
 proc normalizeUrl*(url: string): string =

@@ -11,7 +11,7 @@ import types
 import searchlib
 
 const
-    MAXNEWS = 30 # How many news to show in 'latest'
+    MAXNEWS = 50 # How many news to show in 'latest'
     HTML_DIR = "html/"
 
 
@@ -158,11 +158,10 @@ proc createLatestCards(max: int, userid: string): string =
         # produce cards for output
         cards.add(createRSSItemCard(rssItem))
 
-    var container = fmt"""{{
-            <div id="livefeed" class="rsscard-container" data-init="@get('/livefeed')">
-                {cards}
-            </div>      
-        }}"""
+    let container = fmt"""{{
+        <div id="rsscard" class="rsscard-container">{cards}</div>      
+    }}"""
+
     return container
 
 proc getWallClock(req: Request): string =
@@ -175,6 +174,7 @@ proc handleLiveFeed(req: Request) =
     let userid = getSignal(req, "userid")
     let wallclock = getWallClock(req)
     let keywordContainer = fmt"""{{<div id="keywords"></div>}}"""
+    echo "handleLiveFeed ", $getSignals(req)
 
     SSE(req):
         patchElements(sse, fmt"<h3 id='wallclock'>{wallclock}</h3>")
@@ -183,9 +183,11 @@ proc handleLiveFeed(req: Request) =
 
 
 proc handleUpdateClock(req: Request) =
+    let userid = getSignal(req, "userid")
+    var lastSHA1: string
+
     # /update-clock and RSSItems (Do not close the connection)
     var sse = req.respondSSE()
-    let userid = getSignal(req, "userid")
     while true:
         try:
             # Update Wall-Clock
@@ -198,7 +200,12 @@ proc handleUpdateClock(req: Request) =
                 let formId = getSignal(req, "formId")
                 echo "updateclock page:", formId, " signals=", getSignals(req)
                 if formId == "livefeed":
-                    patchElements(sse, createLatestCards(MAXNEWS, userid))
+                    let cards = createLatestCards(MAXNEWS, userid)
+                    let sha1 = generateSHA1(cards)
+                    if sha1 != lastSHA1:
+                        echo "New Articles"
+                        lastSHA1 = sha1
+                        patchElements(sse, cards)
 
             #let msToNextMinute = 60000 - (now().second * 1000 + now().nanosecond div 1_000_000)
             #sleep(msToNextMinute)
@@ -316,9 +323,8 @@ proc handleSearch(req: Request) =
     }}"""
 
     let rssContainer = fmt"""{{
-        <div id="livefeed" class="rsscard-container" data-init="@get('/livefeed')">{cards}</div>      
+        <div id="rsscard" class="rsscard-container">{cards}</div>      
     }}"""
-
     let keywordContainer = fmt"""{{
         <div id="keywords">{$keywords}</div>      
     }}"""

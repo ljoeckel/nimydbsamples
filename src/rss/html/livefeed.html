@@ -1,5 +1,4 @@
-<body data-signals="{formId: 'livefeed'}"  data-init="@get('/update-clock')">
-
+<body data-signals="{formId: 'livefeed'}" data-init="@get('/update-clock')">
     <!-- The navigation menu -->
     <div class="navbar">
         <a href="#home" id="home" data-on:click="@get('goto/livefeed.html')">RSS Live</a>
@@ -31,19 +30,13 @@
 
 
     <div>
-        <input 
-            id="keyword" 
-            data-bind:keyword
-            data-class="{'input-error': $emailInvalid}"
-            data-on:input__debounce.500ms="@post('/search')"
-            placeholder="Search for ..."
-            autofocus
-            type="text"/>
+        <input id="keyword" data-bind:keyword data-class="{'input-error': $emailInvalid}"
+            data-on:input__debounce.500ms="@post('/search')" placeholder="Search for ..." autofocus type="text" />
     </div>
 
-    
+
     <div id="keywords"></div>
-    <div id="livefeed" class="card" data-init="@get('/livefeed')"></div>
-
+    <div id="livefeed">
+        <div id="rsscard" class="rsscard-container" data-effect="@get('/livefeed')"> </div>
+    </div>
 </body>
-
