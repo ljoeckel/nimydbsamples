@@ -1,5 +1,16 @@
 #https://feeds2.feedburner.com/ComputerbaseNews
 
+[Börse]
+https://www.wallstreet-online.de/rss/nachrichten-alle.xml
+https://www.wiwo.de/contentexport/feed/rss/schlagzeilen
+https://www.ad-hoc-news.de/rss/nachrichten.xml
+https://www.onvista.de/news/feed/rss.xml?orderBy=datetime&newsType%5B0%5D=marketreport&supplier%5B0%5D=dpa-AFX&tags%5B0%5D=Deutschland&
+# 403 forbidden https://api.boerse-frankfurt.de/v1/feeds/news.rss
+https://www.aktiencheck.de/rss/news.rss2
+https://www.aktiennews24.de/thema/news/feed/
+https://www.wallstreet-online.de/rss/board-dax.xml
+
+
 
 [News]
 https://taz.de/!p4608;rss/

@@ -33,62 +33,63 @@ proc setupStopwords(lang: string): int =
         Set: @gbl(word) = ""
         inc result
 
-proc splitWord(text: string): seq[string] =
-  let trenner: set[char] = {' ', '<', '>', ':', '-', '/', '(', ')', '.', ','}
-  result = text.split(trenner)
-  result = result.filterIt(it.len > 2) # Minimum length 3 chars
-
-proc normalizeWord(wrd: string): string =
-    if wrd.startsWith("http"): return ""
-    #„Buddenbrooks“
-    var word = wrd.multiReplace(
-        ("https://", ""), ("rss", ""), ("www", ""),
-        (";", ""), ("_", ""), ("„", ""), ("“", ""),
-        ("\"", ""), (" ", ""), (",", ""),
-        ("–", ""), # Unicode seq
-    )
-
-    let words = splitWord(word)
-    for word in words:
-        if word.len > 30:
-            echo "Ignored word: ", word
-            return ""
-
-        for c in strip(word):
-            if c in {'\0'..'/', ':'..'@', '['..'`', '{'..'~'}: continue
-            result.add(c)
-
 proc isStopword(word: string, lang: string): bool =
     if word.len == 0: return false
     if ydb_data(STOPWORDS["ALL"], @[word]) > 0: return true
     return ydb_data(STOPWORDS[lang], @[word]) > 0
 
-proc createFTIndex(item: RSSItem, lang: string) =
+proc splitWords(text: string, lang: string): seq[string] =
+    # Replace with ' '
+    var s: string
+    for c in text:
+        if c in {'\0'..'/', ':'..'@', '['..'`', '{'..'~'}: 
+            s.add(' ')
+        else:
+            s.add(c)
+
+    var spaces = s.find("  ")
+    while spaces > 0:
+        s = s.replace("  ", " ")
+        spaces = s.find("  ")
+
+    result = s.split(' ')
+    result = result.filterIt(it.len > 2 and it.len < 40) # min 3, max 39
+    result = result.filterIt(not it.isStopword(lang)) # No stopwords
+
+
+proc createFTIndex(item: RSSItem, lang: string): int =
+    var wordCount = 0
     let title = if item.title.isSome: toLower(item.title.get()) else: ""
     let description = if item.description.isSome: toLower(item.description.get()) else: ""
     let idxref = item.idxref
 
-    let words = splitWord(title & description)
-    for wrd in words:
-        let word = normalizeWord(wrd)
-        if word.len == 0: continue
-        if word.find('-') > 0: 
-            echo "-"
-            quit(0)
-        if isStopword(word, lang): continue
+    let words = splitWords(title & " - " & description, lang)
+    for word in words:
+        # create RSSItem key
         let keys = idxref.split(',')
         let k0 = keys[0]
         let k1 = keys[1]
         Set: ^RSSItemFTI(word, k0, k1) = ""
+        if word == "2026die":
+            echo "idxref:", item.idxref
+            echo "title:", title
+            echo "desc :", description
+            echo "words:", words
+        inc wordCount
+    
+    return wordCount
 
 
 proc createRSSItemIndex() =
+    var wordCount = 0
     for rssId in OrderItr ^RSS:
         let rss = loadObject[RSS](rssId)
         var language = if rss.language.isSome: toUpper(rss.language.get()) else: "XX"
         if language.find('-') > 0: language = language.split('-')[0]
         for item in rss.items:
-            createFTIndex(item, language)
+            inc(wordCount, createFTIndex(item, language))
+    
+    echo fmt"Indexed {wordCount} words"
 
 proc main() =
     var lang: string
@@ -118,6 +119,7 @@ proc main() =
 
 
 if isMainModule:
+    Kill ^RSSItemFTI
     main()
     # let x = "–"
     # for c in x:

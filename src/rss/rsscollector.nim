@@ -20,9 +20,8 @@ proc getUnixTimestamp(dateStr: Option[string]): string =
 
 
 proc getNewGUID(item: RSSItem): string =
-    #let guid = normalizeGUID(item)
-    let title = getOption(item.title) # = if item.title.isSome: item.title.get() else: ""
-    let guidStr = getOption(item.guid) #if item.guid.isSome: item.guid.get() else: ""
+    let title = getOption(item.title)
+    let guidStr = getOption(item.guid)
     let guid = generateSHA1(title & guidStr, 32)
     let id = Query ^RSSItemGUID(guid)
     result = if id.len > 0 and id.find(guid) != -1: "" else: guid
@@ -40,6 +39,7 @@ proc getXmlFromUrl(url: string): string =
 
 proc getXmlFromFile(path: string): string =
     result = strip(readFile(path))
+    # remove tabs from xml file
     result = result.replace("\9","").replace("\n","")
 
     
@@ -78,17 +78,10 @@ proc processFeed(feed: var RSS): int =
 
     if newItems.len > 0:
         # Create a new id for ^RSS, ^RSSItem, ... used in serialization
-        feed.title = normalizeChannelTitle(feed.title)
-        let fid = getOption(feed.title)
-        var feedId = Order ^RSSTITLE(fid,"")
-        if feedId.len == 0:  # creaete new feedid if not used before
-            feedId = $(Increment ^RSSCNT("FeedID"))
-            Set: ^RSSTITLE(fid, feedId) = ""
-        echo "feedTitle:", fid, " feedId=", feedId, " fid=", fid
-        
+        var normalizedTitle = normalizeChannelTitle(feed.title.get())
+        let feedId = generateSHA1(normalizedTitle)  # Feed-Title 'Deutschlandfunk' > abckdkd93,d;-
         let id = Increment ^RSSCNT("RSS")
         feed.id = some($feedId & "," & $id)
-
         for cnt, item in enumerate(newItems.mitems):
             item.idxref = fmt"{id},{cnt}" # idxref="33,1"
             item.feedId = some(feedId)
@@ -96,16 +89,12 @@ proc processFeed(feed: var RSS): int =
         # replace items with newItems and save
         feed.items = newItems
         saveObject(@[$id], feed)
-        
-        # create a lookup index for Feed.title
-        
-        echo "Saved object id:", $id, " new articles:", feed.items.len, " feed.len=", ($feed).len
 
     return newItems.len
 
 
 proc processFeeds(feedPath: string) =
-    let feeds = getRSSFeedConfiguration() #: Table[string, seq[string]] =
+    let feeds = getRSSFeedConfiguration(feedPath) #: Table[string, seq[string]] =
     # Main entry point for the RSS Feed application (Collector)
     for section, urls in feeds.pairs:
         echo "Section ", section

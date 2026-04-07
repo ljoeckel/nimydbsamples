@@ -2,7 +2,7 @@ import std/strformat
 import std/strutils
 import std/wordwrap
 import std/[algorithm, sequtils]
-import std/[options, strutils, strformat, typetraits, enumerate, os]
+import std/[options, strutils, strformat, typetraits]
 import std/[sha1, base64, parseopt, httpclient, times]
 import rssatom
 import yottadb
@@ -61,7 +61,7 @@ proc main() =
                 if val.len == 0:
                     echo "ERROR: need value for -f"
                     quit(0)
-
+                showRSS(val)
                 showRSSItem(val)
             elif key == "s":
                 search()

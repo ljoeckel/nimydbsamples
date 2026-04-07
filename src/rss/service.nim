@@ -1,8 +1,8 @@
 ## Run 'nimble demo'
 
-import std/[os, times, json, strutils, strformat, tables, algorithm, sequtils]
+import std/[os, times, json, strutils, strformat, tables, algorithm, sequtils, sugar]
 import std/[options, typetraits, enumerate]
-import std/[sha1, httpclient, times]
+import std/[sha1, httpclient]
 import mummy, mummy/routers, mummy/datastar
 import macros
 import rssatom
@@ -31,22 +31,16 @@ template SSE(req: Request, body: untyped) =
     body
 
 
-proc listSession() =
-    echo "Session:"
-    for k,v in QueryItr Session.kv:
-        echo k, "=", v
+func stripSignal(signal: string): string =
+    result = strip(signal)
+    if result.startsWith("\"") and result.endsWith("\""): # Remove "xxxx" -> xxxx
+        result = result[1..^2]
 
 
 proc getSignal(req: Request, key: string): string = 
     let signals = getSignals(req)
-    # Update Session variable
-    if "userid" in signals:
-        let userid = $signals["userid"]
-        for k,v in signals.pairs:
-            Set: Session(userid, k) = v
-
     if key in signals:
-        result = $signals[key]
+        result = strip($signals[key])
         if result.startsWith("\"") and result.endsWith("\""): # Remove "xxxx" -> xxxx
             result = result[1..^2]
 
@@ -61,18 +55,12 @@ proc handleGoto(req: Request) =
 
 
 proc getFeeds(): seq[Feed] =
-    for title in OrderItr ^RSSTITLE:
-        let id = Order ^RSSTITLE(title, "")
-        var feed: Feed
-        feed.rssid = id
-        feed.title = title
-        feed.enabled = true
-        #feed.enabled = enabled
-        result.add(feed)
+    for feedId in OrderItr ^ConfigFeed:
+        let feed = loadObject[ConfigFeed](feedId)
+        result.add(loadObject[ConfigFeed](feedId))
 
 
 proc createRSSItemCard(rss: RSSItem): string =
-    let idxref = rss.idxref
     let title = getOption(rss.title)
     let description = getOption(rss.description)
     let link = getOption(rss.link)
@@ -216,14 +204,18 @@ proc handleUpdateClock(req: Request) =
             break
 
 
-proc createTRFeed(id: string, title: string, enabled: bool): string =
+#proc createTRFeed(id: string, group: string, title: string, enabled: bool): string =
+proc createTRFeed(feed: Feed): string =
+    let id = feed.rssid
+    let group = feed.group
+    let title = feed.title
+    let enabled = feed.enabled
     # Construct a <TR><TD>Feed with id, title, status
     var dataclass = fmt"{{selected: $id==='{id}'}}"
     var markedclass = if enabled: "class='marked'" else: ""
     let checkbox = if enabled: "<i class='bi bi-check-square'></i>" else: "<i class='bi-dash-square-dotted'></i></i>"
     result = fmt"""
         <tr {markedclass} id='Feed{id}' data-on:click__stop="$id='{id}'; @post('/select-feed')" data-class="{dataclass}">
-            <td>{id}</td>
             <td>{title}</td>
             <td>
                 <button data-on:click__stop="$id='{id}';$title='{title}'; @post('/toggle-feed')">{checkbox}</button>
@@ -231,8 +223,8 @@ proc createTRFeed(id: string, title: string, enabled: bool): string =
         </tr>
         """
 
-proc createTRFeed(feed: Feed): string =
-    createTRFeed(feed.rssid, feed.title, feed.enabled)
+#proc createTRFeed(feed: Feed): string =
+#    createTRFeed(feed.rssid, feed.group, feed.title, feed.enabled)
 
 
 proc handleGetFeeds(req: Request) {.gcsafe.} =
@@ -242,13 +234,47 @@ proc handleGetFeeds(req: Request) {.gcsafe.} =
         userFeeds.userid = userid
         userFeeds.feeds = getFeeds()
         saveObject[UserFeeds](userid, userFeeds)
+        echo fmt"Created UserFeeds for '{userid}', Number of feeds: {userFeeds.feeds.len}"
+
+    # Sort by group / title
+    let feeds = userFeeds.feeds.sortedByIt(toUpper(it.group) & toUpper(it.title))
 
     # Create the tbody
     var tbody = fmt"""<tbody id="feed-table" data-init="@get('/get-feeds')">"""
     let head = Feed(rssid:" ", title:" Select all", enabled:false)
     tbody.add(createTRFeed(head))
 
-    for feed in userFeeds.feeds:
+    # Calculate css class for group title
+    var groupsCount = initCountTable[string]()
+    var groupsEnabled = initCountTable[string]()
+    for feed in feeds:
+        groupsCount.inc(feed.group)
+        if feed.enabled: groupsEnabled.inc(feed.group)
+    var classTable = initTable[string, string]()
+    var classname: string
+    for group, count in groupsCount.pairs:
+        if groupsEnabled[group] == count: classname = "full"
+        elif groupsEnabled[group] > 0:    classname = "partial"
+        else:                             classname = "empty"
+        classTable[group] = classname
+
+    # create table-rows
+    var oldGroup: string
+    for feed in feeds:
+        let class = "feedgroup-" & classTable[feed.group]
+        # Add Group header
+        if oldGroup != feed.group:
+            var groupline = fmt"""
+                <tr class='{class}'>
+                    <td>{feed.group}</td>
+                    <td>
+                        <button data-on:click__stop="$id='{feed.group}';@post('/toggle-feedgroup')"><i class="bi bi-card-checklist"></i></button>
+                    </td>
+                </tr>
+            """
+            tbody.add(groupline)
+            oldGroup = feed.group
+        # Add Feed's
         tbody.add(createTRFeed(feed))
     tbody.add("</tbody>")
 
@@ -263,23 +289,36 @@ proc handleToggleFeed(req: Request) {.gcsafe.} =
     let userFeeds = loadObject[UserFeeds](userid)
 
     # Update DB
-    var init: bool
-    var flip: bool
+    var init, flip: bool
     for idx, feed in enumerate(userFeeds.feeds):
         if id == " ":  # select / deselect all
             if not init:
                 flip = (not feed.enabled)
                 init = true
             Set: ^Feed(userid, $idx, "enabled") = flip # update db
-
         elif feed.rssid == id:
             Set: ^Feed(userid, $idx, "enabled") = (not feed.enabled) # update db
-            let row = createTRFeed(feed.rssid, feed.title, (not feed.enabled))
-            SSE(req): patchElements(sse, row) # update gui
-            return
     
+    # Update gui    
     handleGetFeeds(req)
    
+
+proc handleToggleFeedGroup(req: Request) =
+    # Toggle a feedgroup
+    let group = getSignal(req, "id")
+    let userid = getSignal(req, "userid")
+    var init, flip: bool
+    var userFeeds = loadObject[UserFeeds](userid)
+
+    for feed in userFeeds.feeds.mitems:
+        if feed.group == group:
+            if not init:
+                flip = (not feed.enabled)
+                init = true
+            feed.enabled = flip
+    saveObject[UserFeeds](userid, userFeeds) # update db
+    handleGetFeeds(req) # update gui
+
 
 proc handleLogin(req: Request) =
     let userid = getSignal(req, "userid")
@@ -337,8 +376,6 @@ proc handleSearch(req: Request) =
 
 
 if isMainModule:
-    Kill: ^Session
-
     ## Handler für Ctrl+C (SIGINT)
     proc shutdown() {.noconv.} =
         echo "\nShutting down..."
@@ -354,6 +391,7 @@ if isMainModule:
     router.post("/search", handleSearch)
     router.post("/select-feed", handleToggleFeed)
     router.post("/toggle-feed", handleToggleFeed)
+    router.post("/toggle-feedgroup", handleToggleFeedGroup)
 
     router.get("/update-clock", handleUpdateClock)
     #router.post("/validate-email", isEmailRegistered)

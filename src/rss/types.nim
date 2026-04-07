@@ -5,8 +5,13 @@ type
         rssid*: string
         group*: string
         title*: string
+        description*: string
         enabled*: bool = true
+        lastAccess*: string
+        lastError*: string
 
+    ConfigFeed* = object of Feed
+    
     UserFeeds* = object of RootObj
         userid*: string
         group*: string

@@ -78,16 +78,23 @@
     transition: box-shadow 0.3s ease;
 }
 
-.feedtable tbody tr.selected {
-    background: #e0f2fe;
-}
-
 .feedtable tbody tr.marked {
     font-weight: 700;
     color: darkblue;
 }
 
-.highlighted {
-    background-color: yellow !important;
-    transition: background-color 0.3s ease;
+.feedgroup-full {
+    background-color: rgb(231, 241, 207);
+    font-style: italic;
+    font-weight: 600;
+}
+.feedgroup-partial {
+    background-color: rgb(243, 247, 235);
+    font-style: italic;
+    font-weight: 600;
+}
+.feedgroup-empty {
+    background-color: rgb(251, 246, 238);
+    font-style: italic;
+    font-weight: 500;
 }

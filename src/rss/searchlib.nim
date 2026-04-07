@@ -2,8 +2,7 @@ import std/strformat
 import std/wordwrap
 import std/[algorithm, sequtils, tables]
 import std/[options, strutils, typetraits]
-import std/[times]
-import std/[sha1, base64, parseopt, httpclient, times]
+import std/[sha1, base64, httpclient, times]
 import rssatom
 import yottadb
 import types
@@ -23,6 +22,22 @@ template getOption*(option: Option): string =
     if option.isSome: option.get() else: ""
 
 
+proc getRSSFeedConfiguration*(path: string): Table[string, seq[string]] =
+    # Get the RSS feeds from feeds.rss
+    # [Section] content content [Section2] content content
+    var currentSection = ""
+    result[currentSection] = @[]
+
+    for line in lines(path):
+        let trimmed = line.strip()
+        if trimmed == "" or trimmed.startsWith("#"): continue
+  
+        if trimmed.startsWith("[") and trimmed.endsWith("]"):
+            currentSection = trimmed[1 .. ^2]
+            result[currentSection] = @[]
+        else:
+            result[currentSection].add(trimmed)
+
 proc generateSHA1*(input: string, length: int = 16): string =
   let hash = secureHash(input) # calculate SHA1
   let bytes = cast[array[20, byte]](hash) # convert distinct type to byte array
@@ -35,35 +50,7 @@ proc generateSHA1*(input: string, length: int = 16): string =
   # 5. Kürzen auf die gewünschte Länge
   return b64[0 ..< min(length, b64.len)]
 
-
-proc normalizeUrl*(url: string): string =
-    result = url.multiReplace(
-        ("https://", ""), ("rss", ""), ("www", ""),
-        ("/", ""), (".", ""), ("-", ""), ("!", ""),
-        (";", ""), ("_", "")
-    )
-
-proc getRSSFeedConfiguration*(): Table[string, seq[string]] =
-    # Get the RSS feeds from feeds.rss
-    # [Section] content content [Section2] content content
-    var currentSection = ""
-    result[currentSection] = @[]
-
-    for line in lines("feeds.rss"):
-        let trimmed = line.strip()
-        if trimmed == "" or trimmed.startsWith("#"): continue
-  
-        if trimmed.startsWith("[") and trimmed.endsWith("]"):
-            currentSection = trimmed[1 .. ^2]
-            result[currentSection] = @[]
-        else:
-            result[currentSection].add(trimmed)
-
-    #config[""]
-    #config["Politik"]
-
 proc normalizeChannelTitle*(title: string): string =
-    result = title.toUpper
     # result = result.multiReplace(
     #     ("RSS CHANNEL", ""), 
     #     ("AKTUELLE", ""), ("WWW", ""), ("ONLINE", ""),
@@ -72,16 +59,27 @@ proc normalizeChannelTitle*(title: string): string =
     #     ("  "," "), ("-", ""), (",", ""),
     #     ("SECTION", ""),
     # )
+    result = title
+    let idx = result.toUpper().find(" VOM ")
+    if idx > 0:
+        result = result[0..idx-1] # Edgecase "Deutschlandfunk Nachrichten vom 01.01.2026"
+
     while find(result,"  ") > 0:
         result = result.replace("  "," ")
-    while result.len > 40:
+    while result.len > 60:
         let pos = result.rfind(" ")
         if pos > 0:
             result = result[0..pos-1]
     return result.strip
 
-proc normalizeChannelTitle*(title: Option[string]): Option[string] =
-    if title.isSome: return some(normalizeChannelTitle(title.get())) else: title
+
+proc normalizeUrl*(url: string): string =
+    result = url.multiReplace(
+        ("https://", ""), ("rss", ""), ("www", ""),
+        ("/", ""), (".", ""), ("-", ""), ("!", ""),
+        (";", ""), ("_", "")
+    )
+
 
 proc getKeywords*(keyword: string = ""): seq[string] =
     let kw = toLower(keyword)
@@ -105,6 +103,15 @@ proc getRSSItemKeys*(keyword: string = ""): seq[string] =
             combined.add(key)
     combined.sort()
     result = combined.deduplicate(isSorted = true)
+
+proc showRSS*(keys: string) =
+    let key = if keys.contains(","): keys.split(",")[0] else: keys
+    
+    let items = @["id", "title", "description", "language", "link", "pubDate", "lastBuildDate", "copyright", "description", "generator"]
+    for item in items:
+        let gbl = fmt"^RSS({key}, {item})"
+        let val = Get @gbl
+        echo fmt"{item:>12}: {val}"
 
 proc showRSSItem*(keys: string) =
     var gbl = fmt"^RSSItem({keys},title)"
@@ -166,14 +173,3 @@ proc fullDump*(global: string) =
     for key, value in QueryItr @gbl.kv:
         #let rss = loadObject[RSS](key)
         echo key,"=",value
-
-
-if isMainModule:
-    let feeds = getRSSFeedConfiguration()
-    # In Sequenz umwandeln
-    var sortedPairs = collect(newSeq):
-        for k, v in feeds.pairs: (k, v)
-    # Nach dem ersten Element (dem Key) sortieren
-    sortedPairs.sort((a, b) => cmp(a[0], b[0]))
-    for (section, urls) in sortedPairs:
-        echo section, "=", urls

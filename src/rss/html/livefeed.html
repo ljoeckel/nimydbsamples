@@ -1,8 +1,11 @@
 <body data-signals="{formId: 'livefeed'}" data-init="@get('/update-clock')">
     <!-- The navigation menu -->
     <div class="navbar">
-        <a href="#home" id="home" data-on:click="@get('goto/livefeed.html')">RSS Live</a>
-        <image src="rss.png" height="24" width="24"></image>
+        <a href="#home" id="home" data-on:click="@get('goto/livefeed.html')" 
+            style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none;">
+            <img src="rss.png" height="20" width="20" alt="RSS Icon">
+            RSS Live
+        </a>
 
         <div class="subnav" data-on:mouseenter="$menuOpen = true" data-on:mouseleave="$menuOpen = false">
             <button class="subnavbtn">Configuration<i class="fa fa-caret-down"></i></button>
@@ -16,8 +19,9 @@
             <button class="subnavbtn">Technologies<i class="fa fa-caret-down"></i></button>
             <div class="subnav-content">
                 <a href="https://nim-lang.org">Nim</a>
-                <a href="https://data-star.dev/">Datastar</a>
                 <a href="https://yottadb.com">YottaDB</a>
+                <a href="https://data-star.dev/">Datastar</a>
+                <a href="https://nginx.org/">NGINX</a>
                 <a href="https://icons.getbootstrap.com/">bootstrap icons</a>
             </div>
         </div>
