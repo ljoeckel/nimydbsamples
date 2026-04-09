@@ -12,3 +12,5 @@ src/rss/search
 src/rss/searchlib
 src/rss/setup
 src/rss/stopwords
+src/rss/service
+src/rss/rsscollector
