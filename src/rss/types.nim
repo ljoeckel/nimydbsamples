@@ -17,6 +17,10 @@ type
         group*: string
         feeds*: seq[Feed]
 
+    TimeSearchEntry* = object of RootObj
+        subscript*: seq[string]
+        time*: int
+
 type
     Registration* = object of RootObj
         id*: string

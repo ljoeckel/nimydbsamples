@@ -8,7 +8,7 @@ import macros
 import nimrss
 
 const
-    MAXNEWS = 50 # How many news to show in 'latest'
+    MAXNEWS = 100 # How many news to show in 'latest'
     HTML_DIR = "html/"
 
 
@@ -311,18 +311,12 @@ proc handleSearch(req: Request) =
     var articles: string
     
     var info = meassure:
-        let itemkeys = getRSSItemKeys(stemword) # @["1158,4", "118,10"...]
-    
-        if itemkeys.len > 0:
-            for key in itemkeys:
-                let parts = key.split(",")
-                let rssItem = loadObject[RSSItem](@[parts[0], parts[1]])
-                cards.add(createRSSItemCard(rssItem))
-            
-            articles = fmt"{itemkeys.len} articles"
-        else:
-            for word in getKeywords(stemword):
-                keywords.add(word & " ")
+        let searchResults = getFTI(keyword, lang) # @["1158,4", "118,10"...]
+        for searchResult in searchResults:
+            let rssItem = loadObject[RSSItem](searchResult.subscript)
+            cards.add(createRSSItemCard(rssItem))
+        
+        articles = fmt"{searchResults.len} articles"
 
     let infotxt = if articles.len > 0: fmt"{articles} in {info}" else: fmt"Indexsearch in {info}"
     let infoContainer = fmt"""{{

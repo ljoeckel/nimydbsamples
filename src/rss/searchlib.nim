@@ -1,12 +1,14 @@
 import std/strformat
 import std/wordwrap
-import std/[algorithm, sequtils, tables]
+import std/[algorithm, sequtils, sets, tables]
 import std/[options, strutils, typetraits]
 import std/[sha1, base64, httpclient, times]
 import rssatom
 import yottadb
+import stemmer
 import types
 import sugar
+
 
 const TIME_FORMATS* = [
     "yyyy-MM-dd'T'HH:mm:sszzz",
@@ -17,6 +19,15 @@ const TIME_FORMATS* = [
     "d MMM yyyy HH:mm:ss ZZZ",
     "ddd, dd MMM yyyy HH:mm 'GMT'" # Thu, 09 Apr 2026 12:57 GMT
   ]
+
+proc trim(s: string): string =
+    # remove all leading, trailing and double spaces from a string " abc  def " -> "abc def"
+    result = strip(s)
+    var idx = result.find("  ")
+    while idx > 0:
+        result = result.replace("  ", " ")
+        idx = result.find("  ")
+
 
 proc getUnixTimestamp*(dts: string): string =
   if dts.len > 0:
@@ -93,28 +104,36 @@ proc normalizeUrl*(url: string): string =
     )
 
 
-proc getKeywords*(keyword: string = ""): seq[string] =
-    let kw = toLower(keyword)
-    var combined: seq[string]
-    for indexName in @["category", "topic", "keywords"]:
-        var global = fmt"^RSSItem{indexName.toUpper}"
-        if kw.len > 0:
-            global.add(fmt"({kw})")
-        for key  in OrderItr @global:
-            if key.startsWith(kw):
-                combined.add(key)
-    combined.sort()
-    result = combined.deduplicate(isSorted = true)
+proc getFTI*(keyword: string, lang: string): seq[TimeSearchEntry] =
+    var resultTable = initTable[string, seq[TimeSearchEntry]]()
 
-proc getRSSItemKeys*(keyword: string = ""): seq[string] =
-    let kw = toLower(keyword)
-    var combined: seq[string]
-    for indexName in @["category", "topic", "keywords"]:
-        var global = fmt"^RSSItem{indexName.toUpper}"
-        for key  in OrderItr @global(kw, ""):
-            combined.add(key)
-    combined.sort()
-    result = combined.deduplicate(isSorted = true)
+    let kws = toLower(trim(keyword))
+    for kw in split(kws," "):
+        var items: seq[TimeSearchEntry]
+        let stemword = stem(strip(kw), lang)
+        for keys in QueryItr ^RSSItemFTI(stemword).keys:
+            if not keys[0].startsWith(stemword): break
+            items.add(TimeSearchEntry(subscript: @[keys[1], keys[2] ]))
+        
+        resultTable[kw] = items
+
+    # collect all Keys
+    let keys = toSeq(resultTable.keys)
+    if keys.len > 0:
+        var common = resultTable[keys[0]].toHashSet
+        for i in 1 ..< keys.len:
+            common = common * resultTable[keys[i]].toHashSet # schnittmenge aller teilergebnisse
+
+        echo fmt"Found {common.len} entries for '{kws}'"
+        for entry in common:
+            var sr = entry
+            let subscript = entry.subscript
+            sr.time = Get ^RSSItem(subscript, "pubDate").int # get time from DB
+            result.add(sr)
+
+        # Descending: compare y with x
+        result.sort((x, y) => cmp(y.time, x.time))
+        
 
 proc showRSS*(keys: string) =
     let key = if keys.contains(","): keys.split(",")[0] else: keys
@@ -209,12 +228,7 @@ proc clearRssDb*() =
         ^RSSItemIDXREF
         ^RSSFTI
         ^RSSItemFTI
-        #^ConfigFeed
-        #^Feed
-        #^UserFeeds
+        ^ConfigFeed
+        ^Feed
+        ^UserFeeds
     echo "RSS Globals killed"
-
-
-if isMainModule:
-    let dts = getUnixTimestamp("Thu, 09 Apr 2026 12:57 GMT")
-    echo "dts=", dts

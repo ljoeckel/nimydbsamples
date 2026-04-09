@@ -24,10 +24,12 @@ proc stem(word: string, stm: ptr sb_stemmer): string =       # wrap snowball ste
 
 
 proc stem*(word: string, lang: string): string =
-    if lang == "DE":
-        stem(word, stmDE)
-    else:
-        stem(word, stmEN)
+  if word.isEmptyOrWhitespace: return ""
+
+  if lang == "DE":
+      stem(word, stmDE)
+  else:
+      stem(word, stmEN)
 
 
 iterator words(text: string): string =  # Tokenizer; could go UTF8, limit..
