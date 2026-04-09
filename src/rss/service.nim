@@ -5,10 +5,7 @@ import std/[options, typetraits, enumerate]
 import std/[sha1, httpclient]
 import mummy, mummy/routers, mummy/datastar
 import macros
-import rssatom
-import yottadb
-import types
-import searchlib
+import nimrss
 
 const
     MAXNEWS = 50 # How many news to show in 'latest'
@@ -49,8 +46,6 @@ proc handleGoto(req: Request) =
     # process menu links g.E. <a href="#form" data-on:click="$menuOpen = false; @get('goto/form.html')">Registration</a>
     let page = req.path.split("/goto/")[1]
     SSE(req):
-        #clearFormFields(sse)
-        #clearTechFields(sse)
         forward(sse, HTML_DIR & page)
 
 
@@ -60,65 +55,58 @@ proc getFeeds(): seq[Feed] =
         result.add(loadObject[ConfigFeed](feedId))
 
 
-proc createRSSItemCard(rss: RSSItem): string =
-    let title = getOption(rss.title)
-    let description = getOption(rss.description)
-    let link = getOption(rss.link)
+proc createRSSItemCard(item: RSSItem): string =
+    let title = getOption(item.title)
+    let description = getOption(item.description)
+    let link = getOption(item.link)
 
     # categories
     var category: string
-    if rss.category.len > 0:
+    if item.category.len > 0:
         var cat: string
-        for idx, word in enumerate(rss.category):
+        for idx, word in enumerate(item.category):
             cat.add(word & " ")
             if idx >= 2: break
         category = fmt"""<span class="tag">{cat}</span>"""
     
-    var topic = getOption(rss.topic)
-    if topic.len > 0:
-        topic = fmt"""<span class="tag">{toUpper(topic)}</span>"""
+    var topic = getOption(item.topic)
+    if topic.len > 0: topic = fmt"""<span class="tag">{toUpper(topic)}</span>"""
     
     var keywords: string
-    if rss.keywords.len > 0:
+    if item.keywords.len > 0:
         var keywordlist: string
-        for idx, word in enumerate(rss.keywords):
+        for idx, word in enumerate(item.keywords):
             keywordlist.add(word & " ")
-            if idx >= 2: break
+            if idx >= 2: break # show only first 3 keywords
         keywords = fmt"""<span class="tag">{keywordlist}</span>"""
 
-    let dt = getOption(rss.pubDate)
     var pubDate: string
     try: 
-        pubDate = fmt"{parseInt(dt).fromUnix.local()}"
+        let dt = getOption(item.pubDate)
+        let fu = parseInt(dt).fromUnix()
+        pubDate = fu.format("dd.MM.yyyy HH:mm")
     except:
-         pubDate = "01.01.1970"
-
-    var image:string
-    if rss.enclosure.url.len > 0 and rss.enclosure.enclosureType.len > 0 and rss.enclosure.enclosureType.startsWith("image/"):
-        image = fmt"""
-                <image src="{rss.enclosure.url}" class="rssimage">
-            """
-    image = ""
+         pubDate = "01.01.1970 00:00"
 
     # load feed RSSImage
-    let rssImage = loadObject[RSSImage](rss.idxref.split(',')[0])
+    let rssImage = loadObject[RSSImage](item.idxref.split(',')[0])
     let feedUrl = getOption(rssImage.url)
-    let feedId = getOption(rss.feedId)
+    let feedId = getOption(item.feedId)
     
-    var divimg: string
+    var divimg, feedTitle, feedLink: string
     if feedUrl.len > 0:
-        let feedTitle = getOption(rssImage.title)
-        let feedLink = getOption(rssImage.link)
-        var feedWidth = getOption(rssImage.width)
-        if feedWidth.len == 0: feedWidth = "90"
-        var feedHeight = getOption(rssImage.height)
-        if feedHeight.len == 0: feedHeight = "36"
-        let feedDescription = getOption(rssImage.description)
-        #if feedUrl.len > 0: divimg.add(fmt"""<image src="{feedUrl}" class="icon">""")
-        divimg.add(fmt"""<a target="_blank" href={feedLink} class="footer-link">""")
-        divimg.add(fmt"""<span class="feed-title">{feedTitle}</span>""")
-        divimg.add("</a>")
+        feedTitle = getOption(rssImage.title)
+        if feedTitle.len == 0: feedTitle = getOption(item.title)
+        feedLink = getOption(rssImage.link)
+    else:
+        let rssId = item.idxref.split(',')[0]
+        feedTitle = Get ^RSS(rssId, "title")
+        feedLink = Get ^RSS(rssId, "link")
 
+    divimg.add(fmt"""<a target="_blank" href={feedLink} class="footer-link">""")
+    divimg.add(fmt"""<span class="feed-title">{feedTitle}</span>""")
+    divimg.add("</a>")
+    
     let card = fmt"""
         <div class="rsscard">
             <div class="rsscard-tags">
@@ -126,23 +114,23 @@ proc createRSSItemCard(rss: RSSItem): string =
                 {category}
                 {keywords}
             </div>
-            <div class="rsscard-title">  <a target="_blank" href="{link}">{title}</a> </div>
-            <p class="rsscard-text"> {description} </p>
+            <div class="rsscard-title"> <a target="_blank" href="{link}"> {title}</a> </div>
+            <p class="rsscard-text"> <a target="_blank" href="{link}"> {description}</a> </p>
             <div class="rsscard-footer">
                 <p>{divimg}</p>
-                <p class="rsspubdate"> {pubDate} / {rss.idxref} / {feedId}</p>
-                {image}
+                <p class="rsspubdate"> {pubDate} / {item.idxref} / {feedId}</p>
             </div>
         </div>
         """
+
     return card
+
 
 proc createLatestCards(max: int, userid: string): string =
     let userFeeds = loadObject[UserFeeds](userid)
-
+   
     var cards: string
-    let items = getLatestRSSItems(max, userFeeds.feeds)
-    for rssItem in items:
+    for rssItem in getLatestRSSItems(max, userFeeds.feeds):
         # produce cards for output
         cards.add(createRSSItemCard(rssItem))
 
@@ -151,6 +139,7 @@ proc createLatestCards(max: int, userid: string): string =
     }}"""
 
     return container
+
 
 proc getWallClock(req: Request): string =
     let userid = getSignal(req, "userid")
@@ -162,7 +151,6 @@ proc handleLiveFeed(req: Request) =
     let userid = getSignal(req, "userid")
     let wallclock = getWallClock(req)
     let keywordContainer = fmt"""{{<div id="keywords"></div>}}"""
-    echo "handleLiveFeed ", $getSignals(req)
 
     SSE(req):
         patchElements(sse, fmt"<h3 id='wallclock'>{wallclock}</h3>")
@@ -170,41 +158,6 @@ proc handleLiveFeed(req: Request) =
         patchElements(sse, createLatestCards(MAXNEWS, userid))
 
 
-proc handleUpdateClock(req: Request) =
-    let userid = getSignal(req, "userid")
-    var lastSHA1: string
-
-    # /update-clock and RSSItems (Do not close the connection)
-    var sse = req.respondSSE()
-    while true:
-        try:
-            # Update Wall-Clock
-            let msg = getWallClock(req)
-            patchElements(sse, fmt"<h3 id='wallclock'>{msg}</h3>")
-
-            # Show articles for logged in users
-            if userid.len > 0:
-                # Update Articles
-                let formId = getSignal(req, "formId")
-                echo "updateclock page:", formId, " signals=", getSignals(req)
-                if formId == "livefeed":
-                    let cards = createLatestCards(MAXNEWS, userid)
-                    let sha1 = generateSHA1(cards)
-                    if sha1 != lastSHA1:
-                        echo "New Articles"
-                        lastSHA1 = sha1
-                        patchElements(sse, cards)
-
-            #let msToNextMinute = 60000 - (now().second * 1000 + now().nanosecond div 1_000_000)
-            #sleep(msToNextMinute)
-            sleep(10000)
-        except:
-            echo "Leaving handleUpdateClock: ", getCurrentExceptionMsg()
-            sse.close()
-            break
-
-
-#proc createTRFeed(id: string, group: string, title: string, enabled: bool): string =
 proc createTRFeed(feed: Feed): string =
     let id = feed.rssid
     let group = feed.group
@@ -213,7 +166,8 @@ proc createTRFeed(feed: Feed): string =
     # Construct a <TR><TD>Feed with id, title, status
     var dataclass = fmt"{{selected: $id==='{id}'}}"
     var markedclass = if enabled: "class='marked'" else: ""
-    let checkbox = if enabled: "<i class='bi bi-check-square'></i>" else: "<i class='bi-dash-square-dotted'></i></i>"
+    let checkbox = if enabled: "<i class='bi bi-check-square'></i>" else: "<i class='bi bi-square'></i></i>"
+    #let checkbox = if enabled: "<i class='bi bi-check-square'></i>" else: "<i class='bi-dash-square-dotted'></i></i>"
     result = fmt"""
         <tr {markedclass} id='Feed{id}' data-on:click__stop="$id='{id}'; @post('/select-feed')" data-class="{dataclass}">
             <td>{title}</td>
@@ -222,9 +176,6 @@ proc createTRFeed(feed: Feed): string =
             </td>
         </tr>
         """
-
-#proc createTRFeed(feed: Feed): string =
-#    createTRFeed(feed.rssid, feed.group, feed.title, feed.enabled)
 
 
 proc handleGetFeeds(req: Request) {.gcsafe.} =
@@ -323,6 +274,18 @@ proc handleToggleFeedGroup(req: Request) =
 proc handleLogin(req: Request) =
     let userid = getSignal(req, "userid")
     if userid == "ljoeckel" or userid == "guest":
+        # Check for ^Feed
+        let dta = Data ^Feed(userid)
+        if dta == 0:  # no feeds for the user
+            echo "Create initial Feeds for user ", userid
+            var userFeeds: UserFeeds
+            userFeeds.userid = userid
+
+            for feedid in OrderItr ^ConfigFeed:
+                let feed = loadObject[ConfigFeed](feedid)
+                userFeeds.feeds.add(feed)
+            saveObject[UserFeeds](userid, userFeeds)
+
         SSE(req):
             forward(sse, "./html/livefeed.html")
 
@@ -334,16 +297,21 @@ proc handleLogout(req: Request) =
 
 proc handleSearch(req: Request) =
     let keyword = getSignal(req, "keyword")
+    var lang = getSignal(req, "lang")
+    if lang.len == 0: lang = "DE"
+
     if keyword.len == 0:
         handleLiveFeed(req)
         return
+
+    let stemword = stem(keyword, lang)
 
     var cards: string
     var keywords: string
     var articles: string
     
     var info = meassure:
-        let itemkeys = getRSSItemKeys(keyword) # @["1158,4", "118,10"...]
+        let itemkeys = getRSSItemKeys(stemword) # @["1158,4", "118,10"...]
     
         if itemkeys.len > 0:
             for key in itemkeys:
@@ -353,7 +321,7 @@ proc handleSearch(req: Request) =
             
             articles = fmt"{itemkeys.len} articles"
         else:
-            for word in getKeywords(keyword):
+            for word in getKeywords(stemword):
                 keywords.add(word & " ")
 
     let infotxt = if articles.len > 0: fmt"{articles} in {info}" else: fmt"Indexsearch in {info}"
@@ -373,6 +341,37 @@ proc handleSearch(req: Request) =
         patchElements(sse, rssContainer)
         patchElements(sse, keywordContainer)
 
+
+proc handleUpdateClock(req: Request) =
+    let userid = getSignal(req, "userid")
+    var lastSHA1: string
+
+    # /update-clock and RSSItems (Do not close the connection)
+    var sse = req.respondSSE()
+    while true:
+        try:
+            # Update Wall-Clock
+            let msg = getWallClock(req)
+            patchElements(sse, fmt"<h3 id='wallclock'>{msg}</h3>")
+
+            # Show articles for logged in users
+            if userid.len > 0:
+                # Update Articles
+                let formId = getSignal(req, "formId")
+                if formId == "livefeed":
+                    let cards = createLatestCards(MAXNEWS, userid)
+                    let sha1 = generateSHA1(cards)
+                    if sha1 != lastSHA1:
+                        echo "New Articles"
+                        lastSHA1 = sha1
+                        patchElements(sse, cards)
+
+            let msToNextMinute = 60000 - (now().second * 1000 + now().nanosecond div 1_000_000)
+            sleep(msToNextMinute)
+        except:
+            echo "Leaving handleUpdateClock: ", getCurrentExceptionMsg()
+            sse.close()
+            break
 
 
 if isMainModule:
@@ -394,7 +393,6 @@ if isMainModule:
     router.post("/toggle-feedgroup", handleToggleFeedGroup)
 
     router.get("/update-clock", handleUpdateClock)
-    #router.post("/validate-email", isEmailRegistered)
 
     # Standard handlers
     router.get("/goto/**", handleGoto)

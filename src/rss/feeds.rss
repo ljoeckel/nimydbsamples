@@ -12,7 +12,7 @@ https://www.wallstreet-online.de/rss/board-dax.xml
 
 
 
-[News]
+[News German]
 https://taz.de/!p4608;rss/
 https://www.n-tv.de/politik/rss
 https://rss.sueddeutsche.de/rss/Alles
@@ -24,6 +24,24 @@ https://www.welt.de/?service=Rss
 https://www.tagesschau.de/xml/rss2
 https://www.spiegel.de/schlagzeilen/rss/0,5291,,00.xml
 https://www.zdf.de/rss/zdf/nachrichten
+
+[News English]
+https://www.nytimes.com/svc/collections/v1/publish/https://www.nytimes.com/section/world/rss.xml
+https://www.ft.com/world?format=rss
+https://www.theguardian.com/world/rss
+https://www.aljazeera.com/xml/rss/all.xml
+https://feeds.npr.org/1004/rss.xml
+https://feeds.washingtonpost.com/rss/world
+https://feeds.feedburner.com/time/world
+https://feeds.nbcnews.com/nbcnews/public/news
+https://abcnews.go.com/abcnews/internationalheadlines
+http://www.independent.co.uk/news/world/rss
+https://www.cnbc.com/id/100727362/device/rss/rss.html
+https://www.smh.com.au/rss/world.xml
+https://www.latimes.com/world-nation/rss2.0.xml#nt=1col-7030col1
+https://defence-blog.com/feed/
+https://wan-ifra.org/news/feed/
+https://www.washingtontimes.com/rss/headlines/news/world/
 
 [Medizin]
 https://rss.aerzteblatt.de/rss/news.asp

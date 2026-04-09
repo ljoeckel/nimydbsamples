@@ -1,14 +1,13 @@
-import std/[strformat, strutils]
-import yottadb
-import std/strformat
-import std/strutils
-import std/wordwrap
-import std/[algorithm, sequtils]
-import std/[options, strutils, strformat, typetraits, enumerate, os]
-import std/[sha1, base64, parseopt, httpclient, times]
+import std/[sequtils]
+import std/[options, parseopt, strutils, strformat, typetraits, os]
 import std/tables
+
+#import types
+#import searchlib
+
+import yottadb
 import rssatom
-import ydbutils
+import stemmer
 
 const STOPWORDS = {
     "ALL": "^stopwordsALL",
@@ -40,12 +39,48 @@ proc isStopword(word: string, lang: string): bool =
 
 proc splitWords(text: string, lang: string): seq[string] =
     # Replace with ' '
-    var s: string
+    var s = toLower(strip(text))
     for c in text:
         if c in {'\0'..'/', ':'..'@', '['..'`', '{'..'~'}: 
-            s.add(' ')
+            #s.add(' ')
+            continue
         else:
             s.add(c)
+
+    s = s.multiReplace(
+        ("«"," "),
+        ("“"," "),
+        ("„"," "),
+        ("†"," "),
+        ("•"," "),
+        ("…"," "),
+        ("–"," "),
+        (".", " "),
+        ("?", " "),
+        (",", " "),
+        ("-", " "),
+        ("—"," "),
+        ("_", " "),
+        ("'", " "),
+        ("`", " "),
+        ("\"", " "),
+        ("‘", " "),
+        ("‚", " "),
+        (":", " "),
+        ("‘"," "),
+        ("”", " "),
+        ("»", " "),
+        (" ", " "), # C2A0
+        (" ", " "), # E280AF
+        ("►", " "),
+        ("◄", " "),
+        ("■", " "),
+        ("ß", "ss"),
+        ("ä", "a"),
+        ("ö", "o"),
+        ("ü", "u"),
+        ("\t", " "),
+    )
 
     var spaces = s.find("  ")
     while spaces > 0:
@@ -57,31 +92,35 @@ proc splitWords(text: string, lang: string): seq[string] =
     result = result.filterIt(not it.isStopword(lang)) # No stopwords
 
 
-proc createFTIndex(item: RSSItem, lang: string): int =
+proc createFTIndex*(item: RSSItem, lang: string): int =
     var wordCount = 0
-    let title = if item.title.isSome: toLower(item.title.get()) else: ""
-    let description = if item.description.isSome: toLower(item.description.get()) else: ""
-    let idxref = item.idxref
+    let categories = item.category.join(" ")
+    let keywords = item.keywords.join(" ")
+    let topic = if item.topic.isSome: item.topic.get() else: ""
+    let title = if item.title.isSome: item.title.get() else: ""
+    let description = if item.description.isSome: item.description.get() else: ""
+    let keys = item.idxref.split(',') # the db key rss,article
+    let (k0, k1) = (keys[0], keys[1])
 
-    let words = splitWords(title & " - " & description, lang)
-    for word in words:
-        # create RSSItem key
-        let keys = idxref.split(',')
-        let k0 = keys[0]
-        let k1 = keys[1]
-        Set: ^RSSItemFTI(word, k0, k1) = ""
-        if word == "2026die":
-            echo "idxref:", item.idxref
-            echo "title:", title
-            echo "desc :", description
-            echo "words:", words
-        inc wordCount
-    
-    return wordCount
+    let words = splitWords(categories & " " & keywords & " " & topic & " " & title & " " & description, lang)
+    var wordtable = initCountTable[string]()
+    for word in words: wordtable.inc(word)
+
+    for word, cnt in wordtable.pairs:
+        let stemWord = stem(word, lang)
+        Set: ^RSSItemFTI(stemWord, k0, k1) = cnt
+
+    return wordtable.len
+
+proc createFTI*(rss: RSS): int =
+    var language = if rss.language.isSome: toUpper(rss.language.get()) else: "XX"
+    if language.find('-') > 0: language = language.split('-')[0]
+    for item in rss.items:
+        inc(result, createFTIndex(item, language))
 
 
 proc createRSSItemIndex() =
-    var wordCount = 0
+    var wordCount: int
     for rssId in OrderItr ^RSS:
         let rss = loadObject[RSS](rssId)
         var language = if rss.language.isSome: toUpper(rss.language.get()) else: "XX"
@@ -90,6 +129,7 @@ proc createRSSItemIndex() =
             inc(wordCount, createFTIndex(item, language))
     
     echo fmt"Indexed {wordCount} words"
+
 
 proc main() =
     var lang: string
@@ -101,26 +141,28 @@ proc main() =
         of cmdArgument: discard
         of cmdLongOption, cmdShortOption:
             if key == "h" or key == "help":
-                echo "setup_stopwords -l=<language>"
-                echo "-c : Create Fulltext Index"
+                echo "-l=<language> : Load stopwords into DB"
+                echo "-c    : Create Fulltext Index"
+                echo "-d    : Dump RSSItemFTI"
+                echo "-i=id : Load a RSS into FTI"
                 quit(0)
             if key == "l" or key == "language": 
                 lang = val
                 echo fmt"Loading stopwords for language '{lang}'"
                 let words = setupStopwords(lang)
                 echo fmt"Loaded {words} words"
-            if key == "c" or key == "create":
+            elif key == "c" or key == "create":
                 Kill: ^RSSItemFTI
                 createRSSItemIndex()
-            if key == "d" or key == "dump":
+            elif key == "d" or key == "dump":
                 for key in OrderItr ^RSSItemFTI:
                     echo key
+            elif key == "i":
+                let rss = loadObject[RSS](val)
+                let rc = createFTI(rss)
+                echo "rc=", rc
         of cmdEnd: discard
 
-
 if isMainModule:
-    Kill ^RSSItemFTI
+    Kill: ^RSSItemFTI
     main()
-    # let x = "–"
-    # for c in x:
-    #     echo c, ord(c)

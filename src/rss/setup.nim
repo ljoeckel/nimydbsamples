@@ -1,10 +1,6 @@
 import std/[options, strutils, strformat, typetraits, enumerate, os]
 import std/[sha1, base64, parseopt, httpclient, times, tables]
-import rssatom
-import yottadb
-import ydbutils
-import searchlib
-import types
+import nimrss 
 
 proc getXmlFromUrl(url: string): string =
     let client = newHttpClient()
@@ -14,27 +10,6 @@ proc getXmlFromUrl(url: string): string =
     except:
         echo "ERROR with url ", url, " : ", getCurrentException().msg
 
-
-
-proc clearDB(): int =
-    Kill:
-        ^Author
-        ^Feed
-        ^UserFeeds
-        ^RSSCNT
-        ^RSS
-        ^RSSTITLE
-        ^RSSEnclosure
-        ^RSSImage
-        ^RSSItem
-        ^RSSItemGUID
-        ^RSSItemCATEGORY
-        ^RSSItemTOPIC
-        ^RSSItemKEYWORDS
-        ^RSSItemPUBDATE
-        ^RSSItemIDXREF
-    echo "All RSS globals killed"
-    0
 
 
 proc setupFeeds(path: string): int =
@@ -86,20 +61,11 @@ if isMainModule:
         of cmdEnd: assert(false)
     
     if command == KillDB:
-        quit(clearDB())
+        clearFeedsDb()
+        quit(0)
     elif command == SetupFeed:
         quit(setupFeeds(feedPath))
     elif command == Help:
         echo "-f  : Load RSS feeds from <feeds.rss>"
         echo "-k  : Kill all RSS globals in the database"
     
-
-# if isMainModule:
-#     let feeds = getRSSFeedConfiguration()
-#     # In Sequenz umwandeln
-#     var sortedPairs = collect(newSeq):
-#         for k, v in feeds.pairs: (k, v)
-#     # Nach dem ersten Element (dem Key) sortieren
-#     sortedPairs.sort((a, b) => cmp(a[0], b[0]))
-#     for (section, urls) in sortedPairs:
-#         echo section, "=", urls

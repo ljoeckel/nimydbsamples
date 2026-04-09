@@ -1,30 +1,28 @@
 import std/[options, strutils, strformat, typetraits, enumerate, os]
 import std/[sha1, base64, parseopt, httpclient, times, tables]
-import rssatom
-import yottadb
-import ydbutils
-import searchlib
+import nimrss
+
+const
+    DOCUMENTS = "DOCUMENTS"
+    DOCUMENTS_SIZE = "DOCUMENTS_SIZE"
 
 
-proc getUnixTimestamp(dateStr: Option[string]): string =
-  let dts = getOption(dateStr)
-  if dts.len > 0:
-    for f in TIME_FORMATS:
-        try:
-            let dt = parse(dts, f)
-            return $dt.toTime().toUnix()
-        except:
-            continue
-  
-    raise newException(YdbError, "No matching timeformat found to create timestamp for '" & $dateStr)
+proc trim(s: string): string =
+    result = strip(s)
+    var idx = result.find("  ")
+    while idx > 0:
+        result = result.replace("  ", " ")
+        idx = result.find("  ")
+    
+    result = result.multiReplace(
+        ("&lt;strong&gt;", " "), ("&lt;/strong&gt;", ""),
+    )
 
 
-proc getNewGUID(item: RSSItem): string =
-    let title = getOption(item.title)
-    let guidStr = getOption(item.guid)
-    let guid = generateSHA1(title & guidStr, 32)
-    let id = Query ^RSSItemGUID(guid)
-    result = if id.len > 0 and id.find(guid) != -1: "" else: guid
+proc getGUID(item: RSSItem): (string, bool) =
+    let guid = generateSHA1(getOption(item.title) & getOption(item.description), 32)
+    let dta = Data ^RSSItemGUID(guid)
+    return (guid, dta == 0)
 
 
 proc getXmlFromUrl(url: string): string =
@@ -32,101 +30,118 @@ proc getXmlFromUrl(url: string): string =
     defer: client.close()
     try:
         result = client.getContent(url)
+        return trim(result)
     except:
         echo "ERROR with url ", url, " : ", getCurrentException().msg
         return
 
-
-proc getXmlFromFile(path: string): string =
-    result = strip(readFile(path))
-    # remove tabs from xml file
-    result = result.replace("\9","").replace("\n","")
-
     
+proc updateConfigFeed(rss: RSS, group: string) =
+    var normalizedTitle = normalizeChannelTitle(rss.title.get())
+    let sha = generateSHA1(normalizedTitle)  # Feed-Title 'Deutschlandfunk' > abckdkd93,d;-
+    let dta = Data ^ConfigFeed(sha)
+    if dta == 0:  # new feed
+        var newFeed: ConfigFeed
+        newFeed.rssid = sha
+        newFeed.title = getOption(rss.title)
+        newFeed.description = getOption(rss.description)
+        newFeed.enabled = true
+        newFeed.group = group
+        saveObject[ConfigFeed](sha, newFeed)
+
+        # Update the ^UsersFeeds
+        for userid in OrderItr ^UserFeeds:
+            var userFeeds = loadObject[UserFeeds](userid)
+            userFeeds.feeds.add(newFeed)
+            saveObject[UserFeeds](userid, userFeeds)
+
+
 proc saveXmlFile(url: string, xml: string) =
-    let nurl = normalizeUrl(url)
+    let nurl = generateSHA1(url)
     let xmlcount = Increment ^RSSCNT(nurl)
     writeFile(fmt"./xml/{nurl}_{xmlcount}.xml", xml)
 
 
-proc processFeed(feed: var RSS): int =
-    # process the feed. Returns the number of new entries
-    # 1. Check if any new article found in feed
-    var newArticles: bool
-    for item in feed.items:
-        if getNewGUID(item).len > 0:
-            newArticles = true
-            break
-    if not newArticles: return 0
+proc setPubDate(rss: var RSS) =
+    # setup Dates for items and rss
+    let ts = now().format("yyyy-MM-dd'T'HH:mm:sszzz")
+    var opt: string
+    for item in rss.items.mitems:
+        opt = getOption(item.pubDate)
+        if opt.len == 0: opt = getOption(rss.pubDate)
+        let pubDate = if opt.len > 0: parseInt(getUnixTimestamp(opt)) else: parseInt(getUnixTimestamp(ts))
+        opt = getOption(item.updated)
+        let updated = if opt.len > 0: parseInt(getUnixTimestamp(opt)) else: 0
+        item.pubDate = if updated > pubDate: some($updated) else: some($pubDate)
+        item.updated = some($updated)
+
+    opt = getOption(rss.pubDate)
+    let pubDate = if opt.len > 0: parseInt(getUnixTimestamp(opt)) else: parseInt(getUnixTimestamp(ts))
+    opt = getOption(rss.lastBuildDate)
+    let updated = if opt.len > 0: parseInt(getUnixTimestamp(opt)) else: 0
+    rss.pubDate = if updated > pubDate: some($updated) else: some($pubDate)
+    rss.lastBuildDate = some($updated)
+
+
+proc processFeed(rss: var RSS): (int, int) =
+    setPubDate(rss)
 
     # Collect new items
     var newItems: seq[RSSItem]
-    for cnt, item in enumerate(feed.items.mitems):
-        let guid = getNewGUID(item)
-        if guid.len == 0: continue # Only new items will have a 'guid'
-
-        # Update id for RSSItem's to build the indexes g.E. ^RSSItemGUID, ^RSSItemTOPIC etc. index
-        item.guid = some(guid)
-        item.pubDate = some(getUnixTimestamp(item.pubDate)) # create normalized timestamp
-        # lowercase category / keywords / topic for search index
-        for i in 0..<item.category.len:
-            item.category[i] = toLower(item.category[i])
-        for i in 0..<item.keywords.len:
-            item.keywords[i] = tolower(item.keywords[i])
-        if item.topic.isSome: item.topic = some(toLower(item.topic.get()))
-        newItems.add(item)
+    var wordCount: int
+    for cnt, item in enumerate(rss.items.mitems):
+        let (guid, isNew) = getGUID(item)
+        if isNew: # New item
+            item.guid = some(guid)
+            newItems.add(item)
 
     if newItems.len > 0:
         # Create a new id for ^RSS, ^RSSItem, ... used in serialization
-        var normalizedTitle = normalizeChannelTitle(feed.title.get())
+        var normalizedTitle = normalizeChannelTitle(rss.title.get())
         let feedId = generateSHA1(normalizedTitle)  # Feed-Title 'Deutschlandfunk' > abckdkd93,d;-
         let id = Increment ^RSSCNT("RSS")
-        feed.id = some($feedId & "," & $id)
+        rss.id = some($feedId & "," & $id)
         for cnt, item in enumerate(newItems.mitems):
             item.idxref = fmt"{id},{cnt}" # idxref="33,1"
             item.feedId = some(feedId)
+            # Calculation for FTI BM25
+            discard Increment ^RSSCNT(DOCUMENTS)
+            let documentLen = (getOption(item.title)).len + (getOption(item.description)).len
+            Set: ^RSSFTI(id, cnt, "len") = documentLen
+            let totalSize = Get ^RSSCNT(DOCUMENTS_SIZE).int
+            Set: ^RSSCNT(DOCUMENTS_SIZE) = totalSize + documentLen
+
         
         # replace items with newItems and save
-        feed.items = newItems
-        saveObject(@[$id], feed)
+        rss.items = newItems
+        saveObject(@[$id], rss)
 
-    return newItems.len
+        # create the FTI index
+        wordCount = createFTI(rss)
+
+    return (newItems.len, wordCount)
 
 
 proc processFeeds(feedPath: string) =
     let feeds = getRSSFeedConfiguration(feedPath) #: Table[string, seq[string]] =
     # Main entry point for the RSS Feed application (Collector)
-    for section, urls in feeds.pairs:
-        echo "Section ", section
-        if section.len == 0: continue
+    for group, urls in feeds.pairs:
+        if group.len == 0: continue
         for url in urls:
-            echo "Fetching ", url
             let xml = getXmlFromUrl(url)
             if xml.len == 0: continue
+            var rss = parseRSS(xml)
+            if not rss.link.isSome():
+                echo "No link found in RSS. Try Atom-Parser"
+                rss = parseAtom(xml)
 
-            var feed = parseRSS(xml)
-            let nbrNewItms = processFeed(feed)
+            updateConfigFeed(rss, group) # create a ^ConfigFeed entry for new feeds
+
+            let (nbrNewItms, wordCount) = processFeed(rss)
             if nbrNewItms > 0:
                 saveXmlFile(url, xml) # Save the XMl file
+                echo fmt"Fetched {nbrNewItms} new Items with {wordCount} index words from '{group}': {url}"
 
-
-proc clearDB() =
-    Kill:
-        ^Author
-        ^Feed
-        ^UserFeeds
-        ^RSSCNT
-        ^RSS
-        ^RSSTITLE
-        ^RSSEnclosure
-        ^RSSImage
-        ^RSSItem
-        ^RSSItemGUID
-        ^RSSItemCATEGORY
-        ^RSSItemTOPIC
-        ^RSSItemKEYWORDS
-        ^RSSItemPUBDATE
-        ^RSSItemIDXREF
 
 if isMainModule:
     var init = false
@@ -164,8 +179,7 @@ if isMainModule:
                 init = true
                 maxItems = if val.len > 0: parseInt(val) else: 0
             if key == "k" or key == "kill":
-                echo "Kill all Globals"
-                clearDB()
+                clearRssDb()
                 quit(0)
 
         # Ende der Eingabe
@@ -187,12 +201,14 @@ if isMainModule:
     elif init:
         echo "Loading from 'xml' files"
         let files = directoryWalk("./xml")
-        for url in files:
-            let xml = getXmlFromFile(url)
+        for file in files:
+            if not toUpper(file).endsWith(".XML"): continue
+            let xml = trim(readFile(file))
+            echo "file: ", file
             var feed = parseRSS(xml)
-            let nbrNewItms = processFeed(feed)
+            let (nbrNewItms, wordCount) = processFeed(feed)
             if nbrNewItms > 0:
-                echo "url:", url, " nbrNewItms=", nbrNewItms
+                echo "file:", file, " nbrNewItms=", nbrNewItms, " wordCount=", wordCount
                 dec maxItems
                 if maxItems == 0:
                     break

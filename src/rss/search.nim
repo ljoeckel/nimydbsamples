@@ -1,13 +1,8 @@
-import std/strformat
-import std/strutils
-import std/wordwrap
 import std/[algorithm, sequtils]
-import std/[options, strutils, strformat, typetraits]
+import std/[options, wordwrap, strutils, strformat, typetraits]
 import std/[sha1, base64, parseopt, httpclient, times]
-import rssatom
-import yottadb
-import ydbutils
-include searchlib
+import nimrss
+import std/tables
 
 proc search() =
     while true:
@@ -27,8 +22,15 @@ proc search() =
 proc showLatest(max: int) =
     for key in getLatestRSSItemKeys(max):
         showRSSItem(key)
-    #for item in getLatestRSSItems(25):
-    #    echo item
+
+
+proc dumpFTI(start: string) = 
+    var wt = initCountTable[string]()    
+    for keys in QueryItr ^RSSItemFTI.keys:
+        let k = keys[0]
+        wt.inc(k)
+    echo wt
+    echo "words=", wt.len
 
 
 # ----------------
@@ -49,6 +51,7 @@ proc main() =
                 echo "     -f=n,m           : Fetch ^RSSItem(n, m)"
                 echo "     -s               : Search with keywords"
                 echo "     -d=^global       : Dump a database global"
+                echo "     -t               : Dump Full Text Index"
                 quit(0)
             elif key == "l" or key == "latest":
                 if val.len > 0:
@@ -67,6 +70,8 @@ proc main() =
                 search()
             elif key == "d":
                 fullDump(val)
+            elif key == "t":
+                dumpFTI(val)
             else:
                 echo "ERROR: Illegal command. Use -h"
         of cmdEnd: 
@@ -77,5 +82,5 @@ proc main() =
     if optcnt == 0:
         search()
 
-
-main()
+if isMainModule:
+    main()
