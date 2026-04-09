@@ -15,7 +15,19 @@ const TIME_FORMATS* = [
     "ddd, d MMM yyyy HH:mm:ss 'UTC'",
     "ddd, d MMM yyyy HH:mm:ss 'EDT'",
     "d MMM yyyy HH:mm:ss ZZZ",
+    "ddd, dd MMM yyyy HH:mm 'GMT'" # Thu, 09 Apr 2026 12:57 GMT
   ]
+
+proc getUnixTimestamp*(dts: string): string =
+  if dts.len > 0:
+    for f in TIME_FORMATS:
+        try:
+            let dt = parse(dts, f)
+            return $dt.toTime().toUnix()
+        except:
+            continue
+  
+    raise newException(YdbError, "No matching timeformat found to create timestamp for '" & $dts)
 
 
 template getOption*(option: Option): string =
@@ -173,3 +185,36 @@ proc fullDump*(global: string) =
     for key, value in QueryItr @gbl.kv:
         #let rss = loadObject[RSS](key)
         echo key,"=",value
+
+
+proc clearFeedsDb*() =
+    Kill:
+        ^ConfigFeed
+        ^Feed
+        ^UserFeeds
+    echo "Feed related globals killed"
+
+proc clearRssDb*() =
+    Kill:
+        ^Author
+        ^RSSCNT
+        ^RSS
+        ^RSSTITLE
+        ^RSSEnclosure
+        ^RSSImage
+        ^RSSItem
+        ^RSSItemGUID
+        ^RSSItemCATEGORY
+        ^RSSItemPUBDATE
+        ^RSSItemIDXREF
+        ^RSSFTI
+        ^RSSItemFTI
+        #^ConfigFeed
+        #^Feed
+        #^UserFeeds
+    echo "RSS Globals killed"
+
+
+if isMainModule:
+    let dts = getUnixTimestamp("Thu, 09 Apr 2026 12:57 GMT")
+    echo "dts=", dts

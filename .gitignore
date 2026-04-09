@@ -8,9 +8,7 @@ nimble.paths
 nimbledeps
 src/rss/xml
 src/rss/demo.txt
-src/rss/rsscollector
 src/rss/search
 src/rss/searchlib
-src/rss/service
 src/rss/setup
 src/rss/stopwords
