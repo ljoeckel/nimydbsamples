@@ -6,9 +6,9 @@ type
         group*: string
         title*: string
         description*: string
-        enabled*: bool = true
         lastAccess*: string
         lastError*: string
+        enabled*: bool = true
 
     ConfigFeed* = object of Feed
     
@@ -18,8 +18,9 @@ type
         feeds*: seq[Feed]
 
     TimeSearchEntry* = object of RootObj
-        subscript*: seq[string]
         time*: int
+        wordCounts*: seq[int]
+        subscript*: seq[string]
 
 type
     Registration* = object of RootObj
@@ -30,6 +31,6 @@ type
         message*: string
         country* {.INDEX: "id".} : string
         plan* {.INDEX: "id".} : string = "starter"
-        terms* {.INDEX: "id".} : bool
         status* {.INDEX: "id".} : string
         time*: string
+        terms* {.INDEX: "id".} : bool

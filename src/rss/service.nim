@@ -126,19 +126,21 @@ proc createRSSItemCard(item: RSSItem): string =
     return card
 
 
-proc createLatestCards(max: int, userid: string): string =
+proc createLatestCards(max: int, userid: string): (string, int) =
     let userFeeds = loadObject[UserFeeds](userid)
    
     var cards: string
+    var items: int
     for rssItem in getLatestRSSItems(max, userFeeds.feeds):
         # produce cards for output
         cards.add(createRSSItemCard(rssItem))
+        inc items
 
     let container = fmt"""{{
         <div id="rsscard" class="rsscard-container">{cards}</div>      
     }}"""
 
-    return container
+    return (container, items)
 
 
 proc getWallClock(req: Request): string =
@@ -155,8 +157,16 @@ proc handleLiveFeed(req: Request) =
     SSE(req):
         patchElements(sse, fmt"<h3 id='wallclock'>{wallclock}</h3>")
         patchElements(sse, keywordContainer) # clear keyword search result
-        patchElements(sse, createLatestCards(MAXNEWS, userid))
+        var cardsContent: string
+        var cardsCount: int
+        var info = meassure:
+            (cardsContent, cardsCount) = createLatestCards(MAXNEWS, userid)
+        let articles = fmt"{cardsCount} articles"
+        let infotxt = if articles.len > 0: fmt"{articles} in {info}" else: fmt"Fetch in {info}"
+        let infoContainer = fmt"""{{<h3 id="info">{infotxt}</h3>}}"""
 
+        patchElements(sse, cardsContent)
+        patchElements(sse, infoContainer)
 
 proc createTRFeed(feed: Feed): string =
     let id = feed.rssid
@@ -296,6 +306,7 @@ proc handleLogout(req: Request) =
 
 
 proc handleSearch(req: Request) =
+    let userid = getSignal(req, "userid")
     let keyword = getSignal(req, "keyword")
     var lang = getSignal(req, "lang")
     if lang.len == 0: lang = "DE"
@@ -311,7 +322,7 @@ proc handleSearch(req: Request) =
     var articles: string
     
     var info = meassure:
-        let searchResults = getFTI(keyword, lang) # @["1158,4", "118,10"...]
+        let searchResults = getFTI(keyword, lang, userid) # @["1158,4", "118,10"...]
         for searchResult in searchResults:
             let rssItem = loadObject[RSSItem](searchResult.subscript)
             cards.add(createRSSItemCard(rssItem))
@@ -353,12 +364,22 @@ proc handleUpdateClock(req: Request) =
                 # Update Articles
                 let formId = getSignal(req, "formId")
                 if formId == "livefeed":
-                    let cards = createLatestCards(MAXNEWS, userid)
-                    let sha1 = generateSHA1(cards)
+                    var cardsContent: string                    
+                    var cardsCount: int
+                    var info = meassure:
+                        (cardsContent, cardsCount) = createLatestCards(MAXNEWS, userid)
+
+                    let articles = fmt"{cardsCount} articles"
+                    let infotxt = if articles.len > 0: fmt"{articles} in {info}" else: fmt"Fetch in {info}"
+                    let infoContainer = fmt"""{{<h3 id="info">{infotxt}</h3>}}"""
+
+                    # Check for new acticles
+                    let sha1 = generateSHA1(cardsContent)
                     if sha1 != lastSHA1:
                         echo "New Articles"
                         lastSHA1 = sha1
-                        patchElements(sse, cards)
+                        patchElements(sse, infoContainer)
+                        patchElements(sse, cardsContent)
 
             let msToNextMinute = 60000 - (now().second * 1000 + now().nanosecond div 1_000_000)
             sleep(msToNextMinute)

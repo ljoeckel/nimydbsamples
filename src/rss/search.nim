@@ -4,7 +4,7 @@ import std/[sha1, base64, parseopt, httpclient, times]
 import nimrss
 import std/tables
 
-proc search() =
+proc search(lang: string = "DE") =
     while true:
         stdout.write("Search for: ")
         stdout.flushFile()
@@ -12,11 +12,8 @@ proc search() =
         if searchFor == "": quit(0)
 
         timed:
-            for key in getRSSItemKeys(searchFor):
-                showRSSItem(key)
-
-        let more = getKeywords(searchFor)
-        if more.len > 0: echo "More keywords: ", more
+            for tse in getFTI(searchFor, lang):
+                showRSSItem(tse.subscript[0] & "," & tse.subscript[1])
 
 
 proc showLatest(max: int) =
@@ -49,7 +46,7 @@ proc main() =
                 echo "search -l"
                 echo "     -l[=n], --latest : Get the n latest entries (50 is default)"
                 echo "     -f=n,m           : Fetch ^RSSItem(n, m)"
-                echo "     -s               : Search with keywords"
+                echo "     -s[=lang]        : Search with keywords (lang defaults to DE)"
                 echo "     -d=^global       : Dump a database global"
                 echo "     -t               : Dump Full Text Index"
                 quit(0)
@@ -67,7 +64,7 @@ proc main() =
                 showRSS(val)
                 showRSSItem(val)
             elif key == "s":
-                search()
+                search(val)
             elif key == "d":
                 fullDump(val)
             elif key == "t":

@@ -14,3 +14,4 @@ src/rss/setup
 src/rss/stopwords
 src/rss/service
 src/rss/rsscollector
+src/rss/lj

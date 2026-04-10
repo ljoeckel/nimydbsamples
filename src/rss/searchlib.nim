@@ -20,6 +20,10 @@ const TIME_FORMATS* = [
     "ddd, dd MMM yyyy HH:mm 'GMT'" # Thu, 09 Apr 2026 12:57 GMT
   ]
 
+var
+    MIN_KEYWORD_LEN = 2
+    MAX_SEARCH_RESULTS = 1000
+
 proc trim(s: string): string =
     # remove all leading, trailing and double spaces from a string " abc  def " -> "abc def"
     result = strip(s)
@@ -104,8 +108,20 @@ proc normalizeUrl*(url: string): string =
     )
 
 
-proc getFTI*(keyword: string, lang: string): seq[TimeSearchEntry] =
+proc getFTI*(keyword: string, lang: string, userid: string): seq[TimeSearchEntry] =
+    # Search Full Text Index
+    
+    # check minimum length of keywords
+    if keyword.isEmptyOrWhitespace or keyword.len < MIN_KEYWORD_LEN: return
+
     var resultTable = initTable[string, seq[TimeSearchEntry]]()
+    
+    # Get enabled feeds
+    let userFeeds = loadObject[UserFeeds](userid)
+    var feedtable : seq[string]
+    for feed in userFeeds.feeds:
+        if feed.enabled:
+            feedtable.add(feed.rssid)
 
     let kws = toLower(trim(keyword))
     for kw in split(kws," "):
@@ -113,7 +129,10 @@ proc getFTI*(keyword: string, lang: string): seq[TimeSearchEntry] =
         let stemword = stem(strip(kw), lang)
         for keys in QueryItr ^RSSItemFTI(stemword).keys:
             if not keys[0].startsWith(stemword): break
-            items.add(TimeSearchEntry(subscript: @[keys[1], keys[2] ]))
+            # check if item is in active feed
+            let feedId = Order ^RSSItemIDXREF(keys[1] & "," & keys[2] ,"")
+            if feedId in feedtable:
+                items.add(TimeSearchEntry(subscript: @[keys[1], keys[2] ]))
         
         resultTable[kw] = items
 
@@ -125,14 +144,19 @@ proc getFTI*(keyword: string, lang: string): seq[TimeSearchEntry] =
             common = common * resultTable[keys[i]].toHashSet # schnittmenge aller teilergebnisse
 
         echo fmt"Found {common.len} entries for '{kws}'"
+        # Update TimeSearchEntry with pubDate and wordCount
         for entry in common:
             var sr = entry
             let subscript = entry.subscript
             sr.time = Get ^RSSItem(subscript, "pubDate").int # get time from DB
+            #sr.wordCount = 999
+            echo entry
             result.add(sr)
 
         # Descending: compare y with x
         result.sort((x, y) => cmp(y.time, x.time))
+        let maxresults = min(result.len, MAX_SEARCH_RESULTS)-1
+        return result[0..maxresults]
         
 
 proc showRSS*(keys: string) =
