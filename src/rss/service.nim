@@ -322,13 +322,15 @@ proc handleSearch(req: Request) =
     var articles: string
     
     var info = meassure:
-        let searchResults = getFTI(keyword, lang, userid) # @["1158,4", "118,10"...]
-        for searchResult in searchResults:
-            let rssItem = loadObject[RSSItem](searchResult.subscript)
+        var searchResults = getFTI(keyword, lang, userid) # @["1158,4", "118,10"...]
+        searchResults.sortFTIResult(SortBy.ByRelevanceDescending)
+        # Reduce result to max_search_results
+        let mx = min(searchResults.len, MAX_SEARCH_RESULTS)
+        for idx in 0..mx-1:
+            let rssItem = loadObject[RSSItem](searchResults[idx].subscript)
             cards.add(createRSSItemCard(rssItem))
-        
-        articles = fmt"{searchResults.len} articles"
-
+   
+    articles = fmt"{mx} articles"
     let infotxt = if articles.len > 0: fmt"{articles} in {info}" else: fmt"Indexsearch in {info}"
     let infoContainer = fmt"""{{
         <h3 id="info">{infotxt}</h3>

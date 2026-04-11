@@ -4,7 +4,8 @@ import std/[sha1, base64, parseopt, httpclient, times]
 import nimrss
 import std/tables
 
-proc search(lang: string = "DE") =
+
+proc search(lang: string = "DE", userid: string = "ljoeckel") =
     while true:
         stdout.write("Search for: ")
         stdout.flushFile()
@@ -12,8 +13,10 @@ proc search(lang: string = "DE") =
         if searchFor == "": quit(0)
 
         timed:
-            for tse in getFTI(searchFor, lang):
+            let results = getFTI(searchFor, lang, userid)
+            for tse in results:
                 showRSSItem(tse.subscript[0] & "," & tse.subscript[1])
+        echo fmt"Found {results.len} results"
 
 
 proc showLatest(max: int) =

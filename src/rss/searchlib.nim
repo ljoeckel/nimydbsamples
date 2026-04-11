@@ -1,6 +1,6 @@
 import std/strformat
 import std/wordwrap
-import std/[algorithm, sequtils, sets, tables]
+import std/[algorithm, sequtils, hashes, sets, tables]
 import std/[options, strutils, typetraits]
 import std/[sha1, base64, httpclient, times]
 import rssatom
@@ -19,10 +19,6 @@ const TIME_FORMATS* = [
     "d MMM yyyy HH:mm:ss ZZZ",
     "ddd, dd MMM yyyy HH:mm 'GMT'" # Thu, 09 Apr 2026 12:57 GMT
   ]
-
-var
-    MIN_KEYWORD_LEN = 2
-    MAX_SEARCH_RESULTS = 1000
 
 proc trim(s: string): string =
     # remove all leading, trailing and double spaces from a string " abc  def " -> "abc def"
@@ -107,15 +103,79 @@ proc normalizeUrl*(url: string): string =
         (";", ""), ("_", "")
     )
 
+proc getWordCountFromFTI(word: string, subscript: seq[string]): int =
+    let s0 = subscript[0]
+    let s1 = subscript[1]
+    result = Get ^RSSItemFTI(word, s0, s1).int
+    #TODO: Allow 1. Get ^RSSItemFTI(word, subscript)
+    #TODO: Allow 2. Get ^RSSItemFTI(word, subscript[0], subscript[1])
+
+
+# ========= Overwrites for HashTable[TimeSearchEntry] ========
+
+# Nur 'subscript' für den Vergleich nutzen
+proc `==`*(a, b: TimeSearchEntry): bool =
+  a.subscript == b.subscript
+
+# Nur 'subscript' für den Hash nutzen
+proc hash*(x: TimeSearchEntry): Hash =
+  var h: Hash = 0
+  h = h !& hash(x.subscript)
+  result = !$h
+
+template append(result: var HashSet[TimeSearchEntry], keyword: string, wc: int, item: TimeSearchEntry) =
+    var itm = item
+    inc(itm.wordCount, getWordCountFromFTI(keyword, item.subscript) + wc)
+    incl(result, itm)
+
+proc intersect(keyword: string, s1: var HashSet[TimeSearchEntry], s2: var HashSet[TimeSearchEntry]): HashSet[TimeSearchEntry] =
+    #var itm: TimeSearchEntry
+    if s1.len == 0:
+        for item in s2:
+            let wc = s2[item].wordCount
+            result.append(keyword, wc, item)
+    elif s2.len == 0:
+        for item in s1: 
+            let wc = s1[item].wordCount
+            result.append(keyword, wc, item)
+    elif s1.len < s2.len:
+        for item in s1:
+            if item in s2: 
+                let wc = s2[item].wordCount
+                result.append(keyword, wc, item)
+    else:
+        for item in s2:
+            if item in s1: 
+                let wc = s1[item].wordCount
+                result.append(keyword, wc, item)
+
+proc sortFTIResult*(data: var seq[TimeSearchEntry], sortBy: SortBy) =
+    case sortBy
+    of ByTimeAscending:
+        data.sort((x, y) => cmp(x.time, y.time))
+    of ByTimeDescending:
+        data.sort((x, y) => cmp(y.time, x.time))
+    of ByRelevanceAscending:
+        data.sort do (x, y: TimeSearchEntry) -> int:
+            var res: int
+            res = cmp(x.wordCount, y.wordCount) # sort by wordCount
+            if res == 0:
+                res = cmp(x.time, y.time) # by 'time' if 'wordCont' is 0 (equal)
+            return res
+    of ByRelevanceDescending:
+        data.sort do (x, y: TimeSearchEntry) -> int:
+            var res: int
+            res = cmp(y.wordCount, x.wordCount) # sort by wordCount
+            if res == 0:
+                res = cmp(y.time, x.time) # by 'time' if 'wordCont' is 0 (equal)
+            return res
+
 
 proc getFTI*(keyword: string, lang: string, userid: string): seq[TimeSearchEntry] =
     # Search Full Text Index
-    
-    # check minimum length of keywords
-    if keyword.isEmptyOrWhitespace or keyword.len < MIN_KEYWORD_LEN: return
+    if keyword.isEmptyOrWhitespace or keyword.len < MIN_KEYWORD_LEN: 
+        return # check minimum length of keywords
 
-    var resultTable = initTable[string, seq[TimeSearchEntry]]()
-    
     # Get enabled feeds
     let userFeeds = loadObject[UserFeeds](userid)
     var feedtable : seq[string]
@@ -123,40 +183,54 @@ proc getFTI*(keyword: string, lang: string, userid: string): seq[TimeSearchEntry
         if feed.enabled:
             feedtable.add(feed.rssid)
 
-    let kws = toLower(trim(keyword))
-    for kw in split(kws," "):
+    # resultTable holds for each search word a sequence of TimeSearchEntry
+    var resultTable = initTable[string, seq[TimeSearchEntry]]()
+    # Find entries for each search word
+    for kw in split(toLower(trim(keyword))," "):
         var items: seq[TimeSearchEntry]
-        let stemword = stem(strip(kw), lang)
+        let stemword = stem(kw, lang)
         for keys in QueryItr ^RSSItemFTI(stemword).keys:
             if not keys[0].startsWith(stemword): break
             # check if item is in active feed
             let feedId = Order ^RSSItemIDXREF(keys[1] & "," & keys[2] ,"")
             if feedId in feedtable:
                 items.add(TimeSearchEntry(subscript: @[keys[1], keys[2] ]))
-        
-        resultTable[kw] = items
+        # save found items under stemword
+        resultTable[stemword] = items
 
-    # collect all Keys
-    let keys = toSeq(resultTable.keys)
-    if keys.len > 0:
-        var common = resultTable[keys[0]].toHashSet
-        for i in 1 ..< keys.len:
-            common = common * resultTable[keys[i]].toHashSet # schnittmenge aller teilergebnisse
+    # Find TimeSearchEntry's which are in all resultTables
+    var common: HashSet[TimeSearchEntry]
+    for key in resultTable.keys:
+        var s2 = resultTable[key].toHashSet
+        common = intersect(key, common, s2)
 
-        echo fmt"Found {common.len} entries for '{kws}'"
-        # Update TimeSearchEntry with pubDate and wordCount
-        for entry in common:
-            var sr = entry
-            let subscript = entry.subscript
-            sr.time = Get ^RSSItem(subscript, "pubDate").int # get time from DB
-            #sr.wordCount = 999
-            echo entry
-            result.add(sr)
+    #echo fmt"Found {common.len} entries for '{kws}'"
+    # Update TimeSearchEntry with pubDate
+    for entry in common:
+        var sr = entry
+        let subscript = entry.subscript
+        sr.time = Get ^RSSItem(subscript, "pubDate").int # get time from DB
+        result.add(sr)
 
-        # Descending: compare y with x
-        result.sort((x, y) => cmp(y.time, x.time))
-        let maxresults = min(result.len, MAX_SEARCH_RESULTS)-1
-        return result[0..maxresults]
+   
+    # Sort result Descending by-pubdate: compare y with x
+    # if sortOrder == byTime:
+    #     result.sort((x, y) => cmp(y.time, x.time))
+    # else:
+    #     result.sort((x, y) => cmp(y.wordCount, x.wordCount))
+
+    # result.sort do (x, y: TimeSearchEntry) -> int:
+    #     var res: int
+    #     # sort by wordCount
+    #     res = cmp(y.wordCount, x.wordCount)
+    #     # sort additionally by 'time' if 'wordCont' is 0 (equal)
+    #     if res == 0:
+    #         res = cmp(y.time, x.time)
+    #     return res
+
+    # # Reduce result to max_search_results
+    # let maxresults = min(result.len, MAX_SEARCH_RESULTS)-1
+    # return result[0..maxresults]
         
 
 proc showRSS*(keys: string) =

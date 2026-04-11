@@ -16,7 +16,8 @@ proc sb_stemmer_length(stm:ptr sb_stemmer):cint {.importc: "sb_stemmer_length".}
 let stmDE = sb_stemmer_new("german", "UTF_8")
 let stmEN = sb_stemmer_new("english", "UTF_8")
 
-proc stem(word: string, stm: ptr sb_stemmer): string =       # wrap snowball stemmer for English
+proc stem(wrd: string, stm: ptr sb_stemmer): string =       # wrap snowball stemmer for English
+  let word = strip(tolower(wrd))
   let cs = stm.sb_stemmer_stem(word, word.len.cint)
   let cn = stm.sb_stemmer_length
   result.setLen int(cn)

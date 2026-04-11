@@ -1,5 +1,10 @@
 import yottadb
 
+var
+    MIN_KEYWORD_LEN* = 2
+    MAX_SEARCH_RESULTS* = 1000
+    MAX_CARDS* = 100
+
 type 
     Feed* = object of RootObj
         rssid*: string
@@ -19,8 +24,15 @@ type
 
     TimeSearchEntry* = object of RootObj
         time*: int
-        wordCounts*: seq[int]
+        wordCount*: int
         subscript*: seq[string]
+
+    SortBy* = enum 
+        ByTimeDescending,
+        ByTimeAscending,
+        ByRelevanceDescending,
+        ByRelevanceAscending
+
 
 type
     Registration* = object of RootObj
