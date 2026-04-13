@@ -10,6 +10,7 @@ import nimrss
 const
     MAXNEWS = 100 # How many news to show in 'latest'
     HTML_DIR = "html/"
+    USERID = "userid"
 
 
 template meassure(body: untyped): auto =
@@ -27,20 +28,28 @@ template SSE(req: Request, body: untyped) =
     defer: sse.close()
     body
 
-
 func stripSignal(signal: string): string =
     result = strip(signal)
     if result.startsWith("\"") and result.endsWith("\""): # Remove "xxxx" -> xxxx
         result = result[1..^2]
 
+proc patch(sse: SSEConnection, signals: JsonNode) =
+    let dsSignals = getSignals(sse)
+    let userid = if USERID in dsSignals: dsSignals[USERID].getStr() else: ""
+
+    patchSignals(sse, signals)
+    for key in signals.keys:
+        Set: ^Session(userid, key) = stripSignal($signals[key])
+
+proc getSignal(userid: string, key: string): string =
+    result = Get ^Session(userid, key)
 
 proc getSignal(req: Request, key: string): string = 
     let signals = getSignals(req)
-    if key in signals:
-        result = strip($signals[key])
-        if result.startsWith("\"") and result.endsWith("\""): # Remove "xxxx" -> xxxx
-            result = result[1..^2]
-
+    let userid = if USERID in signals: stripSignal($signals[USERID]) else: ""
+    for k, v in signals.pairs:
+        Set: ^Session(userid, k) = stripSignal($v)
+    getSignal(userid, key)
 
 proc handleGoto(req: Request) =
     # process menu links g.E. <a href="#form" data-on:click="$menuOpen = false; @get('goto/form.html')">Registration</a>
@@ -107,7 +116,7 @@ proc createRSSItemCard(item: RSSItem): string =
     divimg.add(fmt"""<span class="feed-title">{feedTitle}</span>""")
     divimg.add("</a>")
     
-    let card = fmt"""
+    result = fmt"""
         <div class="rsscard">
             <div class="rsscard-tags">
                 {topic}
@@ -122,8 +131,6 @@ proc createRSSItemCard(item: RSSItem): string =
             </div>
         </div>
         """
-
-    return card
 
 
 proc createLatestCards(max: int, userid: string): (string, int) =
@@ -143,15 +150,14 @@ proc createLatestCards(max: int, userid: string): (string, int) =
     return (container, items)
 
 
-proc getWallClock(req: Request): string =
-    let userid = getSignal(req, "userid")
+proc getWallClock(userid: string): string =
     let nowTime = now().format("dd.MM.yyyy - HH:mm")
     result = fmt"{userid} / {nowTime}"
 
 
 proc handleLiveFeed(req: Request) =
-    let userid = getSignal(req, "userid")
-    let wallclock = getWallClock(req)
+    let userid = getSignal(req, USERID)
+    let wallclock = getWallClock(userid)
     let keywordContainer = fmt"""{{<div id="keywords"></div>}}"""
 
     SSE(req):
@@ -167,6 +173,7 @@ proc handleLiveFeed(req: Request) =
 
         patchElements(sse, cardsContent)
         patchElements(sse, infoContainer)
+
 
 proc createTRFeed(feed: Feed): string =
     let id = feed.rssid
@@ -189,7 +196,7 @@ proc createTRFeed(feed: Feed): string =
 
 
 proc handleGetFeeds(req: Request) {.gcsafe.} =
-    let userid = getSignal(req, "userid")
+    let userid = getSignal(req, USERID)
     var userFeeds = loadObject[UserFeeds](userid)
     if userFeeds.feeds.len == 0: # init user feeds from base config
         userFeeds.userid = userid
@@ -245,7 +252,7 @@ proc handleGetFeeds(req: Request) {.gcsafe.} =
 
 proc handleToggleFeed(req: Request) {.gcsafe.} =
     # Toggle Row
-    let userid = getSignal(req, "userid")
+    let userid = getSignal(req, USERID)
     let id = getSignal(req, "id")
     let userFeeds = loadObject[UserFeeds](userid)
 
@@ -267,7 +274,7 @@ proc handleToggleFeed(req: Request) {.gcsafe.} =
 proc handleToggleFeedGroup(req: Request) =
     # Toggle a feedgroup
     let group = getSignal(req, "id")
-    let userid = getSignal(req, "userid")
+    let userid = getSignal(req, USERID)
     var init, flip: bool
     var userFeeds = loadObject[UserFeeds](userid)
 
@@ -281,32 +288,38 @@ proc handleToggleFeedGroup(req: Request) =
     handleGetFeeds(req) # update gui
 
 
-proc handleLogin(req: Request) =
-    let userid = getSignal(req, "userid")
-    if userid == "ljoeckel" or userid == "guest":
-        # Check for ^Feed
-        let dta = Data ^Feed(userid)
-        if dta == 0:  # no feeds for the user
-            echo "Create initial Feeds for user ", userid
-            var userFeeds: UserFeeds
-            userFeeds.userid = userid
+proc checkFeedConfiguration(userid: string) =
+    let dta = Data ^Feed(userid)
+    if dta == 0:  # no feeds for the user
+        echo "Create initial Feeds for user ", userid
+        var userFeeds: UserFeeds
+        userFeeds.userid = userid
 
-            for feedid in OrderItr ^ConfigFeed:
-                let feed = loadObject[ConfigFeed](feedid)
-                userFeeds.feeds.add(feed)
-            saveObject[UserFeeds](userid, userFeeds)
+        for feedid in OrderItr ^ConfigFeed:
+            let feed = loadObject[ConfigFeed](feedid)
+            userFeeds.feeds.add(feed)
+        saveObject[UserFeeds](userid, userFeeds)
+
+
+proc handleLogin(req: Request) =
+    let userid = getSignal(req, USERID)
+    if userid == "ljoeckel" or userid == "guest":  #TODO: password validation
+        # Check for user ^Feed configuration
+        checkFeedConfiguration(userid)
 
         SSE(req):
+            patchSignals(sse, %*{"loggedIn": true})
             forward(sse, "./html/livefeed.html")
 
 
 proc handleLogout(req: Request) =
     SSE(req):
+        patch(sse, %*{"loggedIn": false})
         forward(sse, "./html/index.html")
 
 
 proc handleSearch(req: Request) =
-    let userid = getSignal(req, "userid")
+    let userid = getSignal(req, USERID)
     let keyword = getSignal(req, "keyword")
     var lang = getSignal(req, "lang")
     if lang.len == 0: lang = "DE"
@@ -323,7 +336,7 @@ proc handleSearch(req: Request) =
     
     var info = meassure:
         var searchResults = getFTI(keyword, lang, userid) # @["1158,4", "118,10"...]
-        searchResults.sortFTIResult(SortBy.ByRelevanceDescending)
+        searchResults.sortFTIResult(SortBy.ByTimeDescending)
         # Reduce result to max_search_results
         let mx = min(searchResults.len, MAX_SEARCH_RESULTS)
         for idx in 0..mx-1:
@@ -350,22 +363,23 @@ proc handleSearch(req: Request) =
 
 
 proc handleUpdateClock(req: Request) =
-    let userid = getSignal(req, "userid")
+    let userid = getSignal(req, USERID)
     var lastSHA1: string
 
     # /update-clock and RSSItems (Do not close the connection)
     var sse = req.respondSSE()
     while true:
         try:
+            let loggedIn = if getSignal(userid, "loggedIn") == "true": true else: false
+            let msg = if loggedIn: getWallClock(userid) else: ""
             # Update Wall-Clock
-            let msg = getWallClock(req)
             patchElements(sse, fmt"<h3 id='wallclock'>{msg}</h3>")
 
-            # Show articles for logged in users
-            if userid.len > 0:
-                # Update Articles
-                let formId = getSignal(req, "formId")
-                if formId == "livefeed":
+            if loggedIn:
+                # Show articles for logged in users
+                let formId = getSignal(userid, "formId")
+                let keyword = getSignal(userid, "keyword")
+                if formId == "livefeed" and keyword.len == 0:
                     var cardsContent: string                    
                     var cardsCount: int
                     var info = meassure:
@@ -382,9 +396,13 @@ proc handleUpdateClock(req: Request) =
                         lastSHA1 = sha1
                         patchElements(sse, infoContainer)
                         patchElements(sse, cardsContent)
+            else:
+                echo "Leaving WallClock loop. No longer loggedIn"
+                break  # no longer loggedIn
 
             let msToNextMinute = 60000 - (now().second * 1000 + now().nanosecond div 1_000_000)
-            sleep(msToNextMinute)
+            #sleep(msToNextMinute)
+            sleep(5000)
         except:
             echo "Leaving handleUpdateClock: ", getCurrentExceptionMsg()
             sse.close()

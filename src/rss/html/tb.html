@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://unpkg.com"></script>
+    <script>lucide.createIcons();</script>
+
+    <style>
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            /* Ermöglicht Umbruch auf Mobilgeräten */
+            align-items: center;
+            gap: 8px;
+            padding: 10px;
+            background: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .search-group {
+            display: flex;
+            flex: 1 1 300px;
+            /* Suchfeld wächst, bricht aber ab 300px um */
+            gap: 4px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .action-group {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px;
+            background: #f4f4f4;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #e0e0e0;
+        }
+
+        /* Responsive Anpassung für kleine Screens */
+        @media (max-width: 600px) {
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .action-group {
+                justify-content: space-between;
+            }
+
+            .divider {
+                display: none;
+            }
+        }
+
+        /* Icon-Drehung für Auf/Ab */
+        .rotate-180 {
+            transform: rotate(180deg);
+        }
+
+        .transition-transform {
+            transition: transform 0.3s;
+        }
+    </style>
+
+    <div class="toolbar" id="main_toolbar">
+        <!-- Suchbereich -->
+        <div class="search-group">
+            <input type="text" name="search" class="search-input" placeholder="Suche..." data-bind-search>
+            <!-- Datastar Binding -->
+            <button class="btn" data-on-click="$$get('/search')">
+                <i data-lucide="search"></i>
+            </button>
+        </div>
+
+        <div class="divider" style="width: 1px; height: 20px; background: #ddd;"></div>
+
+        <!-- Sortierung & Ansicht -->
+        <div class="action-group">
+            <!-- Zeit-Sortierung mit Richtungs-Indikator -->
+            <button class="btn" title="Zeit" data-on-click="$$post('/toggle-sort-time')">
+                <i data-lucide="clock"></i>
+                <i data-lucide="chevron-down" class="transition-transform" id="time-arrow"></i>
+                <!-- Klasse 'rotate-180' via SSR/Datastar togglen -->
+            </button>
+
+            <!-- Relevanz -->
+            <button class="btn" title="Relevanz" data-on-click="$$post('/toggle-sort-rel')">
+                <i data-lucide="bar-chart-2"></i>
+            </button>
+
+            <div style="width: 8px;"></div>
+
+            <!-- Ansicht-Formate -->
+            <button class="btn" title="Liste" data-on-click="$$post('/view-list')">
+                <i data-lucide="list"></i>
+            </button>
+            <button class="btn" title="Karte" data-on-click="$$post('/view-grid')">
+                <i data-lucide="layout-grid"></i>
+            </button>
+        </div>
+    </div>
+
+    </body>
+
+</html>
