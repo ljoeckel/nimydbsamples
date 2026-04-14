@@ -30,13 +30,8 @@
             </a>
         </div>
 
-        <div class="subnav" data-show="$loggedIn" data-on:mouseenter="$menuOpen = true" data-on:mouseleave="$menuOpen = false">
-            <button class="subnavbtn">Configuration<i class="fa fa-caret-down"></i></button>
-            <div class="subnav-content" data-class="{'force-closed': !$menuOpen}">
-                <a href="#search" data-on:click="$menuOpen = false; @get('goto/search.html')">Search</a>
-                <a href="#feeds" data-on:click="$menuOpen = false; @get('goto/configfeeds.html')">Feeds</a>
-            </div>
-        </div>
+        <a href="#tb" data-show="$loggedIn"  data-on:click="$menuOpen = false; @get('goto/tb.html')">ToolBar</a>
+        <a href="#feeds" data-show="$loggedIn"  data-on:click="$menuOpen = false; @get('goto/configfeeds.html')">Feeds</a>
 
         <div class="subnav">
             <button class="subnavbtn">Technologies<i class="fa fa-caret-down"></i></button>

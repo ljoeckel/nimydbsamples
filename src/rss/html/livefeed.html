@@ -1,47 +1,10 @@
-<body data-signals="{formId: 'livefeed'}" data-init="@get('/update-clock')">
-    <!-- The navigation menu -->
-    <div class="navbar">
-        <a href="#home" id="home" data-on:click="@get('goto/livefeed.html')" 
-            style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none;">
-            <img src="rss.png" height="20" width="20" alt="RSS Icon">
-            RSS Live
-        </a>
-
-        <div class="subnav" data-on:mouseenter="$menuOpen = true" data-on:mouseleave="$menuOpen = false">
-            <button class="subnavbtn">Configuration<i class="fa fa-caret-down"></i></button>
-            <div class="subnav-content" data-class="{'force-closed': !$menuOpen}">
-                <a href="#search" data-on:click="$menuOpen = false; @get('goto/search.html')">Search</a>
-                <a href="#feeds" data-on:click="$menuOpen = false; @get('goto/configfeeds.html')">Feeds</a>
-            </div>
-        </div>
-
-        <div class="subnav">
-            <button class="subnavbtn">Technologies<i class="fa fa-caret-down"></i></button>
-            <div class="subnav-content">
-                <a href="https://nim-lang.org">Nim</a>
-                <a href="https://yottadb.com">YottaDB</a>
-                <a href="https://data-star.dev/">Datastar</a>
-                <a href="https://nginx.org/">NGINX</a>
-                <a href="https://icons.getbootstrap.com/">bootstrap icons</a>
-            </div>
-        </div>
-
-        <a href="#about" data-on:click="$menuOpen = false; @get('/about.html')">About</a>
-        <a href="#logout" data-on:click="$menuOpen = false; @get('/logout')">Logout</a>
-        <h3 id="info"></h3>
-        <h3 id="wallclock"></h3>
-    </div>
-
-
+<div id="container" class="card" data-signals="{formId: 'livefeed'}" data-init="@get('/update-clock')">
     <div>
         <input id="keyword" data-bind:keyword data-class="{'input-error': $emailInvalid}"
             data-on:input__debounce.500ms="@post('/search')" placeholder="Search for ..." autofocus type="text" />
     </div>
 
-
-    <div id="keywords"></div>
     <div id="livefeed">
         <div id="rsscard" class="rsscard-container"> </div>
-        <!--div id="rsscard" class="rsscard-container" data-effect="@get('/livefeed')"> </div-->
     </div>
-</body>
+</div>
