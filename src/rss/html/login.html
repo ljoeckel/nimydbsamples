@@ -1,0 +1,32 @@
+    <div id="container" class="login-container">
+
+        <form class="login-form" data-on:submit__prevent="@post('/login')">
+            <h2 class="login-title">Welcome to 'Nimetic'</h2>
+            <p class="login-subtitle">Login please</p>
+
+            <div class="login-group">
+                <input 
+                    data-bind:userid
+                    type="text"
+                    class="login-input"
+                    placeholder="Username"
+                    required
+                >
+            </div>
+            <div class="login-group">
+                <input
+                    data-bind:password
+                    type="password"
+                    class="login-input"
+                    placeholder="Password"
+                    required
+                >
+            </div>
+
+            <!-- buttons -->
+            <button type="submit" class="login-btn login-btn--primary">Login</button>
+            <div class="login-divider">or</div>
+            <button type="button" class="login-btn login-btn--secondary">Register</button>
+
+        </form>
+    </div>
