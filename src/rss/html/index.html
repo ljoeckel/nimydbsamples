@@ -15,7 +15,6 @@
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
     <script src="formfields.js"></script>
-    <script src="formfields_country.js"></script>
     <script src="helpers.js"></script>
 </head>
 
@@ -23,7 +22,7 @@
     <!-- The navigation menu -->
     <div class="navbar">
         <div class="subnav" data-show="$loggedIn">
-            <a href="#home" id="home" data-on:click="@get('goto/livefeed.html')"
+            <a href="#home" id="home" data-on:click="@get('/livefeed.html')"
                 style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none;">
                 <img src="rss.png" height="20" width="20" alt="RSS Icon">
                 RSS Live

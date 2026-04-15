@@ -1670,8 +1670,7 @@ an
 and   
 any     
 are     
-aren't 
-arenâ€™t   
+aren't
 arent   
 as      
 at      

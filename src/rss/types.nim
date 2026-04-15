@@ -1,4 +1,5 @@
 import yottadb
+import mummy, mummy/routers, mummy/datastar
 
 var
     MIN_KEYWORD_LEN* = 2
@@ -33,6 +34,15 @@ type
         ByRelevanceDescending,
         ByRelevanceAscending
 
+
+
+type
+  RouteHandler* = proc (req: Request)
+  #RouteHandler* = proc (req: Request) {.gcsafe, raises: [].}
+  WebModule* = ref object
+    name*: string
+    register*: proc (router: var Router)
+    #register*: proc (router: var Router) {.gcsafe, raises: [].}
 
 type
     Registration* = object of RootObj

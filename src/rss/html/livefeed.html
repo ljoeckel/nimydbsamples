@@ -1,4 +1,4 @@
-<div id="container" class="card" data-signals="{formId: 'livefeed'}" data-init="@get('/update-clock')">
+<div id="container" class="card" data-signals="{formId: 'livefeed'}" data-effect="@get('/update-clock')">
     <div>
         <input id="keyword" data-bind:keyword data-class="{'input-error': $emailInvalid}"
             data-on:input__debounce.500ms="@post('/search')" placeholder="Search for ..." autofocus type="text" />

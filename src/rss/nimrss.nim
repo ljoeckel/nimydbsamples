@@ -5,6 +5,7 @@ import yottadb
 import ydbutils
 import stopwords
 import stemmer
+import common
 
 export types
 export yottadb
@@ -13,3 +14,4 @@ export rssatom
 export searchlib
 export stopwords
 export stemmer
+export common
