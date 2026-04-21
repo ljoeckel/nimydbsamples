@@ -93,7 +93,7 @@ proc splitWords(text: string, lang: string): seq[string] =
 
 
 proc createFTIndex*(item: RSSItem, lang: string): int =
-    var wordCount = 0
+    #var wordCount = 0
     let categories = item.category.join(" ")
     let keywords = item.keywords.join(" ")
     let topic = if item.topic.isSome: item.topic.get() else: ""

@@ -11,7 +11,6 @@ proc getXmlFromUrl(url: string): string =
         echo "ERROR with url ", url, " : ", getCurrentException().msg
 
 
-
 proc setupFeeds(path: string): int =
     let feedPath = if path.len == 0: "feeds.rss" else: path
     if not fileExists(feedPath):
@@ -38,7 +37,6 @@ proc setupFeeds(path: string): int =
             if feed.title.len > 0:
                 saveObject[ConfigFeed](feed.rssid, feed)
     0
-
 
 
 if isMainModule:

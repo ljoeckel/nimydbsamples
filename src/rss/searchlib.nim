@@ -2,7 +2,8 @@ import std/strformat
 import std/wordwrap
 import std/[algorithm, hashes, sets, tables]
 import std/[options, strutils, typetraits]
-import std/[sha1, base64, httpclient, times]
+import std/[base64, httpclient, times]
+import checksums/sha1
 import rssatom
 import yottadb
 import stemmer

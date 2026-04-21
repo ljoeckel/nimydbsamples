@@ -1,6 +1,7 @@
 import std/[os, times, json, strutils, strformat, tables]
 import std/[options, typetraits]
-import std/[sha1, httpclient]
+import std/[httpclient]
+import checksums/sha1
 import mummy, mummy/routers, mummy/datastar
 import macros
 import yottadb

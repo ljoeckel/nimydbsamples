@@ -1,16 +1,10 @@
-## Run 'nimble demo'
-
-import std/[times, strutils, strformat, tables, algorithm, sequtils, sugar, json]
-import std/[options, typetraits]
+import std/[times, strutils, strformat]
+import std/[typetraits]
 import mummy, mummy/routers, mummy/datastar
-import macros
 import nimrss
-
 import wmRSSCards
 
 proc handleSearch(req: Request) =
-    echo "handleSearch "
-    let signals = getSignals(req)
     let userid = getSignal(req, USERID)
     let keyword = getSignal(req, "keyword")
     var lang = getSignal(req, "lang")
@@ -33,12 +27,9 @@ proc handleSearch(req: Request) =
         handleLiveFeed(req)
         return
 
-    let stemword = stem(keyword, lang)
-
-    var cards: string
-    var keywords: string  # TODO: handle more keywords after keyword
-
-    var info = meassure:
+    var cards, keywords: string
+    var containerClass = if format == "card": "rsscard-container" else: "rsslist-container"
+    let info = meassure:
         var searchResults = getFTI(keyword, lang, userid) # @["1158,4", "118,10"...]
         searchResults.sortFTIResult(sortBy)
 
@@ -53,10 +44,10 @@ proc handleSearch(req: Request) =
    
     let articles = fmt"{mx} articles"
     let infotxt = if articles.len > 0: fmt"{articles} in {info}" else: fmt"Indexsearch in {info}"
-    let infoContainer = fmt"""{{<h3 id="info">{infotxt}</h3>}}"""
+    let infoContainer = fmt"""<h3 id="info">{infotxt}</h3>"""
 
-    let rssContainer = fmt"""{{<div id="rsscard" class="rsscard-container">{cards}</div>}}"""
-    let keywordContainer = fmt"""{{<div id="keywords">{$keywords}</div>}}"""
+    let rssContainer = fmt"""<div id="rsscard" class="{containerClass}">{cards}</div>"""
+    let keywordContainer = fmt"""<div id="keywords">{$keywords}</div>"""
 
     SSE(req): 
         patchElements(sse, infoContainer)
@@ -66,7 +57,6 @@ proc handleSearch(req: Request) =
 
 # Callback for router registration
 proc register*(router: var Router) =
-    echo "register /search"
     router.post("/search", handleSearch)
 
 

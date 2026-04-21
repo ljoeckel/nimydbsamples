@@ -1,5 +1,5 @@
 import std/[options, strutils, strformat, typetraits, enumerate, os]
-import std/[sha1, base64, parseopt, httpclient, times, tables]
+import std/[parseopt, httpclient, times, tables]
 import nimrss
 
 const

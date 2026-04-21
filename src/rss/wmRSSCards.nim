@@ -1,12 +1,30 @@
-## Run 'nimble demo'
-
-import std/[os, times, json, strutils, strformat, tables, algorithm, sequtils, sugar]
+import std/[times, strutils, strformat]
 import std/[options, typetraits, enumerate]
-import std/[sha1, httpclient]
 import mummy, mummy/routers, mummy/datastar
-import macros
 import nimrss
 
+proc pubDate(item: RSSItem): string =
+    try: 
+        let dt = getOption(item.pubDate)
+        let fu = parseInt(dt).fromUnix()
+        result = fu.format("dd.MM.yyyy HH:mm")
+    except:
+         result = "01.01.1970 00:00"
+
+
+proc feedData(item: RSSItem): (string, string) =
+    let id = item.idxref.split(',')[0]
+    let rssImage = loadObject[RSSImage](id)
+
+    var feedTitle, feedLink: string
+    if rssImage.url.isSome():
+        feedTitle = if rssImage.title.isSome: getOption(rssImage.title) else: getOption(item.title)
+        feedLink = getOption(rssImage.link)
+    else:
+        feedTitle = Get ^RSS(id, "title")
+        feedLink = Get ^RSS(id, "link")
+    
+    return (feedTitle, feedLink)
 
 
 proc createRSSItemCard*(item: RSSItem): string =
@@ -34,45 +52,25 @@ proc createRSSItemCard*(item: RSSItem): string =
             if idx >= 2: break # show only first 3 keywords
         keywords = fmt"""<span class="tag">{keywordlist}</span>"""
 
-    var pubDate: string
-    try: 
-        let dt = getOption(item.pubDate)
-        let fu = parseInt(dt).fromUnix()
-        pubDate = fu.format("dd.MM.yyyy HH:mm")
-    except:
-         pubDate = "01.01.1970 00:00"
-
-    # load feed RSSImage
-    let rssImage = loadObject[RSSImage](item.idxref.split(',')[0])
-    let feedUrl = getOption(rssImage.url)
     let feedId = getOption(item.feedId)
-    
-    var divimg, feedTitle, feedLink: string
-    if feedUrl.len > 0:
-        feedTitle = getOption(rssImage.title)
-        if feedTitle.len == 0: feedTitle = getOption(item.title)
-        feedLink = getOption(rssImage.link)
-    else:
-        let rssId = item.idxref.split(',')[0]
-        feedTitle = Get ^RSS(rssId, "title")
-        feedLink = Get ^RSS(rssId, "link")
-
-    divimg.add(fmt"""<a target="_blank" href={feedLink} class="footer-link">""")
-    divimg.add(fmt"""<span class="feed-title">{feedTitle}</span>""")
-    divimg.add("</a>")
+    let (feedTitle, feedLink) = feedData(item)
+    let divimg = fmt"""
+        <a target='_blank' href={feedLink} class='footer-link'>
+        <span class='feed-title'>{feedTitle}</span></a>
+        """
     
     result = fmt"""
-        <div class="rsscard">
-            <div class="rsscard-tags">
+        <div class='rsscard'>
+            <div class='rsscard-tags'>
                 {topic}
                 {category}
                 {keywords}
             </div>
-            <div class="rsscard-title"> <a target="_blank" href="{link}"> {title}</a> </div>
-            <p class="rsscard-text"> <a target="_blank" href="{link}"> {description}</a> </p>
-            <div class="rsscard-footer">
+            <div class='rsscard-title'> <a target='_blank' href='{link}'> {title}</a> </div>
+            <p class='rsscard-text'> <a target='_blank' href='{link}'> {description}</a> </p>
+            <div class='rsscard-footer'>
                 <p>{divimg}</p>
-                <p class="rsspubdate"> {pubDate} / {item.idxref} / {feedId}</p>
+                <p class='rsspubdate'> {pubDate(item)} / {item.idxref} / {feedId}</p>
             </div>
         </div>
         """
@@ -80,28 +78,19 @@ proc createRSSItemCard*(item: RSSItem): string =
 proc createRSSItemList*(item: RSSItem): string =
     let title = getOption(item.title)
     let link = getOption(item.link)
-
-    var pubDate: string
-    try: 
-        let dt = getOption(item.pubDate)
-        let fu = parseInt(dt).fromUnix()
-        pubDate = fu.format("dd.MM.yyyy HH:mm")
-    except:
-         pubDate = "01.01.1970 00:00"
+    let (feedTitle, feedLink) = feedData(item)
+    let divimg = fmt"<a target='_blank' href={feedLink}><span>{feedTitle}</span></a>"
 
     result = fmt"""
-        <div class="rsslist">
-            <div class="rsscard-title"> <a target="_blank" href="{link}"> {title}</a> </div>
-            <div class="rsscard-footer">
-                <p class="rsspubdate"> {pubDate} / {item.idxref} </p>
-            </div>
+        <div class='rsscard-title'>
+            <a target='_blank' href='{link}'> {title}</a>
+            <p class='rsspubdate'> {pubDate(item)} / {item.idxref} / {divimg} </p>
         </div>
         """
 
 
 proc createLatestCards*(max: int, userid: string): (string, int) =
     let userFeeds = loadObject[UserFeeds](userid)
-   
     var cards: string
     var items: int
     for rssItem in getLatestRSSItems(max, userFeeds.feeds):
@@ -137,29 +126,8 @@ proc handleLiveFeed*(req: Request) =
         patchElements(sse, infoContainer)
 
 
-proc createTRFeed(feed: Feed): string =
-    let id = feed.rssid
-    let group = feed.group
-    let title = feed.title
-    let enabled = feed.enabled
-    # Construct a <TR><TD>Feed with id, title, status
-    var dataclass = fmt"{{selected: $id==='{id}'}}"
-    var markedclass = if enabled: "class='marked'" else: ""
-    let checkbox = if enabled: "<i class='bi bi-check-square'></i>" else: "<i class='bi bi-square'></i></i>"
-    #let checkbox = if enabled: "<i class='bi bi-check-square'></i>" else: "<i class='bi-dash-square-dotted'></i></i>"
-    result = fmt"""
-        <tr {markedclass} id='Feed{id}' data-on:click__stop="$id='{id}'; @post('/select-feed')" data-class="{dataclass}">
-            <td>{title}</td>
-            <td>
-                <button data-on:click__stop="$id='{id}';$title='{title}'; @post('/toggle-feed')">{checkbox}</button>
-            </td>
-        </tr>
-        """
-
-
 # Callback for router registration
 proc register*(router: var Router) =
-    echo "register /livefeed"
     router.get("/livefeed", handleLiveFeed)
 
 

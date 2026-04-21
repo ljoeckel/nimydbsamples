@@ -18,7 +18,7 @@ let stmEN = sb_stemmer_new("english", "UTF_8")
 
 proc stem(wrd: string, stm: ptr sb_stemmer): string =       # wrap snowball stemmer for English
   let word = strip(tolower(wrd))
-  let cs = stm.sb_stemmer_stem(word, word.len.cint)
+  let cs = stm.sb_stemmer_stem(cstring(word), word.len.cint)
   let cn = stm.sb_stemmer_length
   result.setLen int(cn)
   copyMem result[0].addr, cs, int(cn)

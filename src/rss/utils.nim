@@ -1,6 +1,7 @@
 import std/macros
 import std/json
 
+
 proc getClearPatch*[T](obj: T): JsonNode =
   ## Iterates over fields and returns a JSON object containing 'null' for every non-empty field.
   result = newJObject()
@@ -11,6 +12,7 @@ proc getClearPatch*[T](obj: T): JsonNode =
     elif value is bool:
       if value:
         result[name] = newJNull()
+
 
 proc filterPatch*[T](obj: T, fields:seq[string]): JsonNode =
     # add only fields from 'obj' which are also in 'fields'
@@ -46,6 +48,7 @@ macro getFieldAsString*(obj: auto, fieldName: string): string =
     (echo "WARNUNG: Feld '" & `fieldName` & "' existiert nicht in " & `typeName`; "")
   )
 
+
 macro setFieldFromString*(obj: var auto, fieldName: string, value: string) =
   let t = obj.getTypeInst()
   var impl = t.getTypeImpl()
@@ -77,18 +80,3 @@ macro setFieldFromString*(obj: var auto, fieldName: string, value: string) =
   result.add nnkElse.newTree(quote do:
     echo "FEHLER: Kann Feld '" & `fieldName` & "' nicht setzen (unbekannt in " & `typeName` & ")"
   )
-
-if isMainModule:
-  # --- Test ---
-  type
-    Person = object
-      id: int
-      firstname: string
-      calling_code: string
-
-  let p = Person(id: 7, firstname: "Lothar", calling_code: "+49")
-  let FIELDS = @["firstname", "calling_code", "id"]
-
-  for field in FIELDS:
-    # Das hier wird nun korrekt zu einem case-Statement evaluiert
-    echo "Wert für ", field, ": ", p.getFieldAsString(field)

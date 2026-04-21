@@ -52,7 +52,7 @@ proc handleUpdateClock(req: Request) =
                 echo "Leaving WallClock loop. No longer loggedIn"
                 break  # no longer loggedIn
 
-            let msToNextMinute = 60000 - (now().second * 1000 + now().nanosecond div 1_000_000)
+            #let msToNextMinute = 60000 - (now().second * 1000 + now().nanosecond div 1_000_000)
             #sleep(msToNextMinute)
             sleep(5000)
         except:

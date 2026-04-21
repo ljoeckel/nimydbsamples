@@ -7,13 +7,11 @@ import nimrss
 
 proc getFeeds(): seq[Feed] =
     for feedId in OrderItr ^ConfigFeed:
-        let feed = loadObject[ConfigFeed](feedId)
         result.add(loadObject[ConfigFeed](feedId))
 
 
 proc createTRFeed(feed: Feed): string =
     let id = feed.rssid
-    let group = feed.group
     let title = feed.title
     let enabled = feed.enabled
     # Construct a <TR><TD>Feed with id, title, status

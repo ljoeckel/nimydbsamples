@@ -1,8 +1,6 @@
 import std/[json, strutils]
 import mummy, mummy/routers, mummy/datastar
 import nimrss
-
-
 import wmFeedConfig
 
 proc handleLogin(req: Request) =
@@ -20,8 +18,6 @@ proc handleLogout(req: Request) =
     SSE(req):
         patch(sse, %*{"loggedIn": false})
         forward(sse, "./html/index.html")
-
-
 
 
 # Callback for router registration
