@@ -1,19 +1,33 @@
 ## Run 'nimble demo'
 
-import std/[os, times, json, strutils, strformat, tables, algorithm, sequtils, sugar]
-import std/[options, typetraits, enumerate]
-import std/[sha1, httpclient]
+import std/[times, strutils, strformat, tables, algorithm, sequtils, sugar, json]
+import std/[options, typetraits]
 import mummy, mummy/routers, mummy/datastar
 import macros
 import nimrss
 
+import wmRSSCards
 
 proc handleSearch(req: Request) =
-    echo "handleSearch"
+    echo "handleSearch "
+    let signals = getSignals(req)
     let userid = getSignal(req, USERID)
     let keyword = getSignal(req, "keyword")
     var lang = getSignal(req, "lang")
     if lang.len == 0: lang = "DE"
+
+    let sort = getSignal(req, "sort")
+    let direction = getSignal(req, "direction")
+    let articleCount = parseInt(getSignal(req, "articles"))
+    let format = getSignal(req, "format")
+
+    var sortBy: SortBy
+    if sort == "today":
+        sortBy = if direction == "up": ByTodayAscending else: ByTodayDescending
+    elif sort == "time":
+        sortBy = if direction == "up": ByTimeAscending else: ByTimeDescending
+    elif sort == "relevance":
+        sortBy = if direction == "up": ByRelevanceAscending else: ByRelevanceDescending
 
     if keyword.len == 0:
         handleLiveFeed(req)
@@ -23,15 +37,19 @@ proc handleSearch(req: Request) =
 
     var cards: string
     var keywords: string  # TODO: handle more keywords after keyword
-    
+
     var info = meassure:
         var searchResults = getFTI(keyword, lang, userid) # @["1158,4", "118,10"...]
-        searchResults.sortFTIResult(SortBy.ByTimeDescending)
+        searchResults.sortFTIResult(sortBy)
+
         # Reduce result to max_search_results
-        let mx = min(searchResults.len, MAX_SEARCH_RESULTS)
+        let mx = min(searchResults.len, articleCount)
         for idx in 0..mx-1:
             let rssItem = loadObject[RSSItem](searchResults[idx].subscript)
-            cards.add(createRSSItemCard(rssItem))
+            if format == "card":
+                cards.add(createRSSItemCard(rssItem))
+            else:
+                cards.add(createRSSItemList(rssItem))
    
     let articles = fmt"{mx} articles"
     let infotxt = if articles.len > 0: fmt"{articles} in {info}" else: fmt"Indexsearch in {info}"
@@ -48,8 +66,8 @@ proc handleSearch(req: Request) =
 
 # Callback for router registration
 proc register*(router: var Router) =
-    echo "register /livefeed"
-    router.get("/livefeed", handleLiveFeed)
+    echo "register /search"
+    router.post("/search", handleSearch)
 
 
 # Create module instance

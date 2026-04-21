@@ -1,12 +1,18 @@
 import yottadb
-import mummy, mummy/routers, mummy/datastar
+import mummy, mummy/routers
 
 var
     MIN_KEYWORD_LEN* = 2
     MAX_SEARCH_RESULTS* = 1000
     MAX_CARDS* = 100
 
-type 
+type
+    RouteHandler* = proc (req: Request)
+    WebModule* = ref object
+        name*: string
+        register*: proc (router: var Router)
+
+
     Feed* = object of RootObj
         rssid*: string
         group*: string
@@ -29,20 +35,13 @@ type
         subscript*: seq[string]
 
     SortBy* = enum 
+        ByTodayDescending,
+        ByTodayAscending,
         ByTimeDescending,
         ByTimeAscending,
         ByRelevanceDescending,
         ByRelevanceAscending
 
-
-
-type
-  RouteHandler* = proc (req: Request)
-  #RouteHandler* = proc (req: Request) {.gcsafe, raises: [].}
-  WebModule* = ref object
-    name*: string
-    register*: proc (router: var Router)
-    #register*: proc (router: var Router) {.gcsafe, raises: [].}
 
 type
     Registration* = object of RootObj

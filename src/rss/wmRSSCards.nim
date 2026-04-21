@@ -77,6 +77,27 @@ proc createRSSItemCard*(item: RSSItem): string =
         </div>
         """
 
+proc createRSSItemList*(item: RSSItem): string =
+    let title = getOption(item.title)
+    let link = getOption(item.link)
+
+    var pubDate: string
+    try: 
+        let dt = getOption(item.pubDate)
+        let fu = parseInt(dt).fromUnix()
+        pubDate = fu.format("dd.MM.yyyy HH:mm")
+    except:
+         pubDate = "01.01.1970 00:00"
+
+    result = fmt"""
+        <div class="rsslist">
+            <div class="rsscard-title"> <a target="_blank" href="{link}"> {title}</a> </div>
+            <div class="rsscard-footer">
+                <p class="rsspubdate"> {pubDate} / {item.idxref} </p>
+            </div>
+        </div>
+        """
+
 
 proc createLatestCards*(max: int, userid: string): (string, int) =
     let userFeeds = loadObject[UserFeeds](userid)

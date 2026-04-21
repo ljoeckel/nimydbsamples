@@ -1,6 +1,6 @@
 import std/strformat
 import std/wordwrap
-import std/[algorithm, sequtils, hashes, sets, tables]
+import std/[algorithm, hashes, sets, tables]
 import std/[options, strutils, typetraits]
 import std/[sha1, base64, httpclient, times]
 import rssatom
@@ -151,9 +151,9 @@ proc intersect(keyword: string, s1: var HashSet[TimeSearchEntry], s2: var HashSe
 
 proc sortFTIResult*(data: var seq[TimeSearchEntry], sortBy: SortBy) =
     case sortBy
-    of ByTimeAscending:
+    of ByTodayAscending, ByTimeAscending:
         data.sort((x, y) => cmp(x.time, y.time))
-    of ByTimeDescending:
+    of ByTodayDescending, ByTimeDescending:
         data.sort((x, y) => cmp(y.time, x.time))
     of ByRelevanceAscending:
         data.sort do (x, y: TimeSearchEntry) -> int:
