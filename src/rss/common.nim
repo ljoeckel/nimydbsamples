@@ -17,10 +17,8 @@ template meassure*(body: untyped): auto =
     let t0 = getTime()
     body
     let td = (getTime() - t0).inMicroseconds
-    if td > 1000:
-        $(td div 1000) & "ms."
-    else:
-        $td & " µs."
+    if td > 1000: $(td div 1000) & "ms."
+    else: $td & " µs."
 
 
 template SSE*(req: Request, body: untyped) =
@@ -41,8 +39,13 @@ proc patch*(sse: SSEConnection, signals: JsonNode) =
     for key in signals.keys:
         Set: ^Session(userid, key) = stripSignal($signals[key])
 
+
 proc getSignal*(userid: string, key: string): string =
     result = Get ^Session(userid, key)
+
+proc getSignals*(userid: string): seq[(string, string)] =
+    for k,v in OrderItr ^Session(userid,"").kv:
+        result.add((k,v))
 
 proc getSignal*(req: Request, key: string): string = 
     let signals = getSignals(req)
@@ -50,6 +53,8 @@ proc getSignal*(req: Request, key: string): string =
     for k, v in signals.pairs:
         Set: ^Session(userid, k) = stripSignal($v)
     getSignal(userid, key)
+
+
 
 proc handleGoto*(req: Request) =
     # process menu links g.E. <a href="#form" data-on:click="$menuOpen = false; @get('goto/form.html')">Registration</a>

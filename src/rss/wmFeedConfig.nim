@@ -30,7 +30,6 @@ proc createTRFeed(feed: Feed): string =
 
 
 proc handleGetFeeds(req: Request) {.gcsafe.} =
-    echo "handleGetFeeds"
     let userid = getSignal(req, USERID)
     var userFeeds = loadObject[UserFeeds](userid)
     if userFeeds.feeds.len == 0: # init user feeds from base config

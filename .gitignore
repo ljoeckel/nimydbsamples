@@ -17,3 +17,4 @@ src/rss/rsscollector
 src/rss/lj
 src/rss/stats
 src/rss/rssservice
+src/rss/searchcli

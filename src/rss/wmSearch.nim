@@ -6,7 +6,7 @@ import wmRSSCards
 
 proc handleSearch(req: Request) =
     let userid = getSignal(req, USERID)
-    let keyword = getSignal(req, "keyword")
+    let keyword = strip(getSignal(req, "keyword"))
     var lang = getSignal(req, "lang")
     if lang.len == 0: lang = "DE"
 
@@ -23,29 +23,31 @@ proc handleSearch(req: Request) =
     elif sort == "relevance":
         sortBy = if direction == "up": ByRelevanceAscending else: ByRelevanceDescending
 
-    if keyword.len == 0:
-        handleLiveFeed(req)
-        return
-
     var cards, keywords: string
     var containerClass = if format == "card": "rsscard-container" else: "rsslist-container"
-    let info = meassure:
-        var searchResults = getFTI(keyword, lang, userid) # @["1158,4", "118,10"...]
-        searchResults.sortFTIResult(sortBy)
+    var rssItems: seq[RSSItem]
 
-        # Reduce result to max_search_results
-        let mx = min(searchResults.len, articleCount)
-        for idx in 0..mx-1:
-            let rssItem = loadObject[RSSItem](searchResults[idx].subscript)
+    let infoQuery = meassure:
+        if keyword.len == 0:
+            rssItems = getLatestRSSItems(articleCount, userid)
+        else:
+            var searchResults = getFTI(keyword, lang, userid) # @["1158,4", "118,10"...]
+            searchResults.sortFTIResult(sortBy)
+            # Reduce result to max_search_results
+            let mx = min(searchResults.len, articleCount)
+            for idx in 0..mx-1:
+                rssItems.add(loadObject[RSSItem](searchResults[idx].subscript))
+
+    let infoRender = meassure:
+        for rssItem in rssItems:
             if format == "card":
                 cards.add(createRSSItemCard(rssItem))
             else:
                 cards.add(createRSSItemList(rssItem))
-   
-    let articles = fmt"{mx} articles"
-    let infotxt = if articles.len > 0: fmt"{articles} in {info}" else: fmt"Indexsearch in {info}"
-    let infoContainer = fmt"""<h3 id="info">{infotxt}</h3>"""
 
+    let articles = fmt"{rssItems.len} articles"
+    let infotxt = if rssItems.len > 0: fmt"{articles} in {infoQuery} + {infoRender}" else: fmt"Indexsearch in {infoQuery}"
+    let infoContainer = fmt"""<h3 id="info">{infotxt}</h3>"""
     let rssContainer = fmt"""<div id="rsscard" class="{containerClass}">{cards}</div>"""
     let keywordContainer = fmt"""<div id="keywords">{$keywords}</div>"""
 

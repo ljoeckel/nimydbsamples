@@ -62,6 +62,14 @@ proc getRSSFeedConfiguration*(path: string): Table[string, seq[string]] =
         else:
             result[currentSection].add(trimmed)
 
+
+proc getEnabledFeeds(userid: string): seq[string] =
+    let userFeeds = loadObject[UserFeeds](userid)
+    for feed in userFeeds.feeds:
+        if feed.enabled:
+            result.add(feed.rssid)
+
+
 proc generateSHA1*(input: string, length: int = 16): string =
   let hash = secureHash(input) # calculate SHA1
   let bytes = cast[array[20, byte]](hash) # convert distinct type to byte array
@@ -178,11 +186,7 @@ proc getFTI*(keyword: string, lang: string, userid: string): seq[TimeSearchEntry
         return # check minimum length of keywords
 
     # Get enabled feeds
-    let userFeeds = loadObject[UserFeeds](userid)
-    var feedtable : seq[string]
-    for feed in userFeeds.feeds:
-        if feed.enabled:
-            feedtable.add(feed.rssid)
+    let feedtable = getEnabledFeeds(userid)
 
     # resultTable holds for each search word a sequence of TimeSearchEntry
     var resultTable = initTable[string, seq[TimeSearchEntry]]()
@@ -270,12 +274,9 @@ proc showRSSItem*(keys: string) =
     echo ""
 
 
-proc getLatestRSSItems*(max: int, feeds: seq[Feed]): seq[RSSItem] =
+proc getLatestRSSItems*(max: int, userid: string): seq[RSSItem] =
     var cnt = max
-    var feedtable : seq[string]
-    for feed in feeds:
-        if feed.enabled:
-            feedtable.add(feed.rssid)
+    var feedtable = getEnabledFeeds(userid)
 
     for key  in QueryItr ^RSSItemPUBDATE.reverse.keys:  # youngest first
         let idxKey = key[1]

@@ -37,7 +37,7 @@ proc getXmlFromUrl(url: string): string =
 
     
 proc updateConfigFeed(rss: RSS, group: string) =
-    var normalizedTitle = normalizeChannelTitle(rss.title.get())
+    var normalizedTitle = normalizeChannelTitle(getOption(rss.title))
     let sha = generateSHA1(normalizedTitle)  # Feed-Title 'Deutschlandfunk' > abckdkd93,d;-
     let dta = Data ^ConfigFeed(sha)
     if dta == 0:  # new feed

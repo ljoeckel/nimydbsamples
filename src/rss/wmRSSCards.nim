@@ -1,6 +1,5 @@
 import std/[times, strutils, strformat]
 import std/[options, typetraits, enumerate]
-import mummy, mummy/routers, mummy/datastar
 import nimrss
 
 proc pubDate(item: RSSItem): string =
@@ -52,7 +51,6 @@ proc createRSSItemCard*(item: RSSItem): string =
             if idx >= 2: break # show only first 3 keywords
         keywords = fmt"""<span class="tag">{keywordlist}</span>"""
 
-    let feedId = getOption(item.feedId)
     let (feedTitle, feedLink) = feedData(item)
     let divimg = fmt"""
         <a target='_blank' href={feedLink} class='footer-link'>
@@ -70,7 +68,7 @@ proc createRSSItemCard*(item: RSSItem): string =
             <p class='rsscard-text'> <a target='_blank' href='{link}'> {description}</a> </p>
             <div class='rsscard-footer'>
                 <p>{divimg}</p>
-                <p class='rsspubdate'> {pubDate(item)} / {item.idxref} / {feedId}</p>
+                <p class='rsspubdate'> {pubDate(item)} / {item.idxref}</p>
             </div>
         </div>
         """
@@ -90,10 +88,9 @@ proc createRSSItemList*(item: RSSItem): string =
 
 
 proc createLatestCards*(max: int, userid: string): (string, int) =
-    let userFeeds = loadObject[UserFeeds](userid)
     var cards: string
     var items: int
-    for rssItem in getLatestRSSItems(max, userFeeds.feeds):
+    for rssItem in getLatestRSSItems(max, userid):
         # produce cards for output
         cards.add(createRSSItemCard(rssItem))
         inc items
@@ -103,36 +100,3 @@ proc createLatestCards*(max: int, userid: string): (string, int) =
     }}"""
 
     return (container, items)
-
-
-proc handleLiveFeed*(req: Request) =
-    echo "handleLiveFeed"
-    let userid = getSignal(req, USERID)
-    let wallclock = getWallClock(userid)
-    let keywordContainer = fmt"""{{<div id="keywords"></div>}}"""
-
-    SSE(req):
-        patchElements(sse, fmt"<h3 id='wallclock'>{wallclock}</h3>")
-        patchElements(sse, keywordContainer) # clear keyword search result
-        var cardsContent: string
-        var cardsCount: int
-        var info = meassure:
-            (cardsContent, cardsCount) = createLatestCards(MAXNEWS, userid)
-        let articles = fmt"{cardsCount} articles"
-        let infotxt = if articles.len > 0: fmt"{articles} in {info}" else: fmt"Fetch in {info}"
-        let infoContainer = fmt"""{{<h3 id="info">{infotxt}</h3>}}"""
-
-        patchElements(sse, cardsContent)
-        patchElements(sse, infoContainer)
-
-
-# Callback for router registration
-proc register*(router: var Router) =
-    router.get("/livefeed", handleLiveFeed)
-
-
-# Create module instance
-let wmRSSCardsModule* = WebModule(
-    name: "wmRSSCards",
-    register: register
-)
