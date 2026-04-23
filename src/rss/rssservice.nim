@@ -58,7 +58,7 @@ proc handleUpdateClock(req: Request) =
                         patchElements(sse, infoContainer)
 
                         var containerClass = if format == "card": "rsscard-container" else: "rsslist-container"
-                        let rssContainer = fmt"""<div id="rsscard" class="{containerClass}">{cardsContent}</div>"""
+                        let rssContainer = fmt"<div id='rsscard' class='{containerClass}'>{cardsContent}</div>"
                         patchElements(sse, rssContainer)
             else:
                 echo "Leaving WallClock loop. No longer loggedIn"

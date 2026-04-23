@@ -17,7 +17,7 @@ template meassure*(body: untyped): auto =
     let t0 = getTime()
     body
     let td = (getTime() - t0).inMicroseconds
-    if td > 1000: $(td div 1000) & "ms."
+    if td > 1000: $(td div 1000) & " ms."
     else: $td & " µs."
 
 

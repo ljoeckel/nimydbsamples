@@ -30,12 +30,15 @@ proc handleStats(req: Request) =
         for gbl in globals:
             let duration = meassure:
                 let (orderCnt, queryCnt) = countGlobal(gbl)
+            let time = duration.split(" ")[0]
+            let unit = duration.split(" ")[1]
             let tr = fmt"""
                 <tr>
                     <td align='left'>{gbl}</td>
                     <td align='right'>{orderCnt}</td>
                     <td align='right'>{queryCnt}</td>
-                    <td align='right'>{duration}</td>
+                    <td align='right'>{time}</td>
+                    <td align='right'>{unit}</td>
                 </tr>
                 """
             patchElements(sse, tr, selector="#stats-body", mode=Append)
@@ -46,12 +49,15 @@ proc handleStats(req: Request) =
     # Empty line
     patchElements(sse, emptyline, selector="#stats-body", mode=Append)
     # Summary line
+    let totalTime = totalDuration.split(" ")[0]
+    let totalUnit = totalDuration.split(" ")[1]
     let tr = fmt"""
         <tr>
             <td align='left'>Total # of records:</td>
             <td align='right'>{totalOrder}</td>
             <td align='right'>{totalQuery}</td>
-            <td align='right'>{totalDuration}</td>
+            <td align='right'>{totalTime}</td>
+            <td align='right'>{totalUnit}</td>
         </tr>
         """
     patchElements(sse, tr, selector="#stats-body", mode=Append)

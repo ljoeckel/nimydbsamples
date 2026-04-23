@@ -1,8 +1,8 @@
-<div id="container" 
-    class="card" 
-    data-signals="{formId: 'livefeed', sort:'time', format:'card', direction:'down', articles:100}" 
-    data-effect="@get('/update-clock')" >
-    
+<!--div id="container" class="card"-->
+<div id="container"
+    data-signals="{formId: 'livefeed', articles: 100, direction: 'down', format: 'card', sort: 'time', lastScroll: 0, showButton: false}"
+    data-effect="@get('/update-clock')">
+
     <style>
         .toolbar {
             display: flex;
@@ -82,72 +82,113 @@
                 display: none;
             }
         }
+
+
+        /* Back to top button */
+        #backToTop {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 18px;
+            background: #333;
+            color: white;
+            border-radius: 50px;
+            border: none;
+            cursor: pointer;
+            z-index: 1000;
+
+            /* Animationseigenschaften */
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            opacity: 0;
+            transform: translateY(20px);
+            pointer-events: none;
+            /* Klicks ignorieren wenn unsichtbar */
+        }
+
+        /* Diese Klasse wird von Datastar hinzugefügt */
+        .is-visible {
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+            pointer-events: auto !important;
+        }
     </style>
 
     <div class="toolbar" id="main_toolbar" data-effect="@post('/search')">
         <!-- Search -->
         <div class="search-group">
             <!-- Keyword -->
-            <input type="search" placeholder="Search..."  id="keyword" data-bind:keyword data-on:input__debounce.500ms="@post('/search')" autofocus/>
+            <input type="search" placeholder="Search..." id="keyword" data-bind:keyword
+                data-on:input__debounce.500ms="@post('/search')" autofocus />
 
-            <select 
-                    id="articles" 
-                    name="articles" 
-                    data-bind:articles
-                    autocomplete="articles"
-                    data-on:change__delay.100ms="@post('/search')">
-                    <option>10</option>
-                    <option>25</option>
-                    <option>50</option>
-                    <option>75</option>
-                    <option>100</option>
-                    <option>150</option>
-                    <option>250</option>
-                    <option>500</option>
-                </select>
+            <select id="articles" name="articles" data-bind:articles autocomplete="articles"
+                data-on:change__delay.100ms="@post('/search')">
+                <option>10</option>
+                <option>25</option>
+                <option>50</option>
+                <option>75</option>
+                <option>100</option>
+                <option>150</option>
+                <option>250</option>
+                <option>500</option>
+            </select>
         </div>
 
         <div class="divider" style="width: 1px; height: 20px; background: #ddd;"></div>
 
         <div class="action-group">
             <!-- Time range -->
-            <button class="btn" title="All days" data-class:btnhover="$sort == 'time'" data-on:click="$sort='time'; @post('/search')">
+            <button class="btn" title="All days" data-class:btnhover="$sort == 'time'"
+                data-on:click="$sort='time'; @post('/search')">
                 <i class="bi bi-calendar-week"></i>
             </button>
 
-            <button class="btn" title="Today only" data-class:btnhover="$sort == 'today'" data-on:click="$sort='today'; @post('/search')">
+            <button class="btn" title="Today only" data-class:btnhover="$sort == 'today'"
+                data-on:click="$sort='today'; @post('/search')">
                 <i class="bi bi-calendar-event"></i>
             </button>
 
             <!-- Relevanz -->
-            <button class="btn" title="By Relevance" data-attr:disabled="!$keyword" data-class:btnhover="$sort == 'relevance'" data-on:click="$sort='relevance'; @post('/search')">
+            <button class="btn" title="By Relevance" data-attr:disabled="!$keyword"
+                data-class:btnhover="$sort == 'relevance'" data-on:click="$sort='relevance'; @post('/search')">
                 <i class="bi bi-graph-down"></i>
             </button>
 
             <div style="width: 6px;"></div>
 
             <!-- Display formats -->
-            <button class="btn" title="Show Cards" data-class:btnhover="$format == 'card'" data-on:click="$format='card'; @post('/search')">
+            <button class="btn" title="Show Cards" data-class:btnhover="$format == 'card'"
+                data-on:click="$format='card'; @post('/search')">
                 <i class="bi bi-postcard"></i>
             </button>
-            <button class="btn" title="Show as List" data-class:btnhover="$format == 'list'" data-on:click="$format='list'; @post('/search')">
+            <button class="btn" title="Show as List" data-class:btnhover="$format == 'list'"
+                data-on:click="$format='list'; @post('/search')">
                 <i class="bi bi-list"></i>
             </button>
 
             <div style="width: 6px;"></div>
 
             <!-- Sort -->
-            <button class="btn" title="Oldest first" data-attr:disabled="!$keyword" data-class:btnhover="$direction == 'up'" data-on:click="$direction='up'; @post('/search')">
+            <button class="btn" title="Oldest first" data-attr:disabled="!$keyword"
+                data-class:btnhover="$direction == 'up'" data-on:click="$direction='up'; @post('/search')">
                 <i class="bi bi-sort-up"></i>
             </button>
-            <button class="btn" title="Youngest first" data-attr:disabled="!$keyword" data-class:btnhover="$direction == 'down'" data-on:click="$direction='down'; @post('/search')">
+            <button class="btn" title="Youngest first" data-attr:disabled="!$keyword"
+                data-class:btnhover="$direction == 'down'" data-on:click="$direction='down'; @post('/search')">
                 <i class="bi bi-sort-down-alt"></i>
             </button>
-
         </div>
-    </div>
-    
-    <div id="livefeed">
-        <div id="rsscard" class="rsscard-container"> </div>
-    </div>
 
+        <!-- Scroll to top button -->
+        <button id="backToTop" data-class="{ 'is-visible': $showButton }"
+            data-on:click="window.scrollTo({top: 0, behavior: 'smooth'})">
+            ↑ Go to top
+        </button>
+        <!-- Scroll to top controlling -->
+        <div
+            data-on:scroll__window__throttle.50ms="$showButton = (window.scrollY < $lastScroll && window.scrollY > 300); $lastScroll = window.scrollY">
+        </div>
+
+        <!-- Placeholder for Cards or List -->
+        <div id="rsscard" class="rsscard-container"></div>
+
+    </div>
