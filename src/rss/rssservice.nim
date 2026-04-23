@@ -11,6 +11,7 @@ import wmFeedConfig
 import wmRSSCards
 import wmLogin
 import wmSearch
+import wmStats
 
 
 proc handleUpdateClock(req: Request) =
@@ -85,6 +86,7 @@ if isMainModule:
     wmFeedConfigModule.register(router)
     wmLoginModule.register(router)
     wmSearchModule.register(router)
+    wmStatsModule.register(router)
 
     router.get("/update-clock", handleUpdateClock)
 

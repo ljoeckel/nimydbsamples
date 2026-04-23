@@ -137,7 +137,6 @@ proc checkFeedConfiguration*(userid: string) =
 
 # Callback for router registration
 proc register*(router: var Router) =
-    echo "register /get-feeds, /select-feed, /toggle-feed, /toggle-feedgroup"
     router.get("/get-feeds", handleGetFeeds)
     router.post("/select-feed", handleToggleFeed)
     router.post("/toggle-feed", handleToggleFeed)

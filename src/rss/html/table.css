@@ -16,6 +16,7 @@
     scrollbar-gutter: stable;
     border: 1px solid #e5e7eb;
     width: max-content;
+    height: 85vh;
 }
 
 .feedtable {

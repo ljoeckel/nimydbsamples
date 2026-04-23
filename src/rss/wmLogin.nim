@@ -22,7 +22,6 @@ proc handleLogout(req: Request) =
 
 # Callback for router registration
 proc register*(router: var Router) =
-    echo "register /login, /logout"
     router.post("/login", handleLogin)
     router.get("/logout", handleLogout)
 

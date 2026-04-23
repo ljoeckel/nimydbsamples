@@ -11,7 +11,7 @@
             align-items: center;
             gap: 8px;
             padding: 10px;
-            background: #eaf2a6;
+            background: var(--bg);
             border: 1px solid #ddd;
             border-radius: 8px;
         }
@@ -19,7 +19,6 @@
         .search-group {
             display: flex;
             flex: 1 1 300px;
-            /* Suchfeld wächst, bricht aber ab 300px um */
             gap: 4px;
         }
 
@@ -85,12 +84,12 @@
         }
     </style>
 
-    <div class="toolbar" id="main_toolbar">
-    <!--div class="toolbar" id="main_toolbar" data-effect="@post('/search')"-->
+    <!--div class="toolbar" id="main_toolbar"-->
+    <div class="toolbar" id="main_toolbar" data-effect="@post('/search')">
         <!-- Suchbereich -->
         <div class="search-group">
             <!-- Keyword -->
-            <input id="keyword" data-bind:keyword data-on:input__debounce.500ms="@post('/search')" placeholder="Search for xxxx ..." autofocus type="text"/>
+            <input type="search" placeholder="Search..."  id="keyword" data-bind:keyword data-on:input__debounce.500ms="@post('/search')" autofocus/>
 
             <select 
                     id="articles" 
@@ -98,7 +97,6 @@
                     data-bind:articles
                     autocomplete="articles"
                     data-on:change__delay.100ms="@post('/search')">
-                    <option selected>50</option>
                     <option>10</option>
                     <option>25</option>
                     <option>50</option>
