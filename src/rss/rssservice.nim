@@ -1,10 +1,8 @@
 ## Run 'nimble demo'
 
-import std/[os, times, strutils, strformat]
-import std/[typetraits]
+import std/[os, times, strutils, strformat, typetraits]
 import mummy, mummy/routers, mummy/datastar
 import nimrss
-import common
 
 # WebModules
 import wmFeedConfig

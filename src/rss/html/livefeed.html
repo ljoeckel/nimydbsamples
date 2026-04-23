@@ -84,9 +84,8 @@
         }
     </style>
 
-    <!--div class="toolbar" id="main_toolbar"-->
     <div class="toolbar" id="main_toolbar" data-effect="@post('/search')">
-        <!-- Suchbereich -->
+        <!-- Search -->
         <div class="search-group">
             <!-- Keyword -->
             <input type="search" placeholder="Search..."  id="keyword" data-bind:keyword data-on:input__debounce.500ms="@post('/search')" autofocus/>
@@ -110,39 +109,38 @@
 
         <div class="divider" style="width: 1px; height: 20px; background: #ddd;"></div>
 
-        <!-- Sortierung & Ansicht -->
         <div class="action-group">
-            <!-- Zeit-Sortierung mit Richtungs-Indikator -->
-            <button class="btn" title="Time" data-class:btnhover="$sort == 'time'" data-on:click="$sort='time'; @post('/search')">
+            <!-- Time range -->
+            <button class="btn" title="All days" data-class:btnhover="$sort == 'time'" data-on:click="$sort='time'; @post('/search')">
                 <i class="bi bi-calendar-week"></i>
             </button>
 
-            <button class="btn" title="Today" data-class:btnhover="$sort == 'today'" data-on:click="$sort='today'; @post('/search')">
+            <button class="btn" title="Today only" data-class:btnhover="$sort == 'today'" data-on:click="$sort='today'; @post('/search')">
                 <i class="bi bi-calendar-event"></i>
             </button>
 
             <!-- Relevanz -->
-            <button class="btn" title="Relevance" data-attr:disabled="!$keyword" data-class:btnhover="$sort == 'relevance'" data-on:click="$sort='relevance'; @post('/search')">
+            <button class="btn" title="By Relevance" data-attr:disabled="!$keyword" data-class:btnhover="$sort == 'relevance'" data-on:click="$sort='relevance'; @post('/search')">
                 <i class="bi bi-graph-down"></i>
             </button>
 
             <div style="width: 6px;"></div>
 
-            <!-- Ansicht-Formate -->
-            <button class="btn" title="Cards" data-class:btnhover="$format == 'card'" data-on:click="$format='card'; @post('/search')">
+            <!-- Display formats -->
+            <button class="btn" title="Show Cards" data-class:btnhover="$format == 'card'" data-on:click="$format='card'; @post('/search')">
                 <i class="bi bi-postcard"></i>
             </button>
-            <button class="btn" title="List" data-class:btnhover="$format == 'list'" data-on:click="$format='list'; @post('/search')">
+            <button class="btn" title="Show as List" data-class:btnhover="$format == 'list'" data-on:click="$format='list'; @post('/search')">
                 <i class="bi bi-list"></i>
             </button>
 
             <div style="width: 6px;"></div>
 
             <!-- Sort -->
-            <button class="btn" title="Sort ascending" data-attr:disabled="!$keyword" data-class:btnhover="$direction == 'up'" data-on:click="$direction='up'; @post('/search')">
+            <button class="btn" title="Oldest first" data-attr:disabled="!$keyword" data-class:btnhover="$direction == 'up'" data-on:click="$direction='up'; @post('/search')">
                 <i class="bi bi-sort-up"></i>
             </button>
-            <button class="btn" title="Sort descending" data-attr:disabled="!$keyword" data-class:btnhover="$direction == 'down'" data-on:click="$direction='down'; @post('/search')">
+            <button class="btn" title="Youngest first" data-attr:disabled="!$keyword" data-class:btnhover="$direction == 'down'" data-on:click="$direction='down'; @post('/search')">
                 <i class="bi bi-sort-down-alt"></i>
             </button>
 
