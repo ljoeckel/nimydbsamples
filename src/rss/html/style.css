@@ -46,6 +46,7 @@ body {
     border-top-right-radius: 0px;
     border-bottom-left-radius: 22px;
     border-bottom-right-radius: 22px;
+    max-width: 100%;
 }
 
 .header {

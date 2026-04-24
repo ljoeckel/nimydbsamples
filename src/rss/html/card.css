@@ -9,11 +9,13 @@ body {
 }
 */
 
+/*
 .showcase {
   color: #570ec5;
   font-size: 0.75rem;
   font-weight: 700;
 }
+*/
 
 .rsscard-container {
   display: grid;
@@ -25,7 +27,7 @@ body {
   
   /* Padding für den gesamten Container */
   padding: 10px;
-  max-width: 1200px; /* Optional: Begrenzt die Gesamtbreite */
+  max-width: 100%; /* Optional: Begrenzt die Gesamtbreite */
   margin: 0 auto;    /* Zentriert den Container auf der Seite */
 }
 
@@ -35,7 +37,7 @@ body {
   height: 100%;
   box-sizing: border-box;
 
-  background: white;
+  background: rgb(250, 250, 250);
   border-radius: 12px;
   padding: 24px;
   max-width: 350px;
@@ -83,20 +85,6 @@ body {
   font-size: 1.0rem;
   font-weight: 500;
   margin-bottom: 5px;
-}
-
-.XXrsscard-text {
-  color: #4b5563;
-  line-height: 1.25; /* Erhöht für bessere Lesbarkeit */
-  font-size: 1.0rem;
-  margin-bottom: 15px;
-
-  /* Das Zaubermittel: */
-  display: -webkit-box;
-  -webkit-line-clamp: 3;    /* Anzahl der Zeilen, bevor abgekürzt wird */
-  -webkit-box-orient: vertical;  
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .feed-title {
