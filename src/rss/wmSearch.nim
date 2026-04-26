@@ -2,7 +2,15 @@ import std/[times, strutils, strformat]
 import std/[typetraits]
 import mummy, mummy/routers, mummy/datastar
 import nimrss
-import wmRSSCards
+
+proc getSortBy*(sort: string, direction: string): SortBy =
+    if sort == "today":
+        result = if direction == "up": ByTodayAscending else: ByTodayDescending
+    elif sort == "time":
+        result = if direction == "up": ByTimeAscending else: ByTimeDescending
+    elif sort == "relevance":
+        result = if direction == "up": ByRelevanceAscending else: ByRelevanceDescending
+
 
 proc handleSearch(req: Request) =
     let userid = getSignal(req, USERID)
@@ -14,24 +22,16 @@ proc handleSearch(req: Request) =
     let direction = getSignal(req, "direction")
     let articleCount = parseInt(getSignal(req, "articles"))
     let format = getSignal(req, "format")
-
-    var sortBy: SortBy
-    if sort == "today":
-        sortBy = if direction == "up": ByTodayAscending else: ByTodayDescending
-    elif sort == "time":
-        sortBy = if direction == "up": ByTimeAscending else: ByTimeDescending
-    elif sort == "relevance":
-        sortBy = if direction == "up": ByRelevanceAscending else: ByRelevanceDescending
-
     var cards, keywords: string
     var containerClass = if format == "card": "rsscard-container" else: "rsslist-container"
     var rssItems: seq[RSSItem]
+    let sortBy = getSortBy(sort, direction)
 
     let infoQuery = meassure:
         if keyword.len == 0:
-            rssItems = getLatestRSSItems(articleCount, userid)
+            rssItems = getLatestRSSItems(articleCount, userid, sortBy)
         else:
-            var searchResults = getFTI(keyword, lang, userid) # @["1158,4", "118,10"...]
+            var searchResults = getFTI(keyword, lang, userid, sortBy) # @["1158,4", "118,10"...]
             searchResults.sortFTIResult(sortBy)
             # Reduce result to max_search_results
             let mx = min(searchResults.len, articleCount)
@@ -60,7 +60,6 @@ proc handleSearch(req: Request) =
 # Callback for router registration
 proc register*(router: var Router) =
     router.post("/search", handleSearch)
-
 
 # Create module instance
 let wmSearchModule* = WebModule(

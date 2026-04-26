@@ -18,3 +18,5 @@ src/rss/lj
 src/rss/stats
 src/rss/rssservice
 src/rss/searchcli
+src/rss/xml2.tgz
+src/rss/xml.tgz

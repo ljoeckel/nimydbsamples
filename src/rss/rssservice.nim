@@ -6,7 +6,6 @@ import nimrss
 
 # WebModules
 import wmFeedConfig
-import wmRSSCards
 import wmLogin
 import wmSearch
 import wmStats
@@ -31,6 +30,9 @@ proc handleUpdateClock(req: Request) =
                 # Show articles for logged in users
                 let formId = getSignal(userid, "formId")
                 let keyword = strip(getSignal(userid, "keyword"))
+                let sort = getSignal(userid, "sort")
+                let direction = getSignal(userid, "direction")
+                let sortBy = getSortBy(sort, direction)
 
                 if formId == "livefeed" and keyword.len == 0:
                     let format = getSignal(userid, "format")
@@ -39,7 +41,7 @@ proc handleUpdateClock(req: Request) =
                     var rssItems: seq[RssItem]
                     var cardsContent: string
                     let info = meassure:
-                        rssItems = getLatestRSSItems(articlesCount, userid)
+                        rssItems = getLatestRSSItems(articlesCount, userid, sortBy)
 
                     let infoRender = meassure:
                         for rssItem in rssItems:

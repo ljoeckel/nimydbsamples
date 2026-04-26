@@ -1,8 +1,5 @@
-import std/strformat
-import std/wordwrap
-import std/[algorithm, hashes, sets, tables]
-import std/[options, strutils, typetraits]
-import std/[base64, httpclient, times]
+import std/[enumerate, strformat, algorithm, hashes, sets, tables]
+import std/[options, strutils, typetraits, base64, httpclient, times]
 import checksums/sha1
 import rssatom
 import yottadb
@@ -21,6 +18,7 @@ const TIME_FORMATS* = [
     "ddd, dd MMM yyyy HH:mm 'GMT'" # Thu, 09 Apr 2026 12:57 GMT
   ]
 
+
 proc trim(s: string): string =
     # remove all leading, trailing and double spaces from a string " abc  def " -> "abc def"
     result = strip(s)
@@ -28,6 +26,39 @@ proc trim(s: string): string =
     while idx > 0:
         result = result.replace("  ", " ")
         idx = result.find("  ")
+
+
+template getOption*(option: Option): string =
+    if option.isSome: option.get() else: ""
+
+
+func fastParseInt*(s: string): int {.inline.} =
+  ## scan a string for positive numbers
+  ## Return 0 if no numbers
+  result = 0
+  for i in 0 ..< s.len:
+    let c = s[i]
+    if c in '0'..'9':
+      result = result * 10 + (ord(c) - ord('0'))
+    else:
+      break # Stopp at first non numeric character
+
+
+proc pubDate(item: RSSItem): string =
+    try: 
+        let dt = getOption(item.pubDate)
+        let fu = parseInt(dt).fromUnix()
+        result = fu.format("dd.MM.yyyy HH:mm")
+    except:
+         result = "01.01.1970 00:00"
+
+
+proc currentDayFromTo(): (int, int) =
+    # Get time range for the current day    
+    let date = getDateStr(now())
+    let dt1 = parse(date & " 00:00:00", "yyyy-MM-dd HH:mm:ss")
+    let dt2 = parse(date & " 23:59:59", "yyyy-MM-dd HH:mm:ss")
+    return (dt1.toTime().toUnix(),  dt2.toTime().toUnix())
 
 
 proc getUnixTimestamp*(dts: string): string =
@@ -42,8 +73,9 @@ proc getUnixTimestamp*(dts: string): string =
     raise newException(YdbError, "No matching timeformat found to create timestamp for '" & $dts)
 
 
-template getOption*(option: Option): string =
-    if option.isSome: option.get() else: ""
+proc datetimeToUnix*(): int =
+    let tm = now().toTime()
+    result = tm.toUnix()
 
 
 proc getRSSFeedConfiguration*(path: string): Table[string, seq[string]] =
@@ -132,10 +164,12 @@ proc hash*(x: TimeSearchEntry): Hash =
   h = h !& hash(x.subscript)
   result = !$h
 
+
 template append(result: var HashSet[TimeSearchEntry], keyword: string, wc: int, item: TimeSearchEntry) =
     var itm = item
     inc(itm.wordCount, getWordCountFromFTI(keyword, item.subscript) + wc)
     incl(result, itm)
+
 
 proc intersect(keyword: string, s1: var HashSet[TimeSearchEntry], s2: var HashSet[TimeSearchEntry]): HashSet[TimeSearchEntry] =
     #var itm: TimeSearchEntry
@@ -157,6 +191,7 @@ proc intersect(keyword: string, s1: var HashSet[TimeSearchEntry], s2: var HashSe
             if item in s1: 
                 let wc = s1[item].wordCount
                 result.append(keyword, wc, item)
+
 
 proc sortFTIResult*(data: var seq[TimeSearchEntry], sortBy: SortBy) =
     case sortBy
@@ -180,7 +215,7 @@ proc sortFTIResult*(data: var seq[TimeSearchEntry], sortBy: SortBy) =
             return res
 
 
-proc getFTI*(keyword: string, lang: string, userid: string): seq[TimeSearchEntry] =
+proc getFTI*(keyword: string, lang: string, userid: string, sortBy: SortBy): seq[TimeSearchEntry] =
     # Search Full Text Index
     if keyword.isEmptyOrWhitespace or keyword.len < MIN_KEYWORD_LEN: 
         return # check minimum length of keywords
@@ -209,101 +244,123 @@ proc getFTI*(keyword: string, lang: string, userid: string): seq[TimeSearchEntry
         var s2 = resultTable[key].toHashSet
         common = intersect(key, common, s2)
 
-    #echo fmt"Found {common.len} entries for '{kws}'"
     # Update TimeSearchEntry with pubDate
+    # get current day from/to
+    let (todayFrom, todayTo) = currentDayFromTo()
+
     for entry in common:
         var sr = entry
         let subscript = entry.subscript
         sr.time = Get ^RSSItem(subscript, "pubDate").int # get time from DB
-        result.add(sr)
-
-   
-    # Sort result Descending by-pubdate: compare y with x
-    # if sortOrder == byTime:
-    #     result.sort((x, y) => cmp(y.time, x.time))
-    # else:
-    #     result.sort((x, y) => cmp(y.wordCount, x.wordCount))
-
-    # result.sort do (x, y: TimeSearchEntry) -> int:
-    #     var res: int
-    #     # sort by wordCount
-    #     res = cmp(y.wordCount, x.wordCount)
-    #     # sort additionally by 'time' if 'wordCont' is 0 (equal)
-    #     if res == 0:
-    #         res = cmp(y.time, x.time)
-    #     return res
-
-    # # Reduce result to max_search_results
-    # let maxresults = min(result.len, MAX_SEARCH_RESULTS)-1
-    # return result[0..maxresults]
-        
-
-proc showRSS*(keys: string) =
-    let key = if keys.contains(","): keys.split(",")[0] else: keys
-    
-    let items = @["id", "title", "description", "language", "link", "pubDate", "lastBuildDate", "copyright", "description", "generator"]
-    for item in items:
-        let gbl = fmt"^RSS({key}, {item})"
-        let val = Get @gbl
-        echo fmt"{item:>12}: {val}"
-
-proc showRSSItem*(keys: string) =
-    var gbl = fmt"^RSSItem({keys},title)"
-    let title = Get @gbl
-    gbl = fmt"^RSSItem({keys},description)"
-    let description = Get @gbl
-    gbl = fmt"^RSSItem({keys},pubDate)"
-    let pubDate = Get @gbl.int
-    gbl = fmt"^RSSItem({keys},idxref)"
-    let idxref = Get @gbl
-    echo title
-    let umbruch = description.wrapWords(maxLineWidth = 74).indent(5)
-    if umbruch.len > 5:
-        echo umbruch
-
-    # Show feed info
-    let rssid = keys.split(',')[0]
-    let dta = Data ^RSS(rssid)
-    if dta == 0:
-        echo "RSS entry ", rssid, " not found!"
-        return
-
-    let rss = loadObject[RSS](rssid)
-    let feedTitle = if rss.title.isSome: rss.title.get else: ""
-    echo fmt"     {feedTitle} {pubDate.fromUnix.local()} ({idxref})"
-    echo ""
+        case sortBy
+        of ByTodayAscending, ByTodayDescending:
+            if sr.time >= todayFrom and sr.time <= todayTo:
+                result.add(sr)
+        else:
+            result.add(sr)
 
 
-proc getLatestRSSItems*(max: int, userid: string): seq[RSSItem] =
-    var cnt = max
+proc getLatestRSSItems*(max: int, userid: string, sortBy: SortBy): seq[RSSItem] =
     var feedtable = getEnabledFeeds(userid)
-
+   
+    # get current day from/to
+    let (todayFrom, todayTo) = currentDayFromTo()
+    # Iterate from new to old
     for key  in QueryItr ^RSSItemPUBDATE.reverse.keys:  # youngest first
+        let pubDate = fastParseInt(key[0])
         let idxKey = key[1]
         let feedId = Order ^RSSItemIDXREF(idxkey,"")
         if feedId in feedtable:
             let itemKey = idxKey.split(",")
             let rssItem = loadObject[RSSItem](itemKey)
-            result.add(rssItem)
-            dec cnt
-            if cnt == 0: break
+            case sortBy:
+            of ByTodayAscending, ByTodayDescending:
+                if pubDate >= todayFrom and pubDate <= todayTo:
+                    result.add(rssItem)
+                if pubDate < todayFrom:
+                    break
+            else:
+                result.add(rssItem)
+
+        if result.len >= max:
+            break
 
 
-proc getLatestRSSItemKeys*(max: int): seq[string] =
-    var cnt = max
-    for key  in QueryItr ^RSSItemPUBDATE.reverse:
-        let parts = key.split(',')
-        let keys = parts[1] & "," & parts[2][0..^2]
-        result.add(keys)
-        dec cnt
-        if cnt == 0: break
+proc feedData(item: RSSItem): (string, string) =
+    let id = item.idxref.split(',')[0]
+    let rssImage = loadObject[RSSImage](id)
+
+    var feedTitle, feedLink: string
+    if rssImage.url.isSome():
+        feedTitle = if rssImage.title.isSome: getOption(rssImage.title) else: getOption(item.title)
+        feedLink = getOption(rssImage.link)
+    else:
+        feedTitle = Get ^RSS(id, "title")
+        feedLink = Get ^RSS(id, "link")
+    
+    return (feedTitle, feedLink)
 
 
-proc fullDump*(global: string) =
-    let gbl = if global.startsWith("^"): global else: "^" & global
-    for key, value in QueryItr @gbl.kv:
-        #let rss = loadObject[RSS](key)
-        echo key,"=",value
+proc createRSSItemCard*(item: RSSItem): string =
+    let title = getOption(item.title)
+    let description = getOption(item.description)
+    let link = getOption(item.link)
+
+    # categories
+    var category: string
+    if item.category.len > 0:
+        var cat: string
+        for idx, word in enumerate(item.category):
+            cat.add(word & " ")
+            if idx >= 2: break
+        category = fmt"""<span class="tag">{cat}</span>"""
+    
+    var topic = getOption(item.topic)
+    if topic.len > 0: topic = fmt"""<span class="tag">{toUpper(topic)}</span>"""
+    
+    var keywords: string
+    if item.keywords.len > 0:
+        var keywordlist: string
+        for idx, word in enumerate(item.keywords):
+            keywordlist.add(word & " ")
+            if idx >= 2: break # show only first 3 keywords
+        keywords = fmt"""<span class="tag">{keywordlist}</span>"""
+
+    let (feedTitle, feedLink) = feedData(item)
+    let divimg = fmt"""
+        <a target='_blank' href={feedLink} class='footer-link'>
+        <span class='feed-title'>{feedTitle}</span></a>
+        """
+    
+    result = fmt"""
+        <div class='rsscard'>
+            <div class='rsscard-tags'>
+                {topic}
+                {category}
+                {keywords}
+            </div>
+            <div class='rsscard-title'> <a target='_blank' href='{link}'> {title}</a> </div>
+            <p class='rsscard-text'> <a target='_blank' href='{link}'> {description}</a> </p>
+            <div class='rsscard-footer'>
+                <p>{divimg}</p>
+                <p class='rsspubdate'> {pubDate(item)} / {item.idxref}</p>
+            </div>
+        </div>
+        """
+
+
+proc createRSSItemList*(item: RSSItem): string =
+    let title = getOption(item.title)
+    let link = getOption(item.link)
+    let (feedTitle, feedLink) = feedData(item)
+    let divimg = fmt"<a target='_blank' href={feedLink}><span>{feedTitle}</span></a>"
+
+    result = fmt"""
+        <div class='rsscard-title'>
+            <a target='_blank' href='{link}'> {title}</a>
+            <p class='rsspubdate'> {pubDate(item)} / {item.idxref} / {divimg} </p>
+        </div>
+        """
 
 
 proc clearFeedsDb*() =
@@ -312,6 +369,7 @@ proc clearFeedsDb*() =
         ^Feed
         ^UserFeeds
     echo "Feed related globals killed"
+
 
 proc clearRssDb*() =
     Kill:
@@ -332,3 +390,8 @@ proc clearRssDb*() =
         ^Feed
         ^UserFeeds
     echo "RSS Globals killed"
+
+
+if isMainModule:
+    let ux = datetimeToUnix()
+    echo "ux=", ux

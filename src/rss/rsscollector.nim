@@ -58,7 +58,7 @@ proc updateConfigFeed(rss: RSS, group: string) =
 
 proc saveXmlFile(url: string, xml: string) =
     let nurl = generateSHA1(url)
-    let xmlcount = Increment ^RSSCNT(nurl)
+    let xmlcount = datetimeToUnix()
     writeFile(fmt"./xml/{nurl}_{xmlcount}.xml", xml)
 
 
@@ -163,6 +163,7 @@ if isMainModule:
                 echo " -l, --live         : Get data from RSS feeds for one time"
                 echo " -l=n, --live=n     : Get data from RSS and repeat each 'n' minutes."
                 echo " -i[=n], --init.    : Load data from xml-files. (optional [n] items)" 
+                echo " -x <xmlfile>.      : Load data from given xml-file." 
                 echo " -k, --kill.        : Kill all database globals"
                 echo "<feeds.rss>.        : List of RSS adresses"
                 quit(0)
@@ -178,6 +179,13 @@ if isMainModule:
             if key == "i" or key == "init": 
                 init = true
                 maxItems = if val.len > 0: parseInt(val) else: 0
+            if key == "x" and feedPath.len > 0:
+                echo "Loading from ", feedPath
+                let xml = trim(readFile(feedPath))
+                var feed = parseRSS(xml)
+                let (nbrNewItms, wordCount) = processFeed(feed)
+                if nbrNewItms > 0:
+                    echo "file:", feedPath, " nbrNewItms=", nbrNewItms, " wordCount=", wordCount
             if key == "k" or key == "kill":
                 clearRssDb()
                 quit(0)

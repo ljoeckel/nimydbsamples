@@ -5,7 +5,7 @@
     data-signals="{formId: 'livefeed', lastScroll: 0, showButton: false}"
     data-signals:format__ifmissing="'card'"
     data-signals:direction__ifmissing="'down'"
-    data-signals:sort__ifmissing="'time'"
+    data-signals:sort__ifmissing="'today'"
     data-signals:articles__ifmissing=100
     data-effect="@get('/update-clock')">
 
@@ -136,21 +136,25 @@
                 <option>150</option>
                 <option>250</option>
                 <option>500</option>
+                <option>1000</option>
+                <option>2500</option>
+                <option>5000</option>
             </select>
         </div>
 
         <div class="divider" style="width: 1px; height: 20px; background: #ddd;"></div>
 
         <div class="action-group">
-            <!-- Time range -->
-            <button class="btn" title="All days" data-class:btnhover="$sort == 'time'"
-                data-on:click="$sort='time'; @post('/search')">
-                <i class="bi bi-calendar-week"></i>
-            </button>
-
+            <!-- Today -->
             <button class="btn" title="Today only" data-class:btnhover="$sort == 'today'"
                 data-on:click="$sort='today'; @post('/search')">
                 <i class="bi bi-calendar-event"></i>
+            </button>
+
+            <!-- All days -->
+            <button class="btn" title="All days" data-class:btnhover="$sort == 'time'"
+                data-on:click="$sort='time'; @post('/search')">
+                <i class="bi bi-calendar-week"></i>
             </button>
 
             <!-- Relevanz -->
@@ -161,11 +165,13 @@
 
             <div style="width: 6px;"></div>
 
-            <!-- Display formats -->
+            <!-- List as Cards -->
             <button class="btn" title="Show Cards" data-class:btnhover="$format == 'card'"
                 data-on:click="$format='card'; @post('/search')">
                 <i class="bi bi-postcard"></i>
             </button>
+            
+            <!-- List Headline -->
             <button class="btn" title="Show as List" data-class:btnhover="$format == 'list'"
                 data-on:click="$format='list'; @post('/search')">
                 <i class="bi bi-list"></i>

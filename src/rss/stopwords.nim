@@ -39,10 +39,10 @@ proc isStopword(word: string, lang: string): bool =
 
 proc splitWords(text: string, lang: string): seq[string] =
     # Replace with ' '
-    var s = toLower(strip(text))
-    for c in text:
+    var s: string
+    for c in toLower(strip(text)):
         if c in {'\0'..'/', ':'..'@', '['..'`', '{'..'~'}: 
-            #s.add(' ')
+            s.add(' ')
             continue
         else:
             s.add(c)
@@ -75,11 +75,15 @@ proc splitWords(text: string, lang: string): seq[string] =
         ("►", " "),
         ("◄", " "),
         ("■", " "),
+        ("’", " "),
         ("ß", "ss"),
         ("ä", "a"),
         ("ö", "o"),
         ("ü", "u"),
         ("\t", " "),
+        ("\n", " "),
+        ("https", " "),
+        ("html", " "),
     )
 
     var spaces = s.find("  ")
@@ -104,11 +108,16 @@ proc createFTIndex*(item: RSSItem, lang: string): int =
 
     let words = splitWords(categories & " " & keywords & " " & topic & " " & title & " " & description, lang)
     var wordtable = initCountTable[string]()
+    #echo "words=", words
     for word in words: wordtable.inc(word)
 
     for word, cnt in wordtable.pairs:
-        let stemWord = stem(word, lang)
-        Set: ^RSSItemFTI(stemWord, k0, k1) = cnt
+        if word == " " or word.len == 0:
+            echo "Empty or blank not valid word.  words=", words
+        else:
+            let stemWord = stem(word, lang)
+            if stemWord.len > 0:
+                Set: ^RSSItemFTI(stemWord, k0, k1) = cnt
 
     return wordtable.len
 

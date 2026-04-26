@@ -5,7 +5,7 @@ import nimrss
 const
     globals = @[
         "^Author", "^ConfigFeed", "^Feed", "^RSS", "^RSSCNT", "^RSSEnclosure",
-        "^RSSFTI", "^RSSImage", "^RSSItem",  "^RSSItemFEEDID", "^RSSItemFTI",
+        "^RSSFTI", "^RSSImage", "^RSSItem",  "^RSSItemFTI",
         "^RSSItemGUID", "^RSSItemIDXREF", "^RSSItemPUBDATE", "^Session", "^UserFeeds",
         ]
 
@@ -68,7 +68,6 @@ proc handleStats(req: Request) =
 # Callback for router registration
 proc register*(router: var Router) =
     router.get("/get-stats", handleStats)
-
 
 # Create module instance
 let wmStatsModule* = WebModule(

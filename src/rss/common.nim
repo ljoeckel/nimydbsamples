@@ -26,10 +26,12 @@ template SSE*(req: Request, body: untyped) =
     defer: sse.close()
     body
 
+
 func stripSignal*(signal: string): string =
     result = strip(signal)
     if result.startsWith("\"") and result.endsWith("\""): # Remove "xxxx" -> xxxx
         result = result[1..^2]
+
 
 proc patch*(sse: SSEConnection, signals: JsonNode) =
     let dsSignals = getSignals(sse)
@@ -43,9 +45,11 @@ proc patch*(sse: SSEConnection, signals: JsonNode) =
 proc getSignal*(userid: string, key: string): string =
     result = Get ^Session(userid, key)
 
+
 proc getSignals*(userid: string): seq[(string, string)] =
     for k,v in OrderItr ^Session(userid,"").kv:
         result.add((k,v))
+
 
 proc getSignal*(req: Request, key: string): string = 
     let signals = getSignals(req)
@@ -55,13 +59,13 @@ proc getSignal*(req: Request, key: string): string =
     getSignal(userid, key)
 
 
-
 proc handleGoto*(req: Request) =
     # process menu links g.E. <a href="#form" data-on:click="$menuOpen = false; @get('goto/form.html')">Registration</a>
     let page = req.path.split("/goto/")[1]
     echo "handelGoto page=", page
     SSE(req):
         forward(sse, HTML_DIR & page)
+
 
 proc getWallClock*(userid: string): string =
     let nowTime = now().format("dd.MM.yyyy - HH:mm")
