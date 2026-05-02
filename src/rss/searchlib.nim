@@ -286,6 +286,15 @@ proc getLatestRSSItems*(max: int, userid: string, sortBy: SortBy): seq[RSSItem] 
             break
 
 
+proc getLatestRSSItemKeys*(max: int): seq[seq[string]] =
+    var cnt = max
+    for key  in QueryItr ^RSSItemPUBDATE.reverse:
+        let keys = key.split(',')
+        result.add(keys)
+        dec cnt
+        if cnt == 0: break
+
+
 proc feedData(item: RSSItem): (string, string) =
     let id = item.idxref.split(',')[0]
     let rssImage = loadObject[RSSImage](id)
@@ -332,6 +341,12 @@ proc createRSSItemCard*(item: RSSItem): string =
         <span class='feed-title'>{feedTitle}</span></a>
         """
     
+    let idxref = fmt"""
+        <button data-on:click__stop="$id='{item.idxref}'; @get('/show-rssitem')"
+        popovertarget="rss-detail">
+            <i class="bi bi-info-square"></i>
+        </button>"""
+
     result = fmt"""
         <div class='rsscard'>
             <div class='rsscard-tags'>
@@ -343,7 +358,7 @@ proc createRSSItemCard*(item: RSSItem): string =
             <p class='rsscard-text'> <a target='_blank' href='{link}'> {description}</a> </p>
             <div class='rsscard-footer'>
                 <p>{divimg}</p>
-                <p class='rsspubdate'> {pubDate(item)} / {item.idxref}</p>
+                <p class='rsspubdate'> {pubDate(item)}  {idxref}</p>
             </div>
         </div>
         """
@@ -361,6 +376,67 @@ proc createRSSItemList*(item: RSSItem): string =
             <p class='rsspubdate'> {pubDate(item)} / {item.idxref} / {divimg} </p>
         </div>
         """
+
+
+proc getRSSFields*(subscript: seq[string]): seq[(string, string)] =
+    if subscript.len == 0:
+        echo fmt">> Subscript {subscript} not valid <<"
+        return
+
+    let rss = loadObject[RSS](subscript[0])
+    result.add ("RSS - FeedType", $rss.feedType)
+    result.add(("id", getOption(rss.id)))
+    result.add(("Title", getOption(rss.title)))
+    result.add(("Category", rss.category.join(" ")))
+    result.add(("Link", getOption(rss.link)))
+    result.add(("Description", getOption(rss.description)))
+    result.add(("Language", getOption(rss.language)))
+    result.add(("Copyright", getOption(rss.copyright)))
+    result.add(("Managing Editor", getOption(rss.managingEditor)))
+    result.add(("Web Master", getOption(rss.webMaster)))
+    result.add(("Publication-date", getOption(rss.pubDate)))
+    result.add(("Last build-date", getOption(rss.lastBuildDate)))
+    result.add(("Generator", getOption(rss.generator)))
+    result.add(("Docs", getOption(rss.docs)))
+    result.add(("Rating", getOption(rss.rating)))
+    result.add(("TTL", getOption(rss.ttl)))
+    result.add(("Skip Days", rss.skipDays.join(" ")))
+    result.add(("Skip Hours", rss.skipHours.join(" ")))
+    result.add(("RSSImage - url", getOption(rss.image.url)))
+    result.add((" title", getOption(rss.image.title)))
+    result.add((" link", getOption(rss.image.link)))
+    result.add(("width", getOption(rss.image.width)))
+    result.add(("height", getOption(rss.image.height)))
+    result.add(("description", getOption(rss.image.description)))
+    result.add(("RSSCloud - domain", getOption(rss.cloud.domain)))
+    result.add((" port", getOption(rss.cloud.port)))
+    result.add((" path", getOption(rss.cloud.path)))
+    result.add((" registerProcedure", getOption(rss.cloud.registerProcedure)))
+    result.add((" protocol", getOption(rss.cloud.protocol)))
+
+    # Get RSSItem fields
+    let rssItem = loadObject[RSSItem](subscript)
+    if rssItem.idxref.len > 0:
+        result.add(("RSSItem - Title", getOption(rssItem.title)))
+        result.add(("Description", getOption(rssItem.description)))
+        result.add(("idxref", rssItem.idxref))
+        result.add(("Author - name", getOption(rssItem.author.name)))
+        result.add(("email", getOption(rssItem.author.email)))
+        result.add(("uri", getOption(rssItem.author.uri)))
+        result.add(("link", getOption(rssItem.link)))
+        result.add(("content", getOption(rssItem.content)))
+        result.add(("category", rssItem.category.join(" ")))
+        result.add(("comments", getOption(rssItem.comments)))
+        result.add(("Enclosure - Url", rssItem.enclosure.url))
+        result.add((" Length", rssItem.enclosure.length))
+        result.add((" Type", rssItem.enclosure.enclosureType))
+        result.add(("guid", getOption(rssItem.guid)))
+        result.add(("pubDate", getOption(rssItem.pubDate)))
+        result.add(("sourceUrl", getOption(rssItem.sourceUrl)))
+        result.add(("sourceText", getOption(rssItem.sourceText)))
+        result.add(("updated", getOption(rssItem.updated)))
+        result.add(("topic", getOption(rssItem.topic)))
+        result.add(("keywords", rssItem.keywords.join(" ")))
 
 
 proc clearFeedsDb*() =
@@ -390,8 +466,3 @@ proc clearRssDb*() =
         ^Feed
         ^UserFeeds
     echo "RSS Globals killed"
-
-
-if isMainModule:
-    let ux = datetimeToUnix()
-    echo "ux=", ux

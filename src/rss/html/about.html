@@ -1,28 +1,208 @@
 <div id="container" class="card">
-    <div class="header">
-        <h1>About</h1>
-    </div>
 
-    <h2 id="sample-srcdatastar-contact-manager">📂 Sample: src/rss
-        (RSS Live Feed)</h2>
-    <p>A lightweight web application demonstrating how to capture,
-        filter and display RSS data feeds.</p>
-    <p>There is no caching for the data. Always fetched from the Database.</p>
-    </p>
-    <h3 id="technical-highlights">Technical Highlights</h3>
-    <ul>
-        <li><strong>Pure Backend Logic:</strong> All validation, persistence,
-            and UI updates are handled strictly on the server side.</li>
-        <li><strong>Real-time Feedback:</strong> Uses Server-Sent Events (SSE)
-            to stream updates instantly to the browser.</li>
-        <li><strong>Efficient Web Server:</strong> Powered by mummyDS
-            multi-threaded HTTP server with Datastar extensions for high
-            concurrency.</li>
-    </ul>
-    <h3 id="quick-start">🚀 Quick Start</h3>
-    <p>Launch the server directly using: <code>nimble rss</code> or go to
-        <code>src/rss</code> and run nim c -r -d:ssl –threads:on –passL:“-L/usr/local/lib/yottadb/r203 -lyottadb” service.nim
-    </p>
-    <hr />
+    <style>
+        /*
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --text-main: #1f2937;
+            --text-muted: #4b5563;
+            --bg-light: #f9fafb;
+            --white: #ffffff;
+            --border: #e5e7eb;
+        }
+            */
+
+        /*
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-main);
+            background-color: var(--bg-light);
+            margin: 0;
+            padding: 0;
+        }
+            */
+
+            
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+            
+
+        /* Hero Header */
+        .hero {
+            background: linear-gradient(135deg, #6e1f2d 0%, #d7426f 100%);
+            color: white;
+            padding: 60px 0;
+            text-align: center;
+        }
+
+        .hero h1 {
+            margin: 0;
+            font-size: 2.5rem;
+        }
+
+        .tagline {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        /* Sections */
+        .section {
+            padding: 40px 0;
+        }
+
+        h2 {
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+
+        hr {
+            border: 0;
+            border-top: 1px solid var(--border);
+        }
+
+        /* Grid & Cards */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .card h3 {
+            margin-top: 0;
+            color: var(--primary-dark);
+        }
+
+        /* Buttons */
+        .cta-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .secondary {
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 40px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 600px) {
+            .cta-buttons {
+                flex-direction: column;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+
+    <header class="hero">
+        <div class="container">
+            <h1>About the 'nimetic' stack</h1>
+            <p class="tagline">What's the vision, technology and implementation.</p>
+        </div>
+    </header>
+
+    <main class="container">
+
+        <!-- Mission Section -->
+        <section class="section">
+            <h2>🚀 Zweck der Plattform</h2>
+            <p>Diese Website dient als zentrale Anlaufstelle für [Dein Thema]. Das Ziel ist es, dem Nutzer eine
+                intuitive Oberfläche zu bieten, um [Hauptnutzen] effizient zu bewältigen. Wir glauben an Einfachheit und
+                Geschwindigkeit.</p>
+        </section>
+
+        <hr>
+
+        <!-- Tech Stack Section -->
+        <section class="section">
+            <h2>🏗️ Architektur & Frameworks</h2>
+            <div class="grid">
+                <div class="card">
+                    <h3>Frontend</h3>
+                    <p>Eingesetzt wurde <strong>React.js</strong> für ein reaktives UI, kombiniert mit <strong>Tailwind
+                            CSS</strong> für das Styling.</p>
+                </div>
+                <div class="card">
+                    <h3>Backend</h3>
+                    <p>Eine robuste <strong>Node.js</strong> Umgebung mit einer <strong>PostgreSQL</strong> Datenbank
+                        sorgt für Datensicherheit.</p>
+                </div>
+                <div class="card">
+                    <h3>Infrastruktur</h3>
+                    <p>Gehostet auf <strong>Vercel</strong> mit einer automatisierten CI/CD Pipeline über GitHub
+                        Actions.</p>
+                </div>
+            </div>
+        </section>
+
+        <hr>
+
+        <!-- Interesting Points -->
+        <section class="section">
+            <h2>💡 Besondere Merkmale</h2>
+            <ul>
+                <li><strong>Performance:</strong> Optimiert auf einen Lighthouse-Score von 95+.</li>
+                <li><strong>Accessibility:</strong> Vollständig barrierefrei nach WCAG-Standards.</li>
+                <li><strong>Dark Mode:</strong> Intelligente Erkennung der Systempräferenz.</li>
+            </ul>
+        </section>
+
+        <hr>
+
+        <!-- Call to Action -->
+        <section class="section contact-box">
+            <h2>🛠️ Sourcecode & Kontakt</h2>
+            <p>Interessiert an den Innereien? Der gesamte Code ist Open Source verfügbar.</p>
+            <div class="cta-buttons">
+                <a href="https://github.com" class="btn primary">GitHub Repository</a>
+                <a href="mailto:deine-mail@beispiel.de" class="btn secondary">Autor kontaktieren</a>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2024 Dein Name. Erstellt mit Leidenschaft für Code.</p>
+    </footer>
 
 </div>

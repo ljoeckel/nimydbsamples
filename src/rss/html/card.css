@@ -17,6 +17,7 @@ body {
 }
 */
 
+
 .rsscard-container {
   display: grid;
   /* Erstellt automatisch so viele Spalten wie Platz ist (mind. 300px breit) */

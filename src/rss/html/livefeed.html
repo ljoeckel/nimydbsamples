@@ -1,19 +1,11 @@
-<!--div id="container" class="card"-->
-<!-- data-signals="{formId: 'livefeed', articles: 100, direction: 'down', format: 'card', sort: 'time', lastScroll: 0, showButton: false}" -->
-
-<div id="container"
-    data-signals="{formId: 'livefeed', lastScroll: 0, showButton: false}"
-    data-signals:format__ifmissing="'card'"
-    data-signals:direction__ifmissing="'down'"
-    data-signals:sort__ifmissing="'today'"
-    data-signals:articles__ifmissing=100
-    data-effect="@get('/update-clock')">
+<div id="container" data-signals="{formId: 'livefeed', lastScroll: 0, showButton: false}"
+    data-signals:format__ifmissing="'card'" data-signals:direction__ifmissing="'down'"
+    data-signals:sort__ifmissing="'today'" data-signals:articles__ifmissing=100 data-effect="@get('/update-clock')">
 
     <style>
         .toolbar {
             display: flex;
             flex-wrap: wrap;
-            /* Ermöglicht Umbruch auf Mobilgeräten */
             align-items: center;
             gap: 8px;
             padding: 10px;
@@ -73,7 +65,7 @@
             background: #0d239f;
         }
 
-        /* Responsive Anpassung für kleine Screens */
+        /* Responsive adjustments for smaller screens */
         @media (max-width: 600px) {
             .toolbar {
                 flex-direction: column;
@@ -89,7 +81,6 @@
             }
         }
 
-
         /* Back to top button */
         #backToTop {
             position: fixed;
@@ -103,19 +94,129 @@
             cursor: pointer;
             z-index: 1000;
 
-            /* Animationseigenschaften */
+            /* Animation */
             transition: opacity 0.4s ease, transform 0.4s ease;
             opacity: 0;
             transform: translateY(20px);
             pointer-events: none;
-            /* Klicks ignorieren wenn unsichtbar */
+            /* Ignore clicks when not visible */
         }
 
-        /* Diese Klasse wird von Datastar hinzugefügt */
+        /* This class will be added by Datastar */
         .is-visible {
             opacity: 1 !important;
             transform: translateY(0) !important;
             pointer-events: auto !important;
+        }
+
+        /* Popover detail styling */
+        .rss-detail {
+            background: whitesmoke;
+            border-radius: 12px;
+            margin-top: 10px;
+            margin-left: 20px;
+            padding: 2rem;
+            max-width: fit-content;
+            border: none;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .rss-detail:popover-open {
+            animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .rss-detail::backdrop {
+            background: rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(1px);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            width: 24px;
+            height: 24px;
+            border: none;
+            color: white;
+            background: #333;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            z-index: 1000;
+        }
+
+        .close-btn:hover {
+            background: darkblue;
+        }
+
+
+        /* The wrapper handles the scrollbar */
+        /*
+        .table-container {
+            height: calc((var(--row-height) * var(--visible-rows)) + var(--header-height) + var(--shadow-height));
+            overflow-y: auto;
+            scrollbar-gutter: stable;
+            border: 1px solid #e5e7eb;
+            width: 200px;
+            height: 85vh;
+        }
+            */
+
+        .rssinfotable {
+            border-collapse: collapse;
+            table-layout: fixed;
+            width: 75vw;
+            /* Table fills the container */
+        }
+
+        .rssinfotable th {
+            position: sticky;
+            top: 0;
+            background: #e4e3e3;
+            color: darkslategrey;
+            z-index: 10;
+            border: 1px solid #ddd;
+            padding: 4px;
+            text-align: left;
+        }
+
+        .rssinfotable table {
+            border-collapse: collapse;
+            table-layout: fixed;
+            width: 100%;
+        }
+
+        .rssinfotable thead tr {
+            background: #3b82f6;
+            color: #ffffff;
+            text-align: left;
+        }
+
+        .rssinfotable td {
+            border: 1px solid #ddd;
+            padding: 6px;
+            /*overflow: auto;*/
+            /*text-overflow: ellipsis;*/
+            overflow-wrap: break-word;
+            white-space: normal;
+            text-align: left;
+        }
+
+        .rssinfotable tbody tr {
+            font-size: 14px;
+            color: black;
         }
     </style>
 
@@ -170,7 +271,7 @@
                 data-on:click="$format='card'; @post('/search')">
                 <i class="bi bi-postcard"></i>
             </button>
-            
+
             <!-- List Headline -->
             <button class="btn" title="Show as List" data-class:btnhover="$format == 'list'"
                 data-on:click="$format='list'; @post('/search')">
@@ -200,7 +301,26 @@
             data-on:scroll__window__throttle.50ms="$showButton = (window.scrollY < $lastScroll && window.scrollY > 300); $lastScroll = window.scrollY">
         </div>
 
+
+        <!-- RSS Detail Popover -->
+        <div id="rss-detail" class="rss-detail" popover>
+            <button class="close-btn" popovertarget="rss-detail" popovertargetaction="hide">
+                ✕
+            </button>
+            <table class="rssinfotable">
+                <thead>
+                    <tr>
+                        <th align="left" width="120px">Field</th>
+                        <th align="right" width="500px"></th>
+                    </tr>
+                </thead>
+                <tbody id="rssinfo"></tbody>
+            </table>
+        </div>
+
+
         <!-- Placeholder for Cards or List -->
-        <div id="rsscard" class="rsscard-container"></div>
+         <div id="rsscard" class="rsscard-container"></div>
+        <!--div id="rsscard" class="card"></div-->
 
     </div>

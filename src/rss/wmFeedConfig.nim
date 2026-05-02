@@ -18,12 +18,13 @@ proc createTRFeed(feed: Feed): string =
     var dataclass = fmt"{{selected: $id==='{id}'}}"
     var markedclass = if enabled: "class='marked'" else: ""
     let checkbox = if enabled: "<i class='bi bi-check-square'></i>" else: "<i class='bi bi-square'></i></i>"
-    #let checkbox = if enabled: "<i class='bi bi-check-square'></i>" else: "<i class='bi-dash-square-dotted'></i></i>"
     result = fmt"""
         <tr {markedclass} id='Feed{id}' data-on:click__stop="$id='{id}'; @post('/select-feed')" data-class="{dataclass}">
-            <td>{title}</td>
+            <td></td>
             <td>
                 <button data-on:click__stop="$id='{id}';$title='{title}'; @post('/toggle-feed')">{checkbox}</button>
+                &nbsp;
+                {title}
             </td>
         </tr>
         """
@@ -60,17 +61,28 @@ proc handleGetFeeds(req: Request) {.gcsafe.} =
         else:                             classname = "empty"
         classTable[group] = classname
 
-    # create table-rows
+    # create 'Group' row
     var oldGroup: string
     for feed in feeds:
-        let class = "feedgroup-" & classTable[feed.group]
         # Add Group header
         if oldGroup != feed.group:
+            let class = "feedgroup-" & classTable[feed.group]
+    
+            var cbIcon: string
+            let feedClass = classTable[feed.group]
+            if feedClass == "full":
+                cbIcon = "bi-check-square"
+            elif feedClass == "partial":
+                cbIcon = "bi-slash-square"
+            else:
+                cbIcon = "bi-square"
+
             var groupline = fmt"""
-                <tr class='{class}'>
-                    <td>{feed.group}</td>
-                    <td>
-                        <button data-on:click__stop="$id='{feed.group}';@post('/toggle-feedgroup')"><i class="bi bi-card-checklist"></i></button>
+                <tr>
+                    <td class='{class}' colspan='2'>
+                    <button data-on:click__stop="$id='{feed.group}';@post('/toggle-feedgroup')"><i class="bi {cbIcon}"></i></button>
+                    &nbsp;
+                    {feed.group}
                     </td>
                 </tr>
             """

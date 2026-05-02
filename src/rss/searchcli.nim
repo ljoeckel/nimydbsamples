@@ -1,55 +1,17 @@
-import std/[algorithm, sequtils]
-import std/[options, wordwrap, strutils, strformat, typetraits]
-import std/[base64, parseopt, httpclient, times]
+import std/[algorithm, sequtils, wordwrap, strutils]
+import std/[parseopt, times, tables, strformat, typetraits]
 import nimrss
-import std/tables
-import checksums/sha1
 
 
-proc showRSS*(keys: string) =
-    let key = if keys.contains(","): keys.split(",")[0] else: keys
-    
-    let items = @["id", "title", "description", "language", "link", "pubDate", "lastBuildDate", "copyright", "description", "generator"]
-    for item in items:
-        let gbl = fmt"^RSS({key}, {item})"
-        let val = Get @gbl
-        echo fmt"{item:>12}: {val}"
-
-proc showRSSItem*(keys: string) =
-    var gbl = fmt"^RSSItem({keys},title)"
-    let title = Get @gbl
-    gbl = fmt"^RSSItem({keys},description)"
-    let description = Get @gbl
-    gbl = fmt"^RSSItem({keys},pubDate)"
-    let pubDate = Get @gbl.int
-    gbl = fmt"^RSSItem({keys},idxref)"
-    let idxref = Get @gbl
-    echo title
-    let umbruch = description.wrapWords(maxLineWidth = 74).indent(5)
-    if umbruch.len > 5:
-        echo umbruch
-
-    # Show feed info
-    let rssid = keys.split(',')[0]
-    let dta = Data ^RSS(rssid)
-    if dta == 0:
-        echo "RSS entry ", rssid, " not found!"
-        return
-
-    let rss = loadObject[RSS](rssid)
-    let feedTitle = if rss.title.isSome: rss.title.get else: ""
-    echo fmt"     {feedTitle} {pubDate.fromUnix.local()} ({idxref})"
-    echo ""
+proc printValue(key: string, value: string) =
+    if value.len > 0:
+        let wrap = value.wrapWords(maxLineWidth = 90).indent(18)
+        echo fmt"{key:>16}: {strip(wrap)}"
 
 
-proc getLatestRSSItemKeys*(max: int): seq[string] =
-    var cnt = max
-    for key  in QueryItr ^RSSItemPUBDATE.reverse:
-        let parts = key.split(',')
-        let keys = parts[1] & "," & parts[2][0..^2]
-        result.add(keys)
-        dec cnt
-        if cnt == 0: break
+proc showRSSItem(subscript: seq[string]) =
+    for (field, value) in getRSSFields(subscript):
+        printValue(field, value)
 
 
 proc fullDump*(global: string) =
@@ -59,7 +21,7 @@ proc fullDump*(global: string) =
         echo key,"=",value
 
         
-proc search(lang: string = "DE", userid: string = "ljoeckel") =
+proc search(lang: string = "DE", userid: string = "guest") =
     while true:
         stdout.write("Search for: ")
         stdout.flushFile()
@@ -69,7 +31,7 @@ proc search(lang: string = "DE", userid: string = "ljoeckel") =
         timed:
             let results = getFTI(searchFor, lang, userid, SortBy.ByTimeDescending)
             for tse in results:
-                showRSSItem(tse.subscript[0] & "," & tse.subscript[1])
+                showRSSItem(tse.subscript)
         echo fmt"Found {results.len} results"
 
 
@@ -105,7 +67,7 @@ proc main() =
             if key == "h" or key == "help":
                 echo "search -l"
                 echo "     -l[=n], --latest : Get the n latest entries (50 is default)"
-                echo "     -f=n,m           : Fetch ^RSSItem(n, m)"
+                echo "     -f=n,m | *       : Fetch ^RSSItem(n, m) or * for all"
                 echo "     -s[=lang]        : Search with keywords (lang defaults to DE)"
                 echo "     -d=^global       : Dump a database global"
                 echo "     -t               : Dump Full Text Index"
@@ -121,8 +83,16 @@ proc main() =
                 if val.len == 0:
                     echo "ERROR: need value for -f"
                     quit(0)
-                showRSS(val)
-                showRSSItem(val)
+                if val == "*":
+                    for rssId in OrderItr ^RSSItem:
+                        for rssItemId in OrderItr ^RSSItem(rssId,""):
+                            let subscript = @[rssId, rssItemId]
+                            #showRSS(subscript)
+                            showRSSItem(subscript)
+                else:
+                    let subscript = val.split(',')
+                    #showRSS(subscript)
+                    showRSSItem(subscript)
             elif key == "s":
                 search(val)
             elif key == "d":

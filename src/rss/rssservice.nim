@@ -1,6 +1,6 @@
 ## Run 'nimble demo'
 
-import std/[os, times, strutils, strformat, typetraits]
+import std/[os, times, strutils, strformat, typetraits, json, sequtils]
 import mummy, mummy/routers, mummy/datastar
 import nimrss
 
@@ -11,8 +11,8 @@ import wmSearch
 import wmStats
 
 
+
 proc handleUpdateClock(req: Request) =
-    echo "handleUpdateClock"
     let userid = getSignal(req, USERID)
     var lastSHA1: string
 
@@ -74,6 +74,32 @@ proc handleUpdateClock(req: Request) =
             break
 
 
+proc handleShowRSSItem(req: Request) =
+    # Display the raw RSS/RSSItem data in a popup window
+    var sse = req.respondSSE()
+
+    let signals = getSignals(req)
+    let id = signals["id"].getStr()
+    let subscript = id.split(',')
+    let rssFields = getRSSFields(subscript)
+    
+    var tbody = "<tbody id='rssinfo'>"
+    for (field, value) in rssFields:
+        if value.isEmptyOrWhitespace(): continue
+        tbody.add(fmt"""
+            <tr>
+                <td align='right'>{field}</td>
+                <td align='right'>{value}</td>
+            </tr>
+            """)
+    tbody.add("</tbody>")
+    patchElements(sse, tbody) # set new data
+
+    sse.close()
+
+
+
+
 if isMainModule:
     ## Handler für Ctrl+C (SIGINT)
     proc shutdown() {.noconv.} =
@@ -89,6 +115,7 @@ if isMainModule:
     wmStatsModule.register(router)
 
     router.get("/update-clock", handleUpdateClock)
+    router.get("/show-rssitem", handleShowRSSItem)
 
     # Standard handlers
     router.get("/goto/**", handleGoto)
