@@ -1,13 +1,93 @@
 <div id="container" class="card" data-signals="{formId: 'configfeed'}">
-    <div class=" header">
+    <style>
+        .selectall {
+            color: yellow;
+        }
+
+        .feedtable {
+            table-layout: fixed;
+            width: max-content;
+        }
+
+        .feedtable th {
+            position: sticky;
+            top: 0;
+            background: #3b82f6;
+            color: white;
+            z-index: 10;
+            padding: 8px;
+            text-align: left;
+            height: 20px;
+        }
+
+        .feedtable tr {
+            height: 20px;
+        }
+
+        .feedtable thead tr {
+            background: #3b82f6;
+            color: #ffffff;
+            text-align: left;
+        }
+
+        .feedtable tbody tr.marked {
+            font-weight: 700;
+            color: darkblue;
+        }
+
+        .feedtable td {
+            max-width: 100px;
+            padding: 6px;
+            overflow: auto;
+            text-overflow: ellipsis;
+            overflow-wrap: break-word;
+            white-space: nowrap;
+            text-align: left;
+        }
+
+        .feedtable td.feedgroup-full {
+            background-color: rgb(171, 219, 174);
+            font-weight: 600;
+            text-align: left;
+        }
+
+        .feedtable td.feedgroup-partial {
+            background-color: rgb(218, 239, 219);
+            font-weight: 600;
+            text-align: left;
+        }
+
+        .feedtable td.feedgroup-empty {
+            background-color: rgb(251, 246, 238);
+            font-weight: 600;
+            text-align: left;
+        }
+
+        .feedtable a:link {
+            text-decoration: none;
+        }
+
+        .feedtable a:hover {
+            color: #2980b9;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+    </style>
+
+
+    <div class="header">
         <h1>Select RSS Feeds</h1>
     </div>
-
     <div class="table-container">
         <table class="feedtable">
             <thead>
                 <tr>
-                    <th width="20px"></th>
+                    <th width="20px">
+                        <button title="Select/Deselect all RSS feeds" class="selectall"
+                            data-on:click__stop="$id='ALL'; @post('/select-feed')">
+                            <i class="bi bi-square"></i>
+                        </button>
+                    </th>
                     <th width="600px">RSS Feed</th>
                 </tr>
             </thead>

@@ -33,9 +33,11 @@ proc setupStopwords(lang: string): int =
         inc result
 
 proc isStopword(word: string, lang: string): bool =
+    result = false
     if word.len == 0: return false
     if ydb_data(STOPWORDS["ALL"], @[word]) > 0: return true
-    return ydb_data(STOPWORDS[lang], @[word]) > 0
+    if STOPWORDS.contains(lang):
+        return ydb_data(STOPWORDS[lang], @[word]) > 0
 
 proc splitWords(text: string, lang: string): seq[string] =
     # Replace with ' '

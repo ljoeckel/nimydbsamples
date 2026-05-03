@@ -14,17 +14,18 @@ proc createTRFeed(feed: Feed): string =
     let id = feed.rssid
     let title = feed.title
     let enabled = feed.enabled
-    # Construct a <TR><TD>Feed with id, title, status
+    # Construct a <TR><TD>Feed entry
     var dataclass = fmt"{{selected: $id==='{id}'}}"
     var markedclass = if enabled: "class='marked'" else: ""
     let checkbox = if enabled: "<i class='bi bi-check-square'></i>" else: "<i class='bi bi-square'></i></i>"
+    
     result = fmt"""
-        <tr {markedclass} id='Feed{id}' data-on:click__stop="$id='{id}'; @post('/select-feed')" data-class="{dataclass}">
+        <tr {markedclass} id='Feed{id}' data-class="{dataclass}">
             <td></td>
             <td>
-                <button data-on:click__stop="$id='{id}';$title='{title}'; @post('/toggle-feed')">{checkbox}</button>
+                <button data-on:click__stop="$id='{id}'; @post('/toggle-feed')">{checkbox}</button>
                 &nbsp;
-                {title}
+                <a href={feed.link} target='_blank'>{feed.title}</a>
             </td>
         </tr>
         """
@@ -44,8 +45,6 @@ proc handleGetFeeds(req: Request) {.gcsafe.} =
 
     # Create the tbody
     var tbody = fmt"""<tbody id="feed-table">"""
-    let head = Feed(rssid:" ", title:" Select all", enabled:false)
-    tbody.add(createTRFeed(head))
 
     # Calculate css class for group title
     var groupsCount = initCountTable[string]()
@@ -105,7 +104,7 @@ proc handleToggleFeed(req: Request) {.gcsafe.} =
     # Update DB
     var init, flip: bool
     for idx, feed in enumerate(userFeeds.feeds):
-        if id == " ":  # select / deselect all
+        if id == "ALL":  # select / deselect all
             if not init:
                 flip = (not feed.enabled)
                 init = true

@@ -15,8 +15,9 @@ proc sb_stemmer_length(stm:ptr sb_stemmer):cint {.importc: "sb_stemmer_length".}
 
 let stmDE = sb_stemmer_new("german", "UTF_8")
 let stmEN = sb_stemmer_new("english", "UTF_8")
+let stmES = sb_stemmer_new("spanish", "UTF_8")
 
-proc stem(wrd: string, stm: ptr sb_stemmer): string =       # wrap snowball stemmer for English
+proc stem(wrd: string, stm: ptr sb_stemmer): string =       # wrap snowball stemmer
   let word = strip(tolower(wrd))
   let cs = stm.sb_stemmer_stem(cstring(word), word.len.cint)
   let cn = stm.sb_stemmer_length
@@ -28,9 +29,13 @@ proc stem*(word: string, lang: string): string =
   if word.isEmptyOrWhitespace: return ""
 
   if lang == "DE":
-      stem(word, stmDE)
+      return stem(word, stmDE)
+  elif lang == "EN":
+      return stem(word, stmEN)
+  elif lang == "ES":
+      return stem(word, stmES)
   else:
-      stem(word, stmEN)
+    return ""
 
 
 iterator words(text: string): string =  # Tokenizer; could go UTF8, limit..

@@ -344,6 +344,7 @@ proc createRSSItemCard*(item: RSSItem): string =
     let idxref = fmt"""
         <button data-on:click__stop="$id='{item.idxref}'; @get('/show-rssitem')"
         popovertarget="rss-detail">
+            &nbsp;&nbsp;
             <i class="bi bi-info-square"></i>
         </button>"""
 

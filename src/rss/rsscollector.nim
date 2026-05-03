@@ -47,6 +47,7 @@ proc updateConfigFeed(rss: RSS, group: string) =
         newFeed.description = getOption(rss.description)
         newFeed.enabled = true
         newFeed.group = group
+        newFeed.link = getOption(rss.link)
         saveObject[ConfigFeed](sha, newFeed)
 
         # Update the ^UsersFeeds
@@ -127,12 +128,13 @@ proc processFeeds(feedPath: string) =
     # Main entry point for the RSS Feed application (Collector)
     for group, urls in feeds.pairs:
         if group.len == 0: continue
+        echo fmt"Group {group}"
         for url in urls:
+            echo fmt"  {url}"
             let xml = getXmlFromUrl(url)
             if xml.len == 0: continue
             var rss = parseRSS(xml)
-            if not rss.link.isSome():
-                echo "No link found in RSS. Try Atom-Parser"
+            if not rss.link.isSome(): # No link found in RSS. Try Atom-Parser
                 rss = parseAtom(xml)
 
             updateConfigFeed(rss, group) # create a ^ConfigFeed entry for new feeds
@@ -140,7 +142,7 @@ proc processFeeds(feedPath: string) =
             let (nbrNewItms, wordCount) = processFeed(rss)
             if nbrNewItms > 0:
                 saveXmlFile(url, xml) # Save the XMl file
-                echo fmt"Fetched {nbrNewItms} new Items with {wordCount} index words from '{group}': {url}"
+                echo fmt"    {nbrNewItms} new Items with {wordCount} index words."
 
 
 if isMainModule:

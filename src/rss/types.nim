@@ -12,10 +12,10 @@ type
         name*: string
         register*: proc (router: var Router)
 
-
     Feed* = object of RootObj
         rssid*: string
         group*: string
+        link*: string
         title*: string
         description*: string
         lastAccess*: string
@@ -43,7 +43,6 @@ type
         ByRelevanceAscending
 
 
-type
     Registration* = object of RootObj
         id*: string
         name*: string

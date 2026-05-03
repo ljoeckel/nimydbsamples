@@ -113,10 +113,13 @@
         .rss-detail {
             background: whitesmoke;
             border-radius: 12px;
-            margin-top: 10px;
-            margin-left: 20px;
+            margin-top: 0px;
+            margin-left: 0px;
             padding: 2rem;
-            max-width: fit-content;
+            max-width: 100vh;
+            max-height: 100vh;
+            overflow-y: auto;
+            overflow-x: auto;
             border: none;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
         }
@@ -162,18 +165,6 @@
         }
 
 
-        /* The wrapper handles the scrollbar */
-        /*
-        .table-container {
-            height: calc((var(--row-height) * var(--visible-rows)) + var(--header-height) + var(--shadow-height));
-            overflow-y: auto;
-            scrollbar-gutter: stable;
-            border: 1px solid #e5e7eb;
-            width: 200px;
-            height: 85vh;
-        }
-            */
-
         .rssinfotable {
             border-collapse: collapse;
             table-layout: fixed;
@@ -182,7 +173,6 @@
         }
 
         .rssinfotable th {
-            position: sticky;
             top: 0;
             background: #e4e3e3;
             color: darkslategrey;
@@ -207,8 +197,6 @@
         .rssinfotable td {
             border: 1px solid #ddd;
             padding: 6px;
-            /*overflow: auto;*/
-            /*text-overflow: ellipsis;*/
             overflow-wrap: break-word;
             white-space: normal;
             text-align: left;
