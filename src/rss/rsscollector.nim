@@ -1,5 +1,6 @@
 import std/[options, strutils, strformat, typetraits, enumerate, os]
 import std/[parseopt, httpclient, times, tables]
+import rssatom
 import nimrss
 
 const

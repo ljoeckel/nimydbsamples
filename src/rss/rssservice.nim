@@ -1,6 +1,6 @@
 ## Run 'nimble demo'
 
-import std/[os, times, strutils, strformat, typetraits, json, sequtils]
+import std/[os, times, strutils, strformat, typetraits, json]
 import mummy, mummy/routers, mummy/datastar
 import nimrss
 

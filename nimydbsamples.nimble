@@ -10,7 +10,6 @@ srcDir        = "src"
 requires "nim >= 2.2.4"
 requires "https://github.com/ljoeckel/nim-yottadb.git"
 requires "https://github.com/ljoeckel/mummyDS.git"
-requires "rssatom >= 2.7"
 requires "checksums"
 
 # Tasks

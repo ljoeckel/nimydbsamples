@@ -1,7 +1,6 @@
 import std/[enumerate, strformat, algorithm, hashes, sets, tables]
 import std/[options, strutils, typetraits, base64, httpclient, times]
 import checksums/sha1
-import rssatom
 import yottadb
 import stemmer
 import types

@@ -1,18 +1,16 @@
 <div id="container" class="card">
 
     <style>
-        /*
         :root {
-            --primary: #4f46e5;
-            --primary-dark: #4338ca;
-            --text-main: #1f2937;
+            --primary-color: darkred;
+            --primary-color-dark: darkred;
+            /*--text-main: #1f2937;*/
             --text-muted: #4b5563;
-            --bg-light: #f9fafb;
+            /*--bg-light: #f9fafb;*/
             --white: #ffffff;
             --border: #e5e7eb;
         }
-            */
-
+        
         /*
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -30,13 +28,23 @@
             margin: 0 auto;
             padding: 20px;
         }
-            
 
+        .container a:link {
+            text-decoration: underline;
+        }
+
+        .container a:hover {
+            color: #2980b9;
+            text-decoration: underline;
+            cursor: pointer;
+            font-weight: bold;
+        }
+            
         /* Hero Header */
         .hero {
             background: linear-gradient(135deg, #6e1f2d 0%, #d7426f 100%);
             color: white;
-            padding: 60px 0;
+            padding: 25px 0;
             text-align: center;
         }
 
@@ -52,11 +60,11 @@
 
         /* Sections */
         .section {
-            padding: 40px 0;
+            padding: 20px 0;
         }
 
         h2 {
-            color: var(--primary);
+            color: var(--primary-color);
             margin-bottom: 20px;
         }
 
@@ -68,7 +76,7 @@
         /* Grid & Cards */
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
             gap: 20px;
         }
 
@@ -82,7 +90,7 @@
 
         .card h3 {
             margin-top: 0;
-            color: var(--primary-dark);
+            color: var(--primary-color-dark);
         }
 
         /* Buttons */
@@ -105,13 +113,13 @@
         }
 
         .primary {
-            background: var(--primary);
+            background: var(--primary-color);
             color: white;
         }
 
         .secondary {
-            border: 2px solid var(--primary);
-            color: var(--primary);
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
         }
 
         /* Footer */
@@ -138,6 +146,8 @@
         <div class="container">
             <h1>About the 'nimetic' stack</h1>
             <p class="tagline">What's the vision, technology and implementation.</p>
+            <p>&nbsp;</p>
+            <p><i>This is a 'Proof of Concept' and ongoing work.</i></p>
         </div>
     </header>
 
@@ -145,45 +155,89 @@
 
         <!-- Mission Section -->
         <section class="section">
-            <h2>🚀 Zweck der Plattform</h2>
-            <p>Diese Website dient als zentrale Anlaufstelle für [Dein Thema]. Das Ziel ist es, dem Nutzer eine
-                intuitive Oberfläche zu bieten, um [Hauptnutzen] effizient zu bewältigen. Wir glauben an Einfachheit und
-                Geschwindigkeit.</p>
+            <h2>The Vision</h2>
+            <p>
+            Modern web development is often bogged down by heavy client-side frameworks and complex build pipelines.
+            It’s time to bring the power back to the server.
+            <p>
+            <p>&nbsp;</p>
+            The "nimetic" stack is a streamlined approach to building Single Page Applications (SPAs) using Nim as the primary engine.
+            By leveraging the native strengths of HTML5/CSS3 and the lightweight Datastar framework, 
+            we eliminate the need for React-like bloat.
+            </p>
+            <p>&nbsp;</p>
+            <p>
+            'nimetic' allows to use SSE via 'Datastar' to render dynamic UI components directly from Nim.
+            Integrating YottaDB via a native Nim DSL for ultra-low latency data handling.
+            Reducing cognitive load by maintaining application state on the server.
+            Discover how to build fast, maintainable, and modern web applications without leaving the Nim ecosystem.
+            </p>
+            <p>&nbsp;</p>
+            <p>Built for Nim-powered SPAs, this architecture swaps frontend bloat for vanilla HTML5/CSS3.
+            It uses YottaDB for efficient persistence through a native Nim DSL, while Datastar handles SSE to deliver dynamic updates.
+            This approach simplifies development by keeping state and component rendering on the server.</p>
+            
         </section>
 
         <hr>
 
         <!-- Tech Stack Section -->
         <section class="section">
-            <h2>🏗️ Architektur & Frameworks</h2>
+            <h2>Architecture & Frameworks</h2>
             <div class="grid">
                 <div class="card">
-                    <h3>Frontend</h3>
-                    <p>Eingesetzt wurde <strong>React.js</strong> für ein reaktives UI, kombiniert mit <strong>Tailwind
-                            CSS</strong> für das Styling.</p>
+                    <h3><a href="https://nim-lang.org" target='_blank'>Nim</a></h3>
+                    <p></p>
                 </div>
                 <div class="card">
-                    <h3>Backend</h3>
-                    <p>Eine robuste <strong>Node.js</strong> Umgebung mit einer <strong>PostgreSQL</strong> Datenbank
-                        sorgt für Datensicherheit.</p>
+                    <h3><a href="https://github.com/ljoeckel/mummyDS.git" target="_blank">mummyDS</a> / <a href="https://nginx.org/en/" target="_blank">nginx</a></h3>
+                    <p></p>
                 </div>
                 <div class="card">
-                    <h3>Infrastruktur</h3>
-                    <p>Gehostet auf <strong>Vercel</strong> mit einer automatisierten CI/CD Pipeline über GitHub
-                        Actions.</p>
+                    <h3><a href="https://data-star.dev/" target="_blank">Datastar</a></h3>
+                    <p></p>
                 </div>
+                <div class="card">
+                    <h3><a href="https://yottadb.com/" target="_blank">YottaDB</a></h3>
+                    <p></p>
+                </div>
+                <div class="card">
+                    <h3><a href="https://codeberg.org/samsamros/rssatom.git" target='_blank'>atomrss</a></h3>
+                    <p>Using the 'rssatom' library from Samuel Rosado, with minor parsing modifications and YottaDB integration,
+                    allows easy parsing and simple storing RSS data with indexes in YottaDB.
+                    </p>
+                </div>
+
             </div>
         </section>
 
         <hr>
 
-        <!-- Interesting Points -->
         <section class="section">
-            <h2>💡 Besondere Merkmale</h2>
+            <h2>Core Technical Features</h2>
             <ul>
-                <li><strong>Performance:</strong> Optimiert auf einen Lighthouse-Score von 95+.</li>
-                <li><strong>Accessibility:</strong> Vollständig barrierefrei nach WCAG-Standards.</li>
-                <li><strong>Dark Mode:</strong> Intelligente Erkennung der Systempräferenz.</li>
+                <li><strong>Nim Backend</strong>
+                High-performance, statically typed backend logic for SPAs.</li>
+                <li><strong>No-Framework Frontend</strong>
+                Direct reliance on native HTML5 and CSS3 to eliminate React/JavaScript bloat.</li>
+                <li><strong>SSE</strong>
+                Integration of Datastar for efficient Server-Sent Events, enabling real-time UI updates.</li>
+                <li><strong>Simple Persistence</strong>
+                Robust data management via YottaDB with a native Nim DSL for seamless database interaction.</li>
+                <li><strong>SSR Logic</strong>
+                Simplified programming model where dynamic components are rendered server-side, reducing client-side complexity.</li>
+            </ul>
+        </section>
+
+        <section class="section">
+            <h2>Key Advantages for Developers</h2>
+            <ul>
+                <li><strong>Zero Bloat</strong>
+                Minimal dependencies by avoiding complex client-side state management.</li>
+                <li><strong>Performance</strong>
+                Combines Nim’s speed with YottaDB’s low-latency persistence.</li>
+                <li><strong>Maintainability</strong>
+                A unified codebase where the server remains the single source of truth for the UI.</li>
             </ul>
         </section>
 
@@ -191,18 +245,18 @@
 
         <!-- Call to Action -->
         <section class="section contact-box">
-            <h2>🛠️ Sourcecode & Kontakt</h2>
+            <h2>Sourcecode & Contact</h2>
             <p>Interessiert an den Innereien? Der gesamte Code ist Open Source verfügbar.</p>
             <div class="cta-buttons">
-                <a href="https://github.com" class="btn primary">GitHub Repository</a>
-                <a href="mailto:deine-mail@beispiel.de" class="btn secondary">Autor kontaktieren</a>
+                <a href="https://github.com/ljoeckel/nimydbsamples.git" class="btn primary">GitHub Repository</a>
+                <a href="mailto:lothar.joeckel@gmail.com" class="btn primary">Contact me</a>
             </div>
         </section>
 
     </main>
 
     <footer class="footer">
-        <p>&copy; 2024 Dein Name. Erstellt mit Leidenschaft für Code.</p>
+        <p>&copy; 2026 Lothar Jöckel</p>
     </footer>
 
 </div>

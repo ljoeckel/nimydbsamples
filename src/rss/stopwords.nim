@@ -2,11 +2,8 @@ import std/[sequtils]
 import std/[options, parseopt, strutils, strformat, typetraits, os]
 import std/tables
 
-#import types
-#import searchlib
-
+import types
 import yottadb
-import rssatom
 import stemmer
 
 const STOPWORDS = {
@@ -124,8 +121,8 @@ proc createFTIndex*(item: RSSItem, lang: string): int =
     return wordtable.len
 
 proc createFTI*(rss: RSS): int =
-    var language = if rss.language.isSome: toUpper(rss.language.get()) else: "XX"
-    if language.find('-') > 0: language = language.split('-')[0]
+    var language = if rss.language.isSome: toUpper(rss.language.get()) else: DEFAULT_LANGUAGE
+    if language.find('-') > 0: language = language.split('-')[0] # de-de -> de, en-US -> en
     for item in rss.items:
         inc(result, createFTIndex(item, language))
 

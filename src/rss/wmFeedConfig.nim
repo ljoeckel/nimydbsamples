@@ -12,7 +12,6 @@ proc getFeeds(): seq[Feed] =
 
 proc createTRFeed(feed: Feed): string =
     let id = feed.rssid
-    let title = feed.title
     let enabled = feed.enabled
     # Construct a <TR><TD>Feed entry
     var dataclass = fmt"{{selected: $id==='{id}'}}"
