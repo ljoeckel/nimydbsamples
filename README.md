@@ -14,6 +14,24 @@ Ensure you have YottaDB and Nim installed. For detailed setup instructions, plea
 
 ---
 
+## 📂 Sample: src/rss (RSS Feed concentrator)
+
+Check [nimetic.com](https://nimetic.com) for a live demo (Login as 'guest' with some password)
+
+A lightweight web application demonstrating how to capture RSS feed's and make it searchable.
+
+![Login](rss_login.png)
+![Feed](rss_feed.png)
+![Configuration](rss_config.png)
+![DB Stats](rss_dbstats.png)
+![About](rss_about.png)
+
+### Technical Highlights
+* **Pure Backend Logic:** All validation, persistence, and UI updates are handled strictly on the server side.
+* **Real-time Feedback:** Uses Server-Sent Events (SSE) to stream updates instantly to the browser.
+* **Efficient Web Server:** Powered by mummyDS multi-threaded HTTP server with Datastar extensions for high concurrency.
+
+
 ## 📂 Sample: src/datastar (Registration Manager)
 
 Check [nimetic.com](https://nimetic.com) for a live demo
@@ -28,3 +46,5 @@ A lightweight web application demonstrating how to capture, validate, and persis
 * **Pure Backend Logic:** All validation, persistence, and UI updates are handled strictly on the server side.
 * **Real-time Feedback:** Uses Server-Sent Events (SSE) to stream updates instantly to the browser.
 * **Efficient Web Server:** Powered by mummyDS multi-threaded HTTP server with Datastar extensions for high concurrency.
+
+
