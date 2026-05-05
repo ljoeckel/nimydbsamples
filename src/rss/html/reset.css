@@ -65,7 +65,7 @@ figcaption {
     Prevents orphaned words at end of paragraphs.
     Progressive enhancement: Chrome 117+, Firefox 121+.
   */
-    text-wrap: pretty;
+  /*  text-wrap: pretty; */
 }
 
 /* ── Media ── */
