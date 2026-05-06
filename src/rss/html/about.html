@@ -10,14 +10,18 @@
             --white: #ffffff;
             --border: #e5e7eb;
         }
-        
+
         summary {
             margin: 3px;
             padding-left: 5px;
+            font-size: 1.1em;
+            color: darkred;
         }
+
         .summarysub {
-            padding-left: 20px;
-            padding-top: 2px;
+            margin-left: 20px;
+            margin-top: 2px;
+            color: darkblue;
         }
 
         ul {
@@ -25,9 +29,11 @@
             gap: 5px;
             margin: 5px;
         }
+
         li {
             margin: 6px;
         }
+
         li::marker {
             content: \F309;
             color: orange;
@@ -45,7 +51,7 @@
         }
             */
 
-            
+
         .container {
             max-width: 900px;
             margin: 0 auto;
@@ -62,7 +68,7 @@
             cursor: pointer;
             font-weight: bold;
         }
-            
+
         /* Hero Header */
         .hero {
             background: linear-gradient(135deg, #6e1f2d 0%, #d7426f 100%);
@@ -179,194 +185,201 @@
     </header>
 
     <main class="container">
-
-        <!-- Mission Section -->
+        <!-- The Vision Section -->
         <section class="section">
             <h2>The Vision</h2>
             <p>
-            Modern web development is often bogged down by heavy client-side frameworks and complex build pipelines.
-            It’s time to bring the power back to the server.
+                Modern web development is often bogged down by heavy client-side frameworks and complex build pipelines.
+                It’s time to bring the power back to the server.
             <p>
             <p>&nbsp;</p>
-            The "nimetic" stack is a streamlined approach to building Single Page Applications (SPAs) using Nim as the primary engine.
-            By leveraging the native strengths of HTML5/CSS3 and the lightweight Datastar framework, 
+            The "nimetic" stack is a streamlined approach to building Single Page Applications (SPAs) using Nim as the
+            primary engine.
+            By leveraging the native strengths of HTML5/CSS3 and the lightweight Datastar framework,
             we eliminate the need for React-like bloat.
             </p>
             <p>&nbsp;</p>
             <p>
-            'nimetic' allows to use SSE via 'Datastar' to render dynamic UI components directly from Nim.
-            Integrating YottaDB via a native Nim DSL for ultra-low latency data handling.
-            Reducing cognitive load by maintaining application state on the server.
-            Discover how to build fast, maintainable, and modern web applications without leaving the Nim ecosystem.
+                'nimetic' allows to use SSE via 'Datastar' to render dynamic UI components directly from Nim.
+                Integrating YottaDB via a native Nim DSL for ultra-low latency data handling.
+                Reducing cognitive load by maintaining application state on the server.
+                Discover how to build fast, maintainable, and modern web applications without leaving the Nim ecosystem.
             </p>
             <p>&nbsp;</p>
             <p>Built for Nim-powered SPAs, this architecture swaps frontend bloat for vanilla HTML5/CSS3.
-            It uses YottaDB for efficient persistence through a native Nim DSL, while Datastar handles SSE to deliver dynamic updates.
-            This approach simplifies development by keeping state and component rendering on the server.</p>
+                It uses YottaDB for efficient persistence through a native Nim DSL, while Datastar handles SSE to
+                deliver dynamic updates.
+                This approach simplifies development by keeping state and component rendering on the server.</p>
         </section>
 
         <hr>
 
-    <!--
-                    <details>
-                        <summary></summary>
-                        <div>
-                            <ul>
-                                <li></li>
-                                <li></li>
-                            </ul>
-                        </div>
-                    </details>
-    -->
-
-    <!-- Tech Stack Section -->
+        <!-- Tech Stack Section -->
         <section class="section">
             <h2>Architecture & Frameworks</h2>
             <div class="grid">
                 <div class="card">
                     <h3><a href="https://nim-lang.org" target='_blank'>Nim</a></h3>
                     <div class="subsection">
-                        Nim is a statically typed, compiled programming language designed for high performance and expressiveness,
+                        Nim is a statically typed, compiled programming language designed for high performance and
+                        expressiveness,
                         with Python’s readability and C’s efficiency.
-                        Its standout features include a powerful macro system for metaprogramming and zero-cost abstractions.
+                        Its standout features include a powerful macro system for metaprogramming and zero-cost
+                        abstractions.
                     </div>
                     <details>
                         <summary>Python-like Syntax with C Performance</summary>
-                        <div>
-                            <ul>
-                                <li>It uses a clean, indentation-based syntax that is easy for beginners to read.</li>
-                                <li>Compiles to C, C++ or JavaScript so that Nim can be used for all backend and frontend needs and offers performance comparable to C++ or Rust.</li>
-                            </ul>
-                        </div>
+                        <ul>
+                            <li>It uses a clean, indentation-based syntax that is easy for beginners to read.</li>
+                            <li>Compiles to C, C++ or JavaScript so that Nim can be used for all backend and frontend
+                                needs and offers performance comparable to C++ or Rust.</li>
+                        </ul>
                     </details>
                     <details>
                         <summary>Powerful Metaprogramming (Macros)</summary>
-                        <div>
-                            <ul>
-                                <li>Advanced Metaprogramming: Features a sophisticated macro system that allows direct manipulation of the Abstract Syntax Tree (AST).</li>
-                            </ul>
-                        </div>
+                        <ul>
+                            <li>Advanced Metaprogramming: Features a sophisticated macro system that allows direct
+                                manipulation of the Abstract Syntax Tree (AST).</li>
+                        </ul>
                     </details>
                     <details>
                         <summary>Customizable Memory Management</summary>
-                        <div>
-                            <ul>
-                                <li>Memory Control: Uses deterministic management (destructors and move semantics), making it ideal for real-time and embedded systems.</li>
-                            </ul>
-                        </div>
+                        <ul>
+                            <li>Memory Control: Uses deterministic management (destructors and move semantics), making
+                                it ideal for real-time and embedded systems.</li>
+                        </ul>
                     </details>
                     <details>
                         <summary>Seamless C/C++ Interoperability</summary>
-                        <div>
-                            <ul>
-                                <li></li>
-                                <li></li>
-                            </ul>
-                        </div>
                     </details>
                 </div>
 
                 <div class="card">
-                    <h3><a href="https://github.com/ljoeckel/mummyDS.git" target="_blank">mummyDS</a> / <a href="https://nginx.org/en/" target="_blank">nginx</a></h3>
+                    <h3><a href="https://nginx.org/en/" target="_blank">nginx</a></h3>
                     <div class="subsection">
                         Nginx is a high-performance web server and reverse proxy renowned for its event-driven
                         architecture, which allows it to handle tens of thousands of concurrent connections with
                         extremely low memory overhead.
                     </div>
-                    <details>
-                        <summary>nginx</summary>
-                        <div>
-                            <ul>
-                                <li>Reverse proxy handles https connections.</li>
-                                <li>Load balancing possible</li>
-                            </ul>
-                        </div>
-                    </details>
 
                     <details>
                         <summary>Simple Concurrency</summary>
-                        <div>
-                            <ul>
-                                <li>Uses a multi-threaded approach instead of Nim's {.async.} syntax.</li>
-                                <li>Ease of Use: Provides high performance without the "async price" (the complexity of managing asynchronous code).</li>
-                            </ul>
-                        </div>
-                    </details>
-
-                    <details>
-                        <summary>Datastar Integration</summary>
-                        <div>
-                            <ul>
-                                <li>Supports Server-Sent Events (SSE) and the Datastar framework (a modern alternative to heavy frontend frameworks).</li>
-                                <li>Datastar: compression with gzip.</li>                                
-                            </ul>
-                        </div>
+                        <ul>
+                            <li>Uses a multi-threaded approach instead of Nim's {.async.} syntax.</li>
+                            <li>Ease of Use: Provides high performance without the "async price" (the complexity of
+                                managing asynchronous code).</li>
+                        </ul>
                     </details>
                     <details>
                         <summary>Built-in Essentials</summary>
-                        <div>
-                            <ul>
-                                <li>Automatic Features: Handles HTTP keep-alive and gzip compression out of the box.</li>
-                                <li>WebSockets: Includes first-class, native support for WebSocket connections.</li>
-                                <li>Efficient IO: Uses multiplexed socket IO for high throughput.</li>
-                            </ul>
-                        </div>
+                        <ul>
+                            <li>HTTPS support for mummyDS.</li>
+                            <li>Automatic Features: Handles HTTP keep-alive and gzip compression out of the box.</li>
+                            <li>WebSockets: Includes first-class, native support for WebSocket connections.</li>
+                            <li>Efficient IO: Uses multiplexed socket IO for high throughput.</li>
+                        </ul>
+                    </details>
+                </div>
+
+                <div class="card">
+                    <h3><a href="https://github.com/ljoeckel/mummyDS.git" target="_blank">mummyDS</a></h3>                    
+                    <div class="subsection">
+                        "mummy" is a high-performance, multithreaded HTTP and WebSocket server library written entirely in Nim.
+                        It is designed to maximize hardware performance while providing a straightforward developer experience,
+                        specifically avoiding the complexities of asynchronous programming (async/await) in favor of simple, blocking code
+                        "mummyDS" is "mummy" with extensions for SSE / Datastar.
+                    </div>
+                    <details>
+                        <summary>Multi-threaded Architecture</summary>
+                        <ul>
+                            <li>Uses a native thread pool to handle requests in parallel</li>
+                            <li>Fully utilizing multi-core CPUs</li>
+                        </ul>
+                    </details>
+                    <details>
+                        <summary>Synchronous API</summary>
+                        <ul>
+                            <li>Allows you to write simple, blocking code without the complexity of async/await syntax, while still maintaining high performance.</li>
+                        </ul>
+                    </details>
+                    <details>
+                        <summary>WebSocket Support</summary>
+                        <ul>
+                            <li> Includes built-in, first-class support for WebSockets, making real-time applications easy to build.</li>
+                        </ul>
+                    </details>
+                    <details>
+                        <summary>Gzip Compression</summary>
+                        <ul>
+                            <li>Built-in support for compressing responses to save bandwidth and improve load times.</li>
+                        </ul>
+                    </details>
+                    <details>
+                        <summary>SSE / Datastar Extension</summary>
+                        <ul>
+                            <li>Supports SSE via 'Datastar' framework</li>
+                            <li>Gzip compression also for SSE</li>
+                        </ul>
                     </details>
 
                 </div>
+                
                 <div class="card">
                     <h3><a href="https://data-star.dev/" target="_blank">Datastar</a></h3>
                     <div class="subsection">
                         Datastar is a lightweight hypermedia framework that combines the reactive state management
                         of Alpine.js with the server-driven simplicity of htmx, using Server-Sent Events (SSE)
                         to stream real-time DOM updates from any backend.
-                    </div>                    
+                    </div>
                     <details>
                         <summary>Unified Hypermedia & Reactivity</summary>
-                        <div>
-                            <ul>
-                                <li>Best of Both Worlds: It combines the server-side rendering power of HTMX with the client-side reactivity of Alpine.js in a single library.</li>
-                                <li>One Small File: The entire framework is a single script (~12–15 KiB) that handles both DOM updates and local state.</li>
-                            </ul>
-                        </div>
+                        <ul>
+                            <li>Best of Both Worlds: It combines the server-side rendering power of HTMX with the
+                                client-side reactivity of Alpine.js in a single library.</li>
+                            <li>One Small File: The entire framework is a single script (~12–15 KiB) that handles both
+                                DOM updates and local state.</li>
+                        </ul>
                     </details>
                     <details>
                         <summary>Signal-Based State Management</summary>
-                        <div>
-                            <ul>
-                                <li>Reactive Signals: Uses "signals" (similar to SolidJS or Preact) for fine-grained reactivity.</li>
-                                <li>Spreadsheet Model: Think of signals like spreadsheet cells; when one value changes, all dependent UI elements update automatically.</li>
-                                <li>Two-Way Binding: The data-bind attribute synchronizes form inputs with your underlying state.</li>
-                            </ul>
-                        </div>
+                        <ul>
+                            <li>Reactive Signals: Uses "signals" (similar to SolidJS or Preact) for fine-grained
+                                reactivity.</li>
+                            <li>Spreadsheet Model: Think of signals like spreadsheet cells; when one value changes, all
+                                dependent UI elements update automatically.</li>
+                            <li>Two-Way Binding: The data-bind attribute synchronizes form inputs with your underlying
+                                state.</li>
+                        </ul>
                     </details>
                     <details>
                         <summary>Native Server-Sent Events (SSE)</summary>
-                        <div>
-                            <ul>
-                                <li>Real-Time Pushes: Unlike typical AJAX request/response cycles, Datastar uses SSE to allow the server to "push" updates to the browser instantly.</li>
-                                <li>Multiple Fragments: A single server response can update multiple unrelated parts of the page at once (Multi-target orchestration).</li>
-                                <li>Efficiency: SSE is more efficient than polling and easier to implement than WebSockets for many real-time use cases.</li>
-                            </ul>
-                        </div>
+                        <ul>
+                            <li>Real-Time Pushes: Unlike typical AJAX request/response cycles, Datastar uses SSE to
+                                allow the server to "push" updates to the browser instantly.</li>
+                            <li>Multiple Fragments: A single server response can update multiple unrelated parts of the
+                                page at once (Multi-target orchestration).</li>
+                            <li>Efficiency: SSE is more efficient than polling and easier to implement than WebSockets
+                                for many real-time use cases.</li>
+                        </ul>
                     </details>
                     <details>
                         <summary>Logic-on-Server (Source of Truth)</summary>
-                        <div>
-                            <ul>
-                                <li>Backend Driven: The framework is designed so that the server remains the ultimate source of truth for logic and state.</li>
-                                <li>No Parallel Models: You don't have to duplicate your business logic or data structures in a separate frontend JavaScript layer.</li>
-                            </ul>
-                        </div>
+                        <ul>
+                            <li>Backend Driven: The framework is designed so that the server remains the ultimate source
+                                of truth for logic and state.</li>
+                            <li>No Parallel Models: You don't have to duplicate your business logic or data structures
+                                in a separate frontend JavaScript layer.</li>
+                        </ul>
                     </details>
                     <details>
                         <summary>Multi-Language SDK Support</summary>
-                        <div>
-                            <ul>
-                                <li>Backend Agnostic: While it pairs exceptionally well with Go and Nim (via Mummy), it offers first-class SDKs for 12+ languages, including Python, Ruby, PHP, Rust, and .NET.</li>
-                                <li>Seamless Integration: These SDKs handle the formatting of the SSE protocol, so you can focus on your business logic instead of protocol syntax.</li>
-                            </ul>
-                        </div>
+                        <ul>
+                            <li>Backend Agnostic: While it pairs exceptionally well with Go and Nim (via Mummy), it
+                                offers first-class SDKs for 12+ languages, including Python, Ruby, PHP, Rust, and .NET.
+                            </li>
+                            <li>Seamless Integration: These SDKs handle the formatting of the SSE protocol, so you can
+                                focus on your business logic instead of protocol syntax.</li>
+                        </ul>
                     </details>
                 </div>
                 <div class="card">
@@ -375,61 +388,71 @@
                         YottaDB is a high-performance, hierarchical NoSQL database designed for mission-critical
                         applications, distinguished by its unique daemon-less architecture that allows the database
                         engine to run directly within the application's process space for near-zero latency.
-                    </div>                    
+                    </div>
                     <details>
                         <summary>Daemon-less Architecture</summary>
-                        <div class="summarysub">Unlike most databases (like PostgreSQL or MongoDB), YottaDB does not require a background server process (daemon) to run.</div>                             
-                            <ul>
-                                <li>n-Process Execution: The database engine is a library that runs directly within your application's address space.</li>
-                                <li>Zero IPC Latency: By eliminating Inter-Process Communication, it removes a common performance bottleneck and a single point of failure.</li>
-                                <li>All 'nimetic' code linked together in one executable binary</li>
-                            </ul>
+                        <div class="summarysub">Unlike most databases (like PostgreSQL or MongoDB), YottaDB does not
+                            require a background server process (daemon) to run.</div>
+                        <ul>
+                            <li>n-Process Execution: The database engine is a library that runs directly within your
+                                application's address space.</li>
+                            <li>Zero IPC Latency: By eliminating Inter-Process Communication, it removes a common
+                                performance bottleneck and a single point of failure.</li>
+                            <li>All 'nimetic' code linked together in one executable binary</li>
+                        </ul>
                     </details>
                     <details>
                         <summary>Hierarchical Key-Value Model</summary>
-                        <div class="summarysub">Data is stored in "Globals," which are sparse, multi-dimensional, persistent arrays.</div>
-                        <div>
-                            <ul>
-                                <li>Natural Hierarchy: You can store data in tree-like structures with an unlimited number of subscripts (keys).</li>
-                                <li>Schema-free: There are no rigid tables. This allows you to evolve your data model instantly without complex migrations or downtime.</li>
-                            </ul>
-                        </div>
+                        <div class="summarysub">Data is stored in "Globals," which are sparse, multi-dimensional,
+                            persistent arrays.</div>
+                        <ul>
+                            <li>Natural Hierarchy: You can store data in tree-like structures with an unlimited number
+                                of subscripts (keys).</li>
+                            <li>Schema-free: There are no rigid tables. This allows you to evolve your data model
+                                instantly without complex migrations or downtime.</li>
+                        </ul>
                     </details>
                     <details>
                         <summary>Absolute ACID Transactions</summary>
-                        <div class="summarysub">YottaDB provides full ACID (Atomicity, Consistency, Isolation, Durability) guarantees using Optimistic Concurrency Control (OCC).</div>
-                        <div>
-                            <ul>
-                                <li>Extreme Integrity: It ensures that data remains consistent even with tens of thousands of concurrent processes.</li>
-                                <li>Conflict Resolution: The engine automatically detects data conflicts and retries transactions, simplifying the developer's job.</li>
-                            </ul>
-                        </div>
+                        <div class="summarysub">YottaDB provides full ACID (Atomicity, Consistency, Isolation,
+                            Durability) guarantees using Optimistic Concurrency Control (OCC).</div>
+                        <ul>
+                            <li>Extreme Integrity: It ensures that data remains consistent even with tens of thousands
+                                of concurrent processes.</li>
+                            <li>Conflict Resolution: The engine automatically detects data conflicts and retries
+                                transactions, simplifying the developer's job.</li>
+                        </ul>
                     </details>
                     <details>
                         <summary>Language Agnostic (Polyglot)</summary>
-                        <div class="summarysub">While its roots are in the M (MUMPS) language, YottaDB is built to be used by modern programming stacks.</div>
-                        <div>
-                            <ul>
-                                <li>Native APIs: It offers first-class support for Go, Rust, Python, Lua, C, and Node.js.</li>
-                                <li>Nim Support: There is a dedicated wrapper for Nim, allowing you to combine Nim’s speed with YottaDB’s robust storage.</li>
-                            </ul>
-                        </div>
+                        <div class="summarysub">While its roots are in the M (MUMPS) language, YottaDB is built to be
+                            used by modern programming stacks.</div>
+                        <ul>
+                            <li>Native APIs: It offers first-class support for Go, Rust, Python, Lua, C, and Node.js.
+                            </li>
+                            <li>Nim Support: There is a dedicated wrapper for Nim, allowing you to combine Nim’s speed
+                                with YottaDB’s robust storage.</li>
+                        </ul>
                     </details>
                     <details>
                         <summary>Proven Reliability & Replication</summary>
-                            <div class="summarysub">YottaDB is built for "Five Nines" (99.999%) availability, powering some really big real-time systems in finance and health.</div>
-                            <ul>
-                                <li>Logical Replication: Supports real-time data replication across geographical distances for disaster recovery.</li>
-                                <li>Non-Disruptive: You can perform backups, upgrades, and schema changes while the database is online and under heavy load.</li>
-                            </ul>
+                        <div class="summarysub">YottaDB is built for "Five Nines" (99.999%) availability, powering some
+                            really big real-time systems in finance and health.</div>
+                        <ul>
+                            <li>Logical Replication: Supports real-time data replication across geographical distances
+                                for disaster recovery.</li>
+                            <li>Non-Disruptive: You can perform backups, upgrades, and schema changes while the database
+                                is online and under heavy load.</li>
+                        </ul>
                     </details>
 
                 </div>
                 <div class="card">
                     <h3><a href="https://codeberg.org/samsamros/rssatom.git" target='_blank'>atomrss</a></h3>
-                    <div class="subsection">Using the 'rssatom' library from Samuel Rosado, with minor parsing modifications and YottaDB integration,
-                    allows easy parsing and simple storing RSS data with indexes in YottaDB.
-                    </div>
+                    <p class="subsection">The "RSS Concentrator" sample app uses the 'rssatom' library 
+                        with minor parsing modifications and integration with YottaDB
+                        to allow indexing of RSS fields in YottaDB.
+                    </p>
                 </div>
             </div>
         </section>
@@ -440,15 +463,16 @@
             <h2>Core Technical Features</h2>
             <ul>
                 <li><strong>Nim Backend</strong>
-                High-performance, statically typed backend logic for SPAs.</li>
+                    High-performance, statically typed backend logic for SPAs.</li>
                 <li><strong>No-Framework Frontend</strong>
-                Direct reliance on native HTML5 and CSS3 to eliminate React/JavaScript bloat.</li>
+                    Direct reliance on native HTML5 and CSS3 to eliminate React/JavaScript bloat.</li>
                 <li><strong>SSE</strong>
-                Integration of Datastar for efficient Server-Sent Events, enabling real-time UI updates.</li>
+                    Integration of Datastar for efficient Server-Sent Events, enabling real-time UI updates.</li>
                 <li><strong>Simple Persistence</strong>
-                Robust data management via YottaDB with a native Nim DSL for seamless database interaction.</li>
+                    Robust data management via YottaDB with a native Nim DSL for seamless database interaction.</li>
                 <li><strong>SSR Logic</strong>
-                Simplified programming model where dynamic components are rendered server-side, reducing client-side complexity.</li>
+                    Simplified programming model where dynamic components are rendered server-side, reducing client-side
+                    complexity.</li>
             </ul>
         </section>
 
@@ -456,11 +480,13 @@
             <h2>Key Advantages for Developers</h2>
             <ul>
                 <li><strong>Zero Bloat</strong>
-                Minimal dependencies by avoiding complex client-side state management.</li>
+                    Minimal dependencies by avoiding complex client-side state management.</li>
                 <li><strong>Performance</strong>
-                Combines Nim’s speed with YottaDB’s low-latency persistence.</li>
+                    Combines Nim’s speed with YottaDB’s low-latency persistence. Loading the last 5000 RSS articles from YottaDB takes less than a second.</li>
+                <li><strong>Simple</strong>
+                    A simple programming model that combines Datastar with Nim's backend speed and YottaDB’s low-latency persistence.</li>
                 <li><strong>Maintainability</strong>
-                A unified codebase where the server remains the single source of truth for the UI.</li>
+                    A unified codebase where the server remains the single source of truth for the UI.</li>
             </ul>
         </section>
 
