@@ -4,7 +4,7 @@ import nimrss
 
 const
     globals = @[
-        "^Author", "^ConfigFeed", "^Feed", "^RSS", "^RSSCNT", "^RSSEnclosure",
+        "^Author", "^ConfigFeed", "^DBStats", "^Feed", "^RSS", "^RSSCNT", "^RSSEnclosure",
         "^RSSFTI", "^RSSImage", "^RSSItem",  "^RSSItemFTI",
         "^RSSItemGUID", "^RSSItemIDXREF", "^RSSItemPUBDATE", "^Session", "^UserFeeds",
         ]
@@ -34,16 +34,19 @@ proc countGlobalDetail(gbl: string): DBStats =
 proc handleStats(req: Request) =
     var sse = req.respondSSE()
     var totalOrder, totalQuery, totalKeylen, totalValuelen = 0
+    let timestamp = datetimeToUnix()
 
     let totalDuration = meassure:
         for gbl in globals:
             let duration = meassure:
-                #let (orderCnt, queryCnt) = countGlobal(gbl)
-                let stats = countGlobalDetail(gbl)
+                var stats = countGlobalDetail(gbl)
                 let avgKey: float = (stats.keylen / stats.querycnt)
                 let avgValue: float = (stats.valuelen / stats.querycnt)
-            let time = duration.split(" ")[0]
-            let unit = duration.split(" ")[1]
+
+            stats.duration = duration
+
+            let time = stats.duration.split(" ")[0]
+            let unit = stats.duration.split(" ")[1]
             let tr = fmt"""
                 <tr>
                     <td align='left'>{gbl}</td>
@@ -67,6 +70,11 @@ proc handleStats(req: Request) =
             inc(totalQuery, stats.querycnt)
             inc(totalKeylen, stats.keylen)
             inc(totalValuelen, stats.valuelen)
+
+            # Save in DB
+            saveObject[DBStats](@[$timestamp, stats.global], stats)
+            
+
 
     # Empty line
     patchElements(sse, emptyline, selector="#stats-body", mode=Append)

@@ -1,4 +1,4 @@
-import std/[os, times, json, strutils, strformat, tables]
+import std/[os, times, json, strutils, strformat, tables, base64]
 import std/[options, typetraits]
 import std/[httpclient]
 import checksums/sha1
@@ -25,6 +25,48 @@ template SSE*(req: Request, body: untyped) =
     var sse {.inject.} = req.respondSSE() # sse for body
     defer: sse.close()
     body
+
+
+template getOption*(option: Option): string =
+    if option.isSome: option.get() else: ""
+
+
+proc generateSHA1*(input: string, length: int = 16): string =
+  let hash = secureHash(input) # calculate SHA1
+  let bytes = cast[array[20, byte]](hash) # convert distinct type to byte array
+  # 3. Bytes in einen String für den Encoder umwandeln
+  var rawData = ""
+  for b in bytes: 
+    rawData.add(char(b))
+  # 4. Base64-Encoding (URL-safe)
+  let b64 = encode(rawData, safe = true)
+  # 5. Kürzen auf die gewünschte Länge
+  return b64[0 ..< min(length, b64.len)]
+
+
+proc trim*(s: string): string =
+    # remove all leading, trailing and double spaces from a string " abc  def " -> "abc def"
+    result = strip(s)
+    var idx = result.find("  ")
+    while idx > 0:
+        result = result.replace("  ", " ")
+        idx = result.find("  ")
+    
+    result = result.multiReplace(
+        ("&lt;strong&gt;", " "), ("&lt;/strong&gt;", ""),
+    )
+
+
+func fastParseInt*(s: string): int {.inline.} =
+  ## scan a string for positive numbers
+  ## Return 0 if no numbers
+  result = 0
+  for i in 0 ..< s.len:
+    let c = s[i]
+    if c in '0'..'9':
+      result = result * 10 + (ord(c) - ord('0'))
+    else:
+      break # Stopp at first non numeric character
 
 
 func stripSignal*(signal: string): string =
@@ -62,11 +104,23 @@ proc getSignal*(req: Request, key: string): string =
 proc handleGoto*(req: Request) =
     # process menu links g.E. <a href="#form" data-on:click="$menuOpen = false; @get('goto/form.html')">Registration</a>
     let page = req.path.split("/goto/")[1]
-    echo "handelGoto page=", page
     SSE(req):
         forward(sse, HTML_DIR & page)
 
 
+proc currentDayFromTo*(): (int, int) =
+    # Get time range for the current day    
+    let date = getDateStr(now())
+    let dt1 = parse(date & " 00:00:00", "yyyy-MM-dd HH:mm:ss")
+    let dt2 = parse(date & " 23:59:59", "yyyy-MM-dd HH:mm:ss")
+    return (dt1.toTime().toUnix(),  dt2.toTime().toUnix())
+
+
+proc datetimeToUnix*(): int =
+    let tm = now().toTime()
+    result = tm.toUnix()
+
+    
 proc getWallClock*(userid: string): string =
     let nowTime = now().format("dd.MM.yyyy - HH:mm")
     result = fmt"{userid} / {nowTime}"

@@ -54,6 +54,7 @@ type
         maxkey*: int
         maxvalue*: int
         global*: string
+        duration*: string
 
 
     Registration* = object of RootObj

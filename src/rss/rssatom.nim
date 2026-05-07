@@ -21,7 +21,6 @@ proc getAndMap(n: XmlNode, query: string, find: string = ""): seq[string] =
     echo "ERROR getAndMap node.isNil"
     return
 
-  var find = if find == "": query else: find
   if not isNil(n.child(query)):
     for x in n.findAll(query):
       if x.kind == xnElement:
@@ -29,7 +28,6 @@ proc getAndMap(n: XmlNode, query: string, find: string = ""): seq[string] =
           result.add(y.text)
       else:
         result.add(x.text)
-    #result = map(n.findAll(find), (x: XmlNode) -> string => x.innerText)
 
 
 proc parseTextxn(node:XmlNode, childQuery:string): Option[string] =

@@ -8,17 +8,6 @@ const
     DOCUMENTS_SIZE = "DOCUMENTS_SIZE"
 
 
-proc trim(s: string): string =
-    result = strip(s)
-    var idx = result.find("  ")
-    while idx > 0:
-        result = result.replace("  ", " ")
-        idx = result.find("  ")
-    
-    result = result.multiReplace(
-        ("&lt;strong&gt;", " "), ("&lt;/strong&gt;", ""),
-    )
-
 
 proc getGUID(item: RSSItem): (string, bool) =
     let guid = generateSHA1(getOption(item.title) & getOption(item.description), 32)

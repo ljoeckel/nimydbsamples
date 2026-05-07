@@ -1,10 +1,10 @@
 import std/[enumerate, strformat, algorithm, hashes, sets, tables]
-import std/[options, strutils, typetraits, base64, httpclient, times]
-import checksums/sha1
+import std/[options, strutils, typetraits, times]
 import yottadb
 import stemmer
 import types
 import sugar
+import common
 
 
 const TIME_FORMATS* = [
@@ -18,31 +18,6 @@ const TIME_FORMATS* = [
   ]
 
 
-proc trim(s: string): string =
-    # remove all leading, trailing and double spaces from a string " abc  def " -> "abc def"
-    result = strip(s)
-    var idx = result.find("  ")
-    while idx > 0:
-        result = result.replace("  ", " ")
-        idx = result.find("  ")
-
-
-template getOption*(option: Option): string =
-    if option.isSome: option.get() else: ""
-
-
-func fastParseInt*(s: string): int {.inline.} =
-  ## scan a string for positive numbers
-  ## Return 0 if no numbers
-  result = 0
-  for i in 0 ..< s.len:
-    let c = s[i]
-    if c in '0'..'9':
-      result = result * 10 + (ord(c) - ord('0'))
-    else:
-      break # Stopp at first non numeric character
-
-
 proc pubDate(item: RSSItem): string =
     try: 
         let dt = getOption(item.pubDate)
@@ -50,14 +25,6 @@ proc pubDate(item: RSSItem): string =
         result = fu.format("dd.MM.yyyy HH:mm")
     except:
          result = "01.01.1970 00:00"
-
-
-proc currentDayFromTo(): (int, int) =
-    # Get time range for the current day    
-    let date = getDateStr(now())
-    let dt1 = parse(date & " 00:00:00", "yyyy-MM-dd HH:mm:ss")
-    let dt2 = parse(date & " 23:59:59", "yyyy-MM-dd HH:mm:ss")
-    return (dt1.toTime().toUnix(),  dt2.toTime().toUnix())
 
 
 proc getUnixTimestamp*(dts: string): string =
@@ -70,11 +37,6 @@ proc getUnixTimestamp*(dts: string): string =
             continue
   
     raise newException(YdbError, "No matching timeformat found to create timestamp for '" & $dts)
-
-
-proc datetimeToUnix*(): int =
-    let tm = now().toTime()
-    result = tm.toUnix()
 
 
 proc getRSSFeedConfiguration*(path: string): Table[string, seq[string]] =
@@ -100,18 +62,6 @@ proc getEnabledFeeds(userid: string): seq[string] =
         if feed.enabled:
             result.add(feed.rssid)
 
-
-proc generateSHA1*(input: string, length: int = 16): string =
-  let hash = secureHash(input) # calculate SHA1
-  let bytes = cast[array[20, byte]](hash) # convert distinct type to byte array
-  # 3. Bytes in einen String für den Encoder umwandeln
-  var rawData = ""
-  for b in bytes: 
-    rawData.add(char(b))
-  # 4. Base64-Encoding (URL-safe)
-  let b64 = encode(rawData, safe = true)
-  # 5. Kürzen auf die gewünschte Länge
-  return b64[0 ..< min(length, b64.len)]
 
 proc normalizeChannelTitle*(title: string): string =
     # result = result.multiReplace(
