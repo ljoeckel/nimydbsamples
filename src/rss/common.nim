@@ -5,6 +5,7 @@ import checksums/sha1
 import mummy, mummy/routers, mummy/datastar
 import macros
 import yottadb
+import types
 
 
 const
@@ -115,7 +116,6 @@ proc currentDayFromTo*(): (int, int) =
     let dt2 = parse(date & " 23:59:59", "yyyy-MM-dd HH:mm:ss")
     return (dt1.toTime().toUnix(),  dt2.toTime().toUnix())
 
-
 proc datetimeToUnix*(): int =
     let tm = now().toTime()
     result = tm.toUnix()
@@ -124,3 +124,41 @@ proc datetimeToUnix*(): int =
 proc getWallClock*(userid: string): string =
     let nowTime = now().format("dd.MM.yyyy - HH:mm")
     result = fmt"{userid} / {nowTime}"
+
+
+proc getEnabledFeeds*(userid: string): seq[string] =
+    let userFeeds = loadObject[UserFeeds](userid)
+    for feed in userFeeds.feeds:
+        if feed.enabled:
+            result.add(feed.rssid)
+            
+proc clearFeedsDb*() =
+    Kill:
+        ^ConfigFeed
+        ^Feed
+        ^UserFeeds
+    echo "Feed related globals killed"
+
+
+proc clearRssDb*() =
+    Kill:
+        ^Author
+        ^DBStats
+        ^RSSCNT
+        ^RSS
+        ^RSSTITLE
+        ^RSSEnclosure
+        ^RSSImage
+        ^RSSItem
+        ^RSSItemGUID
+        ^RSSItemCATEGORY
+        ^RSSItemPUBDATE
+        ^RSSItemIDXREF
+        ^RSSFTI
+        ^RSSItemFTI
+        ^ConfigFeed
+        ^Feed
+        ^UserFeeds
+    echo "RSS Globals killed"
+
+

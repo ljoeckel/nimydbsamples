@@ -56,13 +56,6 @@ proc getRSSFeedConfiguration*(path: string): Table[string, seq[string]] =
             result[currentSection].add(trimmed)
 
 
-proc getEnabledFeeds(userid: string): seq[string] =
-    let userFeeds = loadObject[UserFeeds](userid)
-    for feed in userFeeds.feeds:
-        if feed.enabled:
-            result.add(feed.rssid)
-
-
 proc normalizeChannelTitle*(title: string): string =
     # result = result.multiReplace(
     #     ("RSS CHANNEL", ""), 
@@ -387,32 +380,3 @@ proc getRSSFields*(subscript: seq[string]): seq[(string, string)] =
         result.add(("updated", getOption(rssItem.updated)))
         result.add(("topic", getOption(rssItem.topic)))
         result.add(("keywords", rssItem.keywords.join(" ")))
-
-
-proc clearFeedsDb*() =
-    Kill:
-        ^ConfigFeed
-        ^Feed
-        ^UserFeeds
-    echo "Feed related globals killed"
-
-
-proc clearRssDb*() =
-    Kill:
-        ^Author
-        ^RSSCNT
-        ^RSS
-        ^RSSTITLE
-        ^RSSEnclosure
-        ^RSSImage
-        ^RSSItem
-        ^RSSItemGUID
-        ^RSSItemCATEGORY
-        ^RSSItemPUBDATE
-        ^RSSItemIDXREF
-        ^RSSFTI
-        ^RSSItemFTI
-        ^ConfigFeed
-        ^Feed
-        ^UserFeeds
-    echo "RSS Globals killed"

@@ -2,6 +2,7 @@ import std/[options, strutils, strformat, typetraits, enumerate, os]
 import std/[parseopt, httpclient, times, tables]
 import rssatom
 import nimrss
+import wmWordcloud
 
 const
     DOCUMENTS = "DOCUMENTS"
@@ -129,6 +130,11 @@ proc processFeeds(feedPath: string) =
 
             updateConfigFeed(rss, group) # create a ^ConfigFeed entry for new feeds
 
+            # Set languuge to the base language: en-gb -> en
+            var language = getOption(rss.language)
+            if language.contains("-"):
+                rss.language = some(language.split("-")[0])
+
             let (nbrNewItms, wordCount) = processFeed(rss)
             if nbrNewItms > 0:
                 saveXmlFile(url, xml) # Save the XMl file
@@ -193,10 +199,15 @@ if isMainModule:
     if liveFeed:
         echo "Running Live-Feed"
         processFeeds(feedPath)
+        var processed = createWordCloudForToday()
+        echo fmt"Processed {processed} Articles"
+
         while minutes > 0:
             echo "Sleep for ", minutes, " minutes"
             nimSleep(1000 * 60 * minutes) # sleep for minutes
             processFeeds(feedPath)
+            processed = createWordCloudForToday()
+            echo fmt"Processed {processed} Articles"
     
     elif init:
         echo "Loading from 'xml' files"

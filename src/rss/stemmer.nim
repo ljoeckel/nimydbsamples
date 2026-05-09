@@ -25,14 +25,16 @@ proc stem(wrd: string, stm: ptr sb_stemmer): string =       # wrap snowball stem
   copyMem result[0].addr, cs, int(cn)
 
 
+# TODO: create a lang/stemmer table
 proc stem*(word: string, lang: string): string =
   if word.isEmptyOrWhitespace: return ""
+  let ucLang = lang.toUpper()
 
-  if lang == "DE":
+  if ucLang == "DE":
       return stem(word, stmDE)
-  elif lang == "EN":
+  elif ucLang == "EN":
       return stem(word, stmEN)
-  elif lang == "ES":
+  elif ucLang == "ES":
       return stem(word, stmES)
   else:
     return ""

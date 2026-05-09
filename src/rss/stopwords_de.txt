@@ -34,6 +34,7 @@ aeusserstem
 aeussersten
 aeusserster
 aeusserstes
+afx
 ähnlich
 ähnliche
 ähnlichem
@@ -446,6 +447,7 @@ doppelt
 dort
 dorther
 dorthin
+dpa
 dran
 drauf
 drei

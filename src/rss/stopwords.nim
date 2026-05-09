@@ -8,8 +8,10 @@ import stemmer
 
 const STOPWORDS = {
     "ALL": "^stopwordsALL",
+    "WC": "^stopwordsWC",
     "DE": "^stopwordsDE",
     "EN": "^stopwordsEN",
+    "ES": "^stopwordsES",
     "XX": "^stopwordsALL"
   }.toTable
 
@@ -29,14 +31,20 @@ proc setupStopwords(lang: string): int =
         Set: @gbl(word) = ""
         inc result
 
-proc isStopword(word: string, lang: string): bool =
+proc isStopword*(word: string, lang: string): bool =
+    var ucLang = lang.toUpper()
+    let wrd = strip(word.toLower())
     result = false
     if word.len == 0: return false
-    if ydb_data(STOPWORDS["ALL"], @[word]) > 0: return true
-    if STOPWORDS.contains(lang):
-        return ydb_data(STOPWORDS[lang], @[word]) > 0
+    if ydb_data(STOPWORDS["WC"], @[wrd]) == 1: return true
 
-proc splitWords(text: string, lang: string): seq[string] =
+    if ucLang.len > 0:
+        if ydb_data(STOPWORDS[ucLang], @[wrd]) == 1: return true
+    else:
+        for lang in STOPWORDS.keys:
+            if ydb_data(STOPWORDS[lang], @[wrd]) == 1: return true
+
+proc splitWords*(text: string, lang: string): seq[string] =
     # Replace with ' '
     var s: string
     for c in toLower(strip(text)):
@@ -115,6 +123,7 @@ proc createFTIndex*(item: RSSItem, lang: string): int =
             echo "Empty or blank not valid word.  words=", words
         else:
             let stemWord = stem(word, lang)
+            #echo "stemword=", stemWord, " word=", word, " lang=", lang
             if stemWord.len > 0:
                 Set: ^RSSItemFTI(stemWord, k0, k1) = cnt
 
@@ -172,5 +181,4 @@ proc main() =
         of cmdEnd: discard
 
 if isMainModule:
-    Kill: ^RSSItemFTI
     main()

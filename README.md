@@ -24,6 +24,7 @@ A lightweight web application demonstrating how to capture RSS feed's and make i
 ![Feed](rss_feed.png)
 ![Configuration](rss_config.png)
 ![DB Stats](rss_dbstats.png)
+![WordCloud](rss_wordcloud.png)
 ![About](rss_about.png)
 
 ### Technical Highlights

@@ -3,6 +3,7 @@ nimblecache/
 htmldocs/
 src/datastar/form
 src/datastar/formtx
+src/rss/wc
 nimble.develop
 nimble.paths
 nimbledeps

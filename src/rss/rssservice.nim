@@ -3,13 +3,16 @@
 import std/[os, times, strutils, strformat, typetraits, json]
 import mummy, mummy/routers, mummy/datastar
 import nimrss
+import nimpy
+import nimpy/py_lib  # Importiert die C-API-Definitionen
+
 
 # WebModules
 import wmFeedConfig
 import wmLogin
 import wmSearch
 import wmStats
-
+import wmWordcloud
 
 
 proc handleUpdateClock(req: Request) =
@@ -107,12 +110,14 @@ if isMainModule:
         quit(0)
     setControlCHook(shutdown)
 
+
     var router = Router()
     # Register WebModules
     wmFeedConfigModule.register(router)
     wmLoginModule.register(router)
     wmSearchModule.register(router)
     wmStatsModule.register(router)
+    wmWordcloud.register(router)
 
     router.get("/update-clock", handleUpdateClock)
     router.get("/show-rssitem", handleShowRSSItem)
