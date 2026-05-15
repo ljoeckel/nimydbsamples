@@ -3,9 +3,6 @@
 import std/[os, times, strutils, strformat, typetraits, json]
 import mummy, mummy/routers, mummy/datastar
 import nimrss
-import nimpy
-import nimpy/py_lib  # Importiert die C-API-Definitionen
-
 
 # WebModules
 import wmFeedConfig

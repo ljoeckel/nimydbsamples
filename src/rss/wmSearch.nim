@@ -22,7 +22,7 @@ proc handleSearch(req: Request) =
     let direction = getSignal(req, "direction")
     let articleCount = parseInt(getSignal(req, "articles"))
     let format = getSignal(req, "format")
-    var cards, keywords: string
+    var cards: string
     var containerClass = if format == "card": "rsscard-container" else: "rsslist-container"
     var rssItems: seq[RSSItem]
     let sortBy = getSortBy(sort, direction)
@@ -49,12 +49,12 @@ proc handleSearch(req: Request) =
     let infotxt = if rssItems.len > 0: fmt"{articles} in {infoQuery} + {infoRender}" else: fmt"Indexsearch in {infoQuery}"
     let infoContainer = fmt"""<h3 id="info">{infotxt}</h3>"""
     let rssContainer = fmt"""<div id="rsscard" class="{containerClass}">{cards}</div>"""
-    let keywordContainer = fmt"""<div id="keywords">{$keywords}</div>"""
+    #let keywordContainer = fmt"""<div id="keywords">{$keywords}</div>"""
 
     SSE(req): 
         patchElements(sse, infoContainer)
         patchElements(sse, rssContainer)
-        patchElements(sse, keywordContainer)
+        #patchElements(sse, keywordContainer)
 
 
 # Callback for router registration

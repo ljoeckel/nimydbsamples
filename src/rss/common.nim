@@ -109,12 +109,19 @@ proc handleGoto*(req: Request) =
         forward(sse, HTML_DIR & page)
 
 
+proc getCurrentDay*(datetime: int): string =
+    let timeObj = fromUnix(datetime)
+    let dt = timeObj.local
+    result = dt.format("yyyy-MM-dd")
+
+
 proc currentDayFromTo*(): (int, int) =
     # Get time range for the current day    
     let date = getDateStr(now())
     let dt1 = parse(date & " 00:00:00", "yyyy-MM-dd HH:mm:ss")
     let dt2 = parse(date & " 23:59:59", "yyyy-MM-dd HH:mm:ss")
     return (dt1.toTime().toUnix(),  dt2.toTime().toUnix())
+
 
 proc datetimeToUnix*(): int =
     let tm = now().toTime()
@@ -131,7 +138,8 @@ proc getEnabledFeeds*(userid: string): seq[string] =
     for feed in userFeeds.feeds:
         if feed.enabled:
             result.add(feed.rssid)
-            
+
+
 proc clearFeedsDb*() =
     Kill:
         ^ConfigFeed
@@ -160,5 +168,3 @@ proc clearRssDb*() =
         ^Feed
         ^UserFeeds
     echo "RSS Globals killed"
-
-

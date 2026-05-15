@@ -22,3 +22,7 @@ src/rss/searchcli
 src/rss/xml2.tgz
 src/rss/xml.tgz
 src/rss/html/wordcloud.png
+src/rss/rsscollector.err
+src/rss/rsscollector.log
+src/rss/rssservice.err
+src/rss/rssservice.log

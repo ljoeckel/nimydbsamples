@@ -12,6 +12,8 @@ requires "https://github.com/ljoeckel/nim-yottadb.git"
 requires "https://github.com/ljoeckel/mummyDS.git"
 requires "checksums"
 requires "nimpy"
+requires "regex"
+requires "unicodedb"
 
 # Tasks
 task demo, "formtx":

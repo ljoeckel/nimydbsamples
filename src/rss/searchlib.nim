@@ -86,13 +86,6 @@ proc normalizeUrl*(url: string): string =
         (";", ""), ("_", "")
     )
 
-proc getWordCountFromFTI(word: string, subscript: seq[string]): int =
-    let s0 = subscript[0]
-    let s1 = subscript[1]
-    result = Get ^RSSItemFTI(word, s0, s1).int
-    #TODO: Allow 1. Get ^RSSItemFTI(word, subscript)
-    #TODO: Allow 2. Get ^RSSItemFTI(word, subscript[0], subscript[1])
-
 
 # ========= Overwrites for HashTable[TimeSearchEntry] ========
 
@@ -107,14 +100,17 @@ proc hash*(x: TimeSearchEntry): Hash =
   result = !$h
 
 
+proc getWordCountFromFTI(word: string, subscript: seq[string]): int =
+    Get ^RSSItemFTI(word, subscript).int
+
+
 template append(result: var HashSet[TimeSearchEntry], keyword: string, wc: int, item: TimeSearchEntry) =
-    var itm = item
+    var itm = item # cannot not modify a HashSet items because the hash would change
     inc(itm.wordCount, getWordCountFromFTI(keyword, item.subscript) + wc)
     incl(result, itm)
 
 
 proc intersect(keyword: string, s1: var HashSet[TimeSearchEntry], s2: var HashSet[TimeSearchEntry]): HashSet[TimeSearchEntry] =
-    #var itm: TimeSearchEntry
     if s1.len == 0:
         for item in s2:
             let wc = s2[item].wordCount

@@ -59,13 +59,16 @@ artikel
 asset
 avoid
 bank
+beendet
 beginnt
+besuch
 border
 borse
 borsen
 breaking
 bringt
 business
+called
 chief
 cmp
 com
@@ -113,6 +116,7 @@ index
 investor
 investoren
 ism
+joined
 jones
 jpg
 kritisiert
@@ -133,6 +137,7 @@ newsletters
 net
 official
 people
+pladiert
 plan
 plant
 png
@@ -173,6 +178,7 @@ united
 unternehmen
 veroffentlichung
 warnt
+watch
 week
 wfcdn
 width
