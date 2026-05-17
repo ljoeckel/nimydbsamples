@@ -23,9 +23,9 @@
     <div class="navbar">
         <div class="subnav" data-show="$loggedIn">
             <a href="#home" id="home" data-on:click="@get('/livefeed.html')"
-                style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none;">
+                style="display: inline-flex; align-items: center; gap: 4px; text-decoration: none;">
                 <img src="rss.png" height="20" width="20" alt="RSS Icon">
-                RSS Live
+                Live
             </a>
         </div>
 
@@ -33,7 +33,7 @@
         <a href="#stats" data-show="$loggedIn"  data-on:click="$menuOpen = false; @get('goto/stats.html')">Stats</a>
         <a href="#wordcloud" data-show="$loggedIn"  data-on:click="$menuOpen = false; @get('goto/wordcloud.html')">WordCloud</a>
 
-        <div class="subnav">
+        <!--div class="subnav">
             <button class="subnavbtn">Technologies<i class="fa fa-caret-down"></i></button>
             <div class="subnav-content">
                 <a href="https://nim-lang.org">Nim</a>
@@ -42,7 +42,7 @@
                 <a href="https://nginx.org/">NGINX</a>
                 <a href="https://icons.getbootstrap.com/">bootstrap icons</a>
             </div>
-        </div>
+        </div-->
 
         <a href="#about" data-on:click="$menuOpen = false; @get('/about.html')">About</a>
         <a href="#logout" data-show="$loggedIn" data-on:click="$menuOpen = false; @get('/logout')">Logout</a>
