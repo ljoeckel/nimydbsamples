@@ -1,4 +1,4 @@
-import std/[strutils, strformat]
+import std/[strutils, strformat, math]
 import mummy, mummy/routers, mummy/datastar
 import nimrss
 
@@ -12,6 +12,13 @@ const
 
     emptyline = "<tr><td line-height:12px;' colspan=4>&nbsp;</td></tr>"
 
+func hrb(bytes: int): string =
+    # return number of bytes as b/k/m/g
+    if bytes < 1024:     return $bytes & "b"
+    elif bytes < 1024^2: return $(bytes div 1024) & "k"
+    elif bytes < 1024^3: return $(bytes div 1024^2) & "m"
+    elif bytes < 1024^4: return $(bytes div 1024^3) & "g"
+    
 
 proc countGlobalDetail(gbl: string): DBStats =
     var stats = DBStats()
@@ -53,8 +60,8 @@ proc handleStats(req: Request) =
                     <td align='left'>{gbl}</td>
                     <td align='right'>{stats.ordercnt}</td>
                     <td align='right'>{stats.querycnt}</td>
-                    <td align='right'>{stats.keylen:>12}</td>
-                    <td align='right'>{stats.valuelen:>12}</td>
+                    <td align='right'>{hrb(stats.keylen):>12}</td>
+                    <td align='right'>{hrb(stats.valuelen):>12}</td>
                     <td align='right'>{avgKey:>5.1f}</td>
                     <td align='right'>{avgValue:>5.1f}</td>
                     <td align='right'>{stats.minkey:>4}</td>
@@ -87,8 +94,8 @@ proc handleStats(req: Request) =
             <td align='left'>Totals:</td>
             <td align='right'>{totalOrder}</td>
             <td align='right'>{totalQuery}</td>
-            <td align='right'>{totalKeylen}</td>
-            <td align='right'>{totalValuelen}</td>
+            <td align='right'>{hrb(totalKeylen)}</td>
+            <td align='right'>{hrb(totalValuelen)}</td>
             <td></td>
             <td></td>
             <td></td>

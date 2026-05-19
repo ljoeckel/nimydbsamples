@@ -100,6 +100,7 @@ fur
 gemass
 global
 government
+greift
 group
 height
 health
@@ -131,6 +132,7 @@ mitte
 moglichkeiten
 mogotes
 nachste
+nahe
 news
 newsletter
 newsletters

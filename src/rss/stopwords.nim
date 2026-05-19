@@ -23,7 +23,7 @@ proc setupStopwords(lang: string): int =
         return
 
     let gbl = fmt"^stopwords{toUpper(lang)}"
-    Kill: @gbl
+    Kill @gbl
 
     let stopwords = toLower(readFile(path))
     for word in stopwords.split('\n'):

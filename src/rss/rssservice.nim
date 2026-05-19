@@ -76,8 +76,6 @@ proc handleUpdateClock(req: Request) =
 
 proc handleShowRSSItem(req: Request) =
     # Display the raw RSS/RSSItem data in a popup window
-    var sse = req.respondSSE()
-
     let signals = getSignals(req)
     let id = signals["id"].getStr()
     let subscript = id.split(',')
@@ -93,9 +91,9 @@ proc handleShowRSSItem(req: Request) =
             </tr>
             """)
     tbody.add("</tbody>")
-    patchElements(sse, tbody) # set new data
 
-    sse.close()
+    SSE(req):
+        patchElements(sse, tbody) # set new data
 
 
 

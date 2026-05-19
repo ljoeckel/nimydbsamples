@@ -36,8 +36,9 @@ proc search(lang: string = "DE", userid: string = "guest") =
 
 
 proc showLatest(max: int) =
-    for key in getLatestRSSItemKeys(max):
-        showRSSItem(key)
+    for subscript in getLatestRSSItemKeys(max):
+        showRSSItem(subscript)
+        echo ""
 
 
 proc dumpFTI(start: string) = 

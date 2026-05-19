@@ -226,9 +226,8 @@ proc getLatestRSSItems*(max: int, userid: string, sortBy: SortBy): seq[RSSItem] 
 
 proc getLatestRSSItemKeys*(max: int): seq[seq[string]] =
     var cnt = max
-    for key  in QueryItr ^RSSItemPUBDATE.reverse:
-        let keys = key.split(',')
-        result.add(keys)
+    for keys  in QueryItr ^RSSItemPUBDATE.keys.reverse:
+        result.add(keys[1].split(','))
         dec cnt
         if cnt == 0: break
 
@@ -321,9 +320,9 @@ proc getRSSFields*(subscript: seq[string]): seq[(string, string)] =
     if subscript.len == 0:
         echo fmt">> Subscript {subscript} not valid <<"
         return
-
+    
     let rss = loadObject[RSS](subscript[0])
-    result.add ("RSS - FeedType", $rss.feedType)
+    result.add(("RSS - FeedType", $rss.feedType))
     result.add(("id", getOption(rss.id)))
     result.add(("Title", getOption(rss.title)))
     result.add(("Category", rss.category.join(" ")))
