@@ -22,18 +22,17 @@ template meassure*(body: untyped): auto =
     else: $td & " µs."
 
 
-template SSE*(req: Request, body: untyped) =
-    var sse {.inject.} = req.respondSSE() # sse for body
-    defer: sse.close()
-    body
-
-
 template getOption*(option: Option): string =
     if option.isSome: option.get() else: ""
 
 
-proc generateSHA1*(input: string, length: int = 16): string =
-  let hash = secureHash(input) # calculate SHA1
+proc generateSHA1*(input: string, length: int = 20): string =
+  let maxlen = min(input.len, 2048) # only the first 2048 bytes
+  var hash: SecureHash
+  if input.len > maxlen:
+    hash = secureHash(input[0..maxlen-1]) # calculate SHA1 
+  else:
+    hash = secureHash(input)
   let bytes = cast[array[20, byte]](hash) # convert distinct type to byte array
   # 3. Bytes in einen String für den Encoder umwandeln
   var rawData = ""
@@ -128,9 +127,8 @@ proc datetimeToUnix*(): int =
     result = tm.toUnix()
 
     
-proc getWallClock*(userid: string): string =
-    let nowTime = now().format("dd.MM.yyyy - HH:mm")
-    result = fmt"{userid} / {nowTime}"
+proc getWallClock*(): string =
+    result = now().format("dd.MM.yyyy - HH:mm")
 
 
 proc getEnabledFeeds*(userid: string): seq[string] =

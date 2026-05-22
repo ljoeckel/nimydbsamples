@@ -16,14 +16,23 @@ proc handleLogin(req: Request) =
 
 proc handleLogout(req: Request) =
     SSE(req):
-        patch(sse, %*{"loggedIn": false})
+        patchSignals(sse, %*{
+            "loggedIn": false,
+            "userid": "",
+        })        
         forward(sse, "./html/index.html")
 
+proc handleEditRegistration(req: Request) =
+    echo "handleRegistration"
+    let signals = getSignals(req)
+    echo "signals=", $signals
+    
 
 # Callback for router registration
 proc register*(router: var Router) =
     router.post("/login", handleLogin)
     router.get("/logout", handleLogout)
+    router.get("/edit-registration", handleEditRegistration)
 
 
 # Create module instance

@@ -48,7 +48,7 @@ proc handleSearch(req: Request) =
     let articles = fmt"{rssItems.len} articles"
     let infotxt = if rssItems.len > 0: fmt"{articles} in {infoQuery} + {infoRender}" else: fmt"Indexsearch in {infoQuery}"
     let infoContainer = fmt"""<h3 id="info">{infotxt}</h3>"""
-    let rssContainer = fmt"""<div id="rsscard" class="{containerClass}">{cards}</div>"""
+    let rssContainer = fmt"""<div id="rsscards" class="{containerClass}">{cards}</div>"""
     #let keywordContainer = fmt"""<div id="keywords">{$keywords}</div>"""
 
     SSE(req): 

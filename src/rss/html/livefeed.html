@@ -1,7 +1,9 @@
+<!-- data-signals:sort__ifmissing="'today'" data-signals:articles__ifmissing=100 data-effect="@get('/update-clock')" -->
+<!-- data-signals:sort__ifmissing="'today'" data-signals:articles__ifmissing=100 data-effect="@get('/update-clock', {openWhenHidden: true})"-->
+
 <div id="container" data-signals="{formId: 'livefeed', lastScroll: 0, showButton: false}"
     data-signals:format__ifmissing="'card'" data-signals:direction__ifmissing="'down'"
     data-signals:sort__ifmissing="'today'" data-signals:articles__ifmissing=100 data-effect="@get('/update-clock')">
-
     <style>
         .toolbar {
             display: flex;
@@ -11,7 +13,7 @@
             padding: 10px;
             background: var(--bg);
             border: 1px solid #ddd;
-            border-radius: 8px;
+            /*border-radius: 8px;*/
         }
 
         .search-group {
@@ -205,7 +207,7 @@
         .rssinfotable tbody tr {
             font-size: 14px;
             color: black;
-        }
+        }      
     </style>
 
     <div class="toolbar" id="main_toolbar" data-effect="@post('/search')">
@@ -214,7 +216,7 @@
             <!-- Keyword -->
             <input type="search" placeholder="Search..." id="keyword" data-bind:keyword
                 data-on:input__debounce.500ms="@post('/search')" autofocus />
-
+            <!-- Number of results -->
             <select id="articles" name="articles" data-bind:articles autocomplete="articles"
                 data-on:change__delay.100ms="@post('/search')">
                 <option>10</option>
@@ -231,7 +233,8 @@
             </select>
         </div>
 
-        <div class="divider" style="width: 1px; height: 20px; background: #ddd;"></div>
+        <!-- horizontal divider between # of results and first button -->
+        <div class="divider" style="width: 1px; height: 25px; background: #ddd;"></div>
 
         <div class="action-group">
             <!-- Today -->
@@ -251,7 +254,8 @@
                 data-class:btnhover="$sort == 'relevance'" data-on:click="$sort='relevance'; @post('/search')">
                 <i class="bi bi-graph-down"></i>
             </button>
-
+            
+            <!-- Spacer -->
             <div style="width: 6px;"></div>
 
             <!-- List as Cards -->
@@ -266,6 +270,7 @@
                 <i class="bi bi-list"></i>
             </button>
 
+            <!-- Spacer -->
             <div style="width: 6px;"></div>
 
             <!-- Sort -->
@@ -308,7 +313,6 @@
 
 
         <!-- Placeholder for Cards or List -->
-         <div id="rsscard" class="rsscard-container"></div>
-        <!--div id="rsscard" class="card"></div-->
+         <div id="rsscards" class="rsscard-container"></div>
 
     </div>

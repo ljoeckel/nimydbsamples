@@ -141,6 +141,11 @@ proc processFeeds(feedPath: string) =
                 echo fmt"    {nbrNewItms} new Items with {wordCount} index words."
 
 
+proc processWordCloud() =
+    var processed = createWordCloudForToday()
+    echo fmt"Processed {processed} Articles for WordCloud"
+
+
 if isMainModule:
     var init = false
     var minutes = 0
@@ -198,17 +203,13 @@ if isMainModule:
     
     if liveFeed:
         echo "Running Live-Feed"
-        processFeeds(feedPath)
-        var processed = createWordCloudForToday()
-        echo fmt"Processed {processed} Articles"
-
-        while minutes > 0:
+        while true:
+            processFeeds(feedPath)
+            processWordCloud()
+            if minutes == 0: break
             echo "Sleep for ", minutes, " minutes"
             nimSleep(1000 * 60 * minutes) # sleep for minutes
-            processFeeds(feedPath)
-            processed = createWordCloudForToday()
-            echo fmt"Processed {processed} Articles"
-    
+
     elif init:
         echo "Loading from 'xml' files"
         let files = directoryWalk("./xml")

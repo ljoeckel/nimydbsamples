@@ -21,10 +21,19 @@ proc handleUpdateClock(req: Request) =
     while true:
         try:
             let loggedIn = if userid.len > 0 and getSignal(userid, "loggedIn") == "true": true else: false
-            let msg = if loggedIn: getWallClock(userid) else: ""
+            let formId = getSignal(userid, "formId")
+            let msg = if loggedIn: getWallClock() else: ""
 
-            # Update Wall-Clock
-            patchElements(sse, fmt"<h3 id='wallclock'>{msg}</h3>")
+            let wc = fmt"""
+                <h3 id='wallclock'>{msg}</h3>
+            """
+            patchElements(sse, wc) # Update Wall-Clock
+
+            # if formId == "wordcloud":
+            #     # update wordcloud
+            #     let timestamp = datetimeToUnix()
+            #     let wordcloud = fmt"<img id='wordcloud' src='html/wordcloud.jpg?t={timestamp}'>"
+            #     patchElements(sse, wordcloud)
 
             if loggedIn:
                 # Show articles for logged in users
@@ -60,7 +69,7 @@ proc handleUpdateClock(req: Request) =
                         patchElements(sse, infoContainer)
 
                         var containerClass = if format == "card": "rsscard-container" else: "rsslist-container"
-                        let rssContainer = fmt"<div id='rsscard' class='{containerClass}'>{cardsContent}</div>"
+                        let rssContainer = fmt"<div id='rsscards' class='{containerClass}'>{cardsContent}</div>"
                         patchElements(sse, rssContainer)
             else:
                 echo "Leaving WallClock loop. No longer loggedIn"
@@ -68,6 +77,7 @@ proc handleUpdateClock(req: Request) =
 
             let msToNextMinute = 60000 - (now().second * 1000 + now().nanosecond div 1_000_000)
             sleep(msToNextMinute)
+            
         except:
             echo "Leaving handleUpdateClock: ", getCurrentExceptionMsg()
             sse.close()
@@ -94,8 +104,6 @@ proc handleShowRSSItem(req: Request) =
 
     SSE(req):
         patchElements(sse, tbody) # set new data
-
-
 
 
 if isMainModule:

@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
 
-<!-- head data-init="@get('/update-clock')"-->
 <head>
     <meta charset="UTF-8">
     <meta name="robots" content="noindex, nofollow" />
@@ -29,30 +28,30 @@
             </a>
         </div>
 
-        <a href="#feeds" data-show="$loggedIn"  data-on:click="$menuOpen = false; @get('goto/configfeeds.html')">Feeds</a>
-        <a href="#stats" data-show="$loggedIn"  data-on:click="$menuOpen = false; @get('goto/stats.html')">Stats</a>
         <a href="#wordcloud" data-show="$loggedIn"  data-on:click="$menuOpen = false; @get('goto/wordcloud.html')">WordCloud</a>
+        <a href="#stats" title="Database Statistics" data-show="$loggedIn"  data-on:click="$menuOpen = false; @get('goto/stats.html')"><i class="bi bi-database"></i></a>
 
-        <!--div class="subnav">
-            <button class="subnavbtn">Technologies<i class="fa fa-caret-down"></i></button>
+        <a href="#about" data-on:click="$menuOpen = false; @get('/about.html')" title="About"><i class="bi bi-question-circle"></i></a>
+        <a href="#login" data-show="!$loggedIn" data-on:click="$menuOpen = false; @get('/index.html')"><i class="bi bi-box-arrow-in-right"></i> Login</a>        
+
+        <div class="subnav" data-show="$loggedIn">
+            <a data-attr:title="'You are logged in as: ' + $userid" data-show="$loggedIn"><i class="bi bi-person-circle"></i></a>
             <div class="subnav-content">
-                <a href="https://nim-lang.org">Nim</a>
-                <a href="https://yottadb.com">YottaDB</a>
-                <a href="https://data-star.dev/">Datastar</a>
-                <a href="https://nginx.org/">NGINX</a>
-                <a href="https://icons.getbootstrap.com/">bootstrap icons</a>
+                <a href="#feeds" title="Feed Configuration" data-on:click="$menuOpen = false; @get('goto/configfeeds.html')"><i class="bi bi-gear"></i> Configuration</i></a>
+                <a href="#edit" data-on:click="$menuOpen = false; @get('/edit-registration')"><i class="bi bi-person-lines-fill"></i> Profile</a>
+                <a href="#logout" data-on:click="$menuOpen = false; @get('/logout')"><i class="bi bi-box-arrow-right"></i> Logout</a>
             </div>
-        </div-->
+        </div>
 
-        <a href="#about" data-on:click="$menuOpen = false; @get('/about.html')">About</a>
-        <a href="#logout" data-show="$loggedIn" data-on:click="$menuOpen = false; @get('/logout')">Logout</a>
-        
+        <!-- placeholders for the 'info' field (Query time etc.) -->
         <h3 id="info"></h3>
+        
+        <!-- placeholder for the wallclock -->
         <h3 id="wallclock"></h3>
     </div>
 
+    <!-- 'container' is the placeholder for content -->
     <div id="container" data-init="@get('/login.html')"></div>
-
 </body>
 
 </html>

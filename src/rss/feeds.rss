@@ -1,5 +1,3 @@
-#https://feeds2.feedburner.com/ComputerbaseNews
-
 [Spain]
 https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada
 https://feeds.thelocal.com/rss/es
@@ -50,7 +48,7 @@ https://www.smh.com.au/rss/world.xml
 https://www.latimes.com/world-nation/rss2.0.xml#nt=1col-7030col1
 https://defence-blog.com/feed/
 https://wan-ifra.org/news/feed/
-https://www.washingtontimes.com/rss/headlines/news/world/
+#https://www.washingtontimes.com/rss/headlines/news/world/
 
 [Medizin]
 https://rss.aerzteblatt.de/rss/news.asp

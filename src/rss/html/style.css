@@ -366,10 +366,9 @@ input[type="radio"] {
 /* Style the subnav content - positioned absolute */
 .subnav-content {
     display: none;
-    position: absolute;
-    left: 0;
+    position: fixed;
     background-color: var(--nav-bg);
-    width: 100%;
+    width: auto;
     z-index: 1000;
 }
 
@@ -381,9 +380,10 @@ input[type="radio"] {
 }
 
 /* Add a grey background color on hover */
+
 .subnav-content a:hover {
-    background-color: #eee;
-    color: var(--nav-bg)
+    text-decoration: underline;
+    text-decoration-style: double;
 }
 
 /* When you move the mouse over the subnav container, open the subnav content */
