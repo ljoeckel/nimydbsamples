@@ -1,3 +1,23 @@
+class UserIdField extends HTMLElement {
+    connectedCallback() {
+        this.innerHTML = `
+        <div class="form-group">
+            <div>
+                <label for="name">Userid</label>
+                <small class="error" data-show="$useridInvalid">Userid is already registered. </small>
+            </div>
+            <input
+                id="userid"
+                data-init="document.getElementById('userid').focus()" 
+                data-bind:userid type="text"
+                data-class="{'input-error': $useridInvalid}"
+                data-on:input__debounce.500ms="@post('/validate-userid')"
+                required
+                placeholder="Your Userid" autofocus />
+        </div>`;
+    }
+}
+
 class NameField extends HTMLElement {
     connectedCallback() {
         this.innerHTML = `
@@ -34,6 +54,7 @@ class EmailField extends HTMLElement {
     }
 }
 
+
 class PasswordField extends HTMLElement {
     connectedCallback() {
         this.innerHTML = `
@@ -43,33 +64,13 @@ class PasswordField extends HTMLElement {
                     id="password" 
                     name="password" 
                     data-bind:password type="password" 
-                    pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
                     placeholder="••••••••"
                     autocomplete="new-password" />
-                    <!-- Der Stärken-Balken -->
-                    <div class="strength-meter"></div>
-                    <small class="hint">Use at least 8 characters with upercase and number.</small>
+                <small class="hint">Use at least 8 characters.</small>
             </div>
         `;
     }
 }
-
-// class PasswordField extends HTMLElement {
-//     connectedCallback() {
-//         this.innerHTML = `
-//             <div class="form-group">
-//                 <label for="password">Password</label>
-//                 <input 
-//                     id="password" 
-//                     name="password" 
-//                     data-bind:password type="password" 
-//                     placeholder="••••••••"
-//                     autocomplete="new-password" />
-//                 <small class="hint">Use at least 8 characters.</small>
-//             </div>
-//         `;
-//     }
-// }
 
 class CountryField extends HTMLElement {
     connectedCallback() {
@@ -90,24 +91,6 @@ class CountryField extends HTMLElement {
                     <option>USA</option>
                 </select>
                 <small class="hint">This helps us show localized content.</small>
-            </div>
-        `;
-    }
-}
-
-class MessageField extends HTMLElement {
-    connectedCallback() {
-        this.innerHTML = `
-            <div class="form-group full">
-                <label for="message">Message</label>
-                <textarea 
-                    id="message" 
-                    data-bind:message 
-                    name="message" 
-                    rows="6"
-                    placeholder="Write your message...">
-                </textarea>
-                <small class="hint">Tell us what you want to build.</small>
             </div>
         `;
     }
@@ -174,28 +157,12 @@ class TimeField extends HTMLElement {
     }
 }
 
-class StatusCountField extends HTMLElement {
-    connectedCallback() {
-        this.innerHTML = `
-        <div class="form-group">
-            <label for="statusNew">New</label>
-            <input id="statusNew" data-bind:statusNew name="statusNew" type="text" readonly />
-            <label for="statusMarked">Marked</label>
-            <input id="statusMarked" data-bind:statusMarked name="statusMarked" type="text" readonly />
-            <label for="statusEdit">Edit</label>
-            <input id="statusEdit" data-bind:statusEdit name="statusEdit" type="text" readonly />
-        </div>
-        `;
-    }
-}
-
+customElements.define('userid-field', UserIdField);
 customElements.define('name-field', NameField);
 customElements.define('email-field', EmailField);
 customElements.define('password-field', PasswordField);
 customElements.define('country-field', CountryField);
-customElements.define('message-field', MessageField);
 customElements.define('terms-field', TermsField);
 customElements.define('plan-field', PlanField);
 customElements.define('status-field', StatusField);
 customElements.define('time-field', TimeField);
-customElements.define('statuscount-field', StatusCountField);

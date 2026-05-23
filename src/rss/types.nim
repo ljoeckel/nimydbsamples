@@ -59,15 +59,16 @@ type
 
     Registration* = object of RootObj
         id*: string
+        userid* {.INDEX: "id".} : string
         name*: string
         password*: string
         email* {.INDEX: "id".} : string
         message*: string
-        country* {.INDEX: "id".} : string
-        plan* {.INDEX: "id".} : string = "starter"
-        status* {.INDEX: "id".} : string
+        country*: string
+        plan*: string = "starter"
+        status*: string
         time*: string
-        terms* {.INDEX: "id".} : bool
+        terms*: bool
 
 
 # Create the RSSATOM types.

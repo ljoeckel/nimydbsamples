@@ -4,18 +4,17 @@
             <div class="form-group header">
                 <h1>Registration</h1>
             </div>
-            <h3>Demo with Datastar, Nim and YottaDB</h3>
-            <p>HTML / CSS / Nim — just clean structure + simple modern (no Bootstrap, no UI library).</p>
+            <h3>Register for the RSS Demo</h3>
             <p>All data of this form is saved in YottaDB under the globalname <b>^Registration</b></p>
             <p>EMail address validated by HTML/CSS, existence by backend</p>
         </div>
 
         <form class="form" data-on:submit__prevent="@post('/submit-registration')">
+            <userid-field data-ignore-morph></userid-field>
             <name-field data-ignore-morph></name-field>
             <email-field data-ignore-morph></email-field>
             <password-field data-ignore-morph></password-field>
             <country-field data-ignore-morph></country-field>
-            <message-field data-ignore-morph class="full"></message-field>
             <div>
                 <terms-field></terms-field>
                 <plan-field></plan-field>
@@ -34,5 +33,7 @@
                 <div id="response-message"></div>
             </div>
         </form>
+        
+        <div id='response-message'></div>
 
     </div>

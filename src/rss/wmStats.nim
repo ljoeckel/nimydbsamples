@@ -7,7 +7,8 @@ const
         "^Author", "^ConfigFeed", "^DBStats", "^Feed", "^RSS", "^RSSCNT", "^RSSEnclosure",
         "^RSSFTI", "^RSSImage", "^RSSItem",  "^RSSItemFTI",
         "^RSSItemGUID", "^RSSItemIDXREF", "^RSSItemPUBDATE", "^Session", "^UserFeeds",
-        "^stopwordsEN", "^stopwordsDE", "^stopwordsES", "^stopwordsWC"
+        "^stopwordsEN", "^stopwordsDE", "^stopwordsES", "^stopwordsWC",
+        "^Registration", "^RegistrationEMAIL", "^RegistrationUSERID", 
         ]
 
     emptyline = "<tr><td line-height:12px;' colspan=4>&nbsp;</td></tr>"

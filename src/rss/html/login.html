@@ -9,7 +9,7 @@
                     data-bind:userid
                     type="text"
                     class="login-input"
-                    placeholder="Username"
+                    placeholder="Userid"
                     required
                 >
             </div>
@@ -28,9 +28,9 @@
             <div class="login-divider">or</div>
             <button 
                 class="login-btn login-btn--secondary"
-                data-on:click__stop="$id='NEW'; @post('/registration')"
+                data-on:click__stop="@get('/goto/registration.html')"
                 <i class='bi bi-person-circle person-btn'></i>Register
         </button>
-
-        </form>
+        <div id='response-message'></div>
+    </form>
     </div>

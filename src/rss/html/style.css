@@ -315,8 +315,6 @@ input[type="radio"] {
     display: flex;
     align-items: center;
     background-color: var(--nav-bar);
-    border-top-left-radius: 22px;
-    border-top-right-radius: 22px;
     position: relative;
 }
 
@@ -339,12 +337,10 @@ input[type="radio"] {
     text-decoration: none;
 }
 
-/* top-left round corner for 'Home' */
-#home {
-    border-top-left-radius: 22px;
+.subnav {
+    position: relative;
 }
 
-/* Subnav button */
 .subnav .subnavbtn {
     display: flex;
     align-items: center;
@@ -355,31 +351,34 @@ input[type="radio"] {
     padding: 14px 16px;
     background-color: inherit;
     cursor: pointer;
+    height: 100%; /* Matches parent height */
 }
 
 /* Add a red background color to navigation links on hover */
 .navbar a:hover,
+.subnav:hover,
 .subnav:hover .subnavbtn {
     background-color: var(--nav-bg);
 }
 
-/* Style the subnav content - positioned absolute */
 .subnav-content {
     display: none;
-    position: fixed;
+    position: absolute;
+    top: 100%;            /* Aligns precisely with the bottom of the stretched navbar */
+    right: 0;             /* Aligns the dropdown flush to the RIGHT edge of the icon */
     background-color: var(--nav-bg);
-    width: auto;
+    width: max-content;   
     z-index: 1000;
+    box-shadow: 0px 4px 8px rgba(0,0,0,0.1); /* Optional: adds depth to the dropdown */
 }
 
-/* Style the subnav links */
 .subnav-content a {
-    float: left;
+    display: block;       /* Changed from float:left to stack options vertically */
     color: var(--nav-fg);
+    padding: 12px 16px;   /* Gives items a good clickable hit-area */
     text-decoration: none;
+    text-align: left;
 }
-
-/* Add a grey background color on hover */
 
 .subnav-content a:hover {
     text-decoration: underline;
@@ -398,7 +397,6 @@ form:has(:invalid) button[type="submit"] {
     /* pointer-events: none;   dont allow click submit button */
     cursor: not-allowed;
 }
-
 
 .stats-grid {
     display: grid;

@@ -17,32 +17,36 @@
     <script src="helpers.js"></script>
 </head>
 
-<body data-signals="{formId:'index', userid:'', password:'', loggedIn: false}">
+<body data-signals="{formId:'index', userid:'', password:'', loggedIn: false, menuOpen: false}">
     <!-- The navigation menu -->
     <div class="navbar">
         <div class="subnav" data-show="$loggedIn">
-            <a href="#home" id="home" data-on:click="@get('/livefeed.html')"
+            <a href="#livefeed" id="home" data-on:click="@get('/livefeed.html')"
                 style="display: inline-flex; align-items: center; gap: 4px; text-decoration: none;">
                 <img src="rss.png" height="20" width="20" alt="RSS Icon">
                 Live
             </a>
         </div>
 
-        <a href="#wordcloud" data-show="$loggedIn"  data-on:click="$menuOpen = false; @get('goto/wordcloud.html')">WordCloud</a>
+        <a href="#wordcloud" data-show="$loggedIn"  data-on:click="$menuOpen = false; @get('goto/wordcloud.html')" title='Show the latest Word-Cloud'><i class="bi bi-radar"></i></a>
         <a href="#stats" title="Database Statistics" data-show="$loggedIn"  data-on:click="$menuOpen = false; @get('goto/stats.html')"><i class="bi bi-database"></i></a>
 
         <a href="#about" data-on:click="$menuOpen = false; @get('/about.html')" title="About"><i class="bi bi-question-circle"></i></a>
         <a href="#login" data-show="!$loggedIn" data-on:click="$menuOpen = false; @get('/index.html')"><i class="bi bi-box-arrow-in-right"></i> Login</a>        
 
-        <div class="subnav" data-show="$loggedIn">
-            <a data-attr:title="'You are logged in as: ' + $userid" data-show="$loggedIn"><i class="bi bi-person-circle"></i></a>
-            <div class="subnav-content">
-                <a href="#feeds" title="Feed Configuration" data-on:click="$menuOpen = false; @get('goto/configfeeds.html')"><i class="bi bi-gear"></i> Configuration</i></a>
+        <div class="subnav" 
+            data-show="$loggedIn" 
+            data-on:mouseenter="$menuOpen = true" 
+            data-on:mouseleave="$menuOpen = false">
+            <button class="subnavbtn" data-attr:title="'You are logged in as: ' + $userid">
+                <i class="bi bi-person-circle"></i>
+            </button>
+            <div class="subnav-content" data-show="$menuOpen">
+                <a href="#feeds" title="Feed Configuration" data-on:click="$menuOpen = false; @get('goto/configfeeds.html')"><i class="bi bi-gear"></i> Configuration</a>
                 <a href="#edit" data-on:click="$menuOpen = false; @get('/edit-registration')"><i class="bi bi-person-lines-fill"></i> Profile</a>
                 <a href="#logout" data-on:click="$menuOpen = false; @get('/logout')"><i class="bi bi-box-arrow-right"></i> Logout</a>
             </div>
         </div>
-
         <!-- placeholders for the 'info' field (Query time etc.) -->
         <h3 id="info"></h3>
         

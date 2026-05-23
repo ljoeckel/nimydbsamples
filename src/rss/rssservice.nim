@@ -21,19 +21,12 @@ proc handleUpdateClock(req: Request) =
     while true:
         try:
             let loggedIn = if userid.len > 0 and getSignal(userid, "loggedIn") == "true": true else: false
-            let formId = getSignal(userid, "formId")
             let msg = if loggedIn: getWallClock() else: ""
 
             let wc = fmt"""
                 <h3 id='wallclock'>{msg}</h3>
             """
             patchElements(sse, wc) # Update Wall-Clock
-
-            # if formId == "wordcloud":
-            #     # update wordcloud
-            #     let timestamp = datetimeToUnix()
-            #     let wordcloud = fmt"<img id='wordcloud' src='html/wordcloud.jpg?t={timestamp}'>"
-            #     patchElements(sse, wordcloud)
 
             if loggedIn:
                 # Show articles for logged in users
