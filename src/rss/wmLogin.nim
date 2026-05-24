@@ -3,21 +3,22 @@ import mummy, mummy/routers, mummy/datastar
 import nimrss
 import wmFeedConfig
 
-proc handleLogin(req: Request) =
-    var loggedIn = false
+
+proc getRegistration(req: Request): Registration =
     let userid = getSignal(req, "userid")
-    let password = getSignal(req, "password")
     let id = Query ^RegistrationUSERID(userid).keys
+    loadObject[Registration](id[1])
 
-    if id.len > 0:
-        let pw = Get ^Registration(id[1], "password")
-        if pw == generateSHA1(password) or userid == "guest":
-            loggedIn = true
 
-    if loggedIn:
-        checkFeedConfiguration(userid)
+proc handleLogin(req: Request) =
+    let password = getSignal(req, "password")
+    let reg = getRegistration(req)
+    if reg.password == generateSHA1(password):
+        checkFeedConfiguration(reg.userid)
         SSE(req):
-            patchSignals(sse, %*{"loggedIn": true})
+            patchSignals(sse, %*{
+                "loggedIn": true,
+            })
             forward(sse, "./html/livefeed.html")
     else:
         SSE(req):
@@ -40,20 +41,20 @@ proc clearForm(sse: SSEConnection) =
         "terms": false, "plan": "", "emailInvalid": false, "useridInvalid": false,
     })
 
+proc handleClearForm(req: Request) =
+    SSE(req):
+        clearForm(sse)
+
 
 proc handleSubmitRegistration(req: Request) =
     # Save Registration
     let signals = getSignals(req)
-    Set: ctx("signals") = $signals
-
-    discard Transaction:
-        let signals = parseJson(Get ctx("signals"))
-        var reg: Registration
-        reg.fillFrom(signals)
-        reg.password = generateSHA1(reg.password)
-        reg.time = $now()
-        reg.id = $Increment ^CNT("registration")
-        saveObject(reg.id, reg)
+    var reg: Registration
+    reg.fillFrom(signals)
+    reg.password = generateSHA1(reg.password)
+    reg.time = $now()
+    reg.id = $Increment ^CNT("registration")
+    saveObject(reg.id, reg)
 
     # Update browser
     SSE(req):
@@ -63,14 +64,26 @@ proc handleSubmitRegistration(req: Request) =
 
 
 proc handleEditRegistration(req: Request) =
-    echo "handleEditRegistration"
-    let signals = getSignals(req)
-    echo "signals=", $signals
-
-
-proc handleClearForm(req: Request) =
+    var reg = getRegistration(req)
     SSE(req):
-        clearForm(sse)
+        forward(sse, "./html/registration-update.html")
+        # fill the form fields
+        patchSignals(sse, %*{
+            "userid": reg.userid, "name": reg.name, "email": reg.email, "country": reg.country,
+            "terms": reg.terms, "plan": reg.plan, "emailInvalid": false, "useridInvalid": false,
+        })
+
+
+proc handleUpdateRegistration(req: Request) =
+    var reg = getRegistration(req)
+    let signals = getSignals(req)
+    reg.fillFrom(signals)
+    reg.password = generateSHA1(reg.password) # in signal 'password' is the plain pw
+    reg.time = $now()
+    saveObject(reg.id, reg)
+    
+    SSE(req):
+        forward(sse, "./html/login.html")
 
 
 proc handleValidateEmail(req: Request) =
@@ -106,6 +119,7 @@ proc register*(router: var Router) =
     router.get("/clear-form", handleClearForm)
     router.post("/submit-registration", handleSubmitRegistration)
     router.get("/edit-registration", handleEditRegistration)
+    router.post("/update-registration", handleUpdateRegistration)    
     router.post("/validate-email", handleValidateEmail)
     router.post("/validate-userid", handleValidateUserid)
 

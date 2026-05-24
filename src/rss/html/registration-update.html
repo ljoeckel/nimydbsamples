@@ -1,0 +1,32 @@
+<div id="container" class="card" data-signals="{formId: 'registration', canSubmit: true}">
+    <div>
+        <div class="header">
+            <div class="form-group header">
+                <h1>Update your registration</h1>
+            </div>
+        </div>
+
+        <form class="form" data-on:submit__prevent="@post('/update-registration')">
+            <userid-field data-ignore-morph></userid-field>
+            <name-field data-ignore-morph></name-field>
+            <email-field data-ignore-morph></email-field>
+            <password-field data-ignore-morph></password-field>
+            <country-field data-ignore-morph></country-field>
+            <div>
+                <terms-field></terms-field>
+                <plan-field></plan-field>
+            </div>
+
+            <!-- Fine print -->
+            <p class="fine-print full">
+                By submitting this form, you agree to our <a href="#">Privacy Policy</a>.
+            </p>
+
+            <!-- Buttons -->
+            <div class="actions full">
+                <button class="btn" type="submit" data-attr:disabled="!$canSubmit">Submit</button>
+                <!-- Response from server is here -->
+                <div id="response-message"></div>
+            </div>
+        </form>
+    </div>
