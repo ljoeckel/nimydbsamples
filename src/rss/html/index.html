@@ -17,6 +17,98 @@
     <script src="helpers.js"></script>
 </head>
 
+<style>
+    /* NAVBAR */
+    .force-closed {
+        display: none !important;
+    }
+
+    .navbar {
+        display: flex;
+        align-items: center;
+        background-color: var(--nav-bar);
+        position: relative;
+    }
+
+    /* For #clock field */
+    .navbar h3 {
+        margin-left: auto;
+        font-size: 14px;
+        color: rgb(159, 178, 196);
+        padding: 14px 16px;
+        margin-top: 0;
+        margin-bottom: 0;
+    }
+
+    /* Navigation without submenu */
+    .navbar a {
+        font-size: 16px;
+        color: var(--nav-fg);
+        text-align: center;
+        padding: 14px 16px;
+        text-decoration: none;
+    }
+
+    .subnav {
+        position: relative;
+    }
+
+    .subnav .subnavbtn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 16px;
+        border: none;
+        color: var(--nav-fg);
+        padding: 14px 16px;
+        background-color: inherit;
+        cursor: pointer;
+        height: 100%;
+        /* Matches parent height */
+    }
+
+    /* Add a red background color to navigation links on hover */
+    .navbar a:hover,
+    .subnav:hover,
+    .subnav:hover .subnavbtn {
+        background-color: var(--nav-bg);
+    }
+
+    .subnav-content {
+        display: none;
+        position: absolute;
+        top: 100%;
+        /* Aligns precisely with the bottom of the stretched navbar */
+        right: 0;
+        /* Aligns the dropdown flush to the RIGHT edge of the icon */
+        background-color: var(--nav-bg);
+        width: max-content;
+        z-index: 1000;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        /* Optional: adds depth to the dropdown */
+    }
+
+    .subnav-content a {
+        display: block;
+        /* Changed from float:left to stack options vertically */
+        color: var(--nav-fg);
+        padding: 12px 16px;
+        /* Gives items a good clickable hit-area */
+        text-decoration: none;
+        text-align: left;
+    }
+
+    .subnav-content a:hover {
+        text-decoration: underline;
+        text-decoration-style: double;
+    }
+
+    /* When you move the mouse over the subnav container, open the subnav content */
+    .subnav:hover .subnav-content {
+        display: block;
+    }
+</style>
+
 <body data-signals="{formId:'index', userid:'', password:'', loggedIn: false, menuOpen: false}">
     <!-- The navigation menu -->
     <div class="navbar">
