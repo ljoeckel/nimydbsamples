@@ -26,15 +26,6 @@ body {
     min-height: 100vh;
 }
 
-/*
-.container {
-    flex: 1;
-    border-bottom-left-radius: 22px;
-    border-bottom-right-radius: 22px;
-    max-width: 900px;
-    margin: 0 auto;
-}
-*/
 
 .card {
     background: var(--bg-card);
@@ -314,17 +305,3 @@ form:has(:invalid) button[type="submit"] {
     cursor: not-allowed;
 }
 
-.stats-grid {
-    display: grid;
-    grid-template-columns: max-content 1fr;
-    gap: 0px 10px;
-    align-items: baseline;
-
-    .label {
-        font-weight: 500;
-    }
-
-    .stats-content {
-        color: #0e13a2;
-    }
-}

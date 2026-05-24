@@ -10,7 +10,7 @@ const
 
 type
     RouteHandler* = proc (req: Request)
-    WebModule* = ref object
+    WebModule* = object
         name*: string
         register*: proc (router: var Router)
 
@@ -31,7 +31,7 @@ type
         group*: string
         feeds*: seq[Feed]
 
-    TimeSearchEntry* = object of RootObj
+    TimeSearchEntry* = object
         time*: int
         wordCount*: int
         subscript*: seq[string]
@@ -57,7 +57,7 @@ type
         duration*: string
 
 
-    Registration* = object of RootObj
+    Registration* = object
         id*: string
         userid* {.INDEX: "id".} : string
         name*: string
