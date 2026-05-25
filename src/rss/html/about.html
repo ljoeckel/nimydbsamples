@@ -46,6 +46,13 @@
             padding: 20px;
         }
 
+        .center {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            width: 50%;
+        }
+
         .container a:link {
             text-decoration: underline;
         }
@@ -163,19 +170,15 @@
         }
     </style>
 
-    <header class="hero">
-        <div class="container">
-            <h1>About the 'nimetic' stack</h1>
-            <p class="tagline">What's the vision, technology and implementation.</p>
-            <p>&nbsp;</p>
-            <p><i>This is a 'Proof of Concept' and ongoing work.</i></p>
-        </div>
-    </header>
+    <div class="container center">
+        <a href="html/architecture.jpg">
+            <img width="400" src="html/features.png">
+            <img width="400" src="html/nimetic.png">
+        </a>
+    </div>
 
     <main class="container">
         <!-- The Vision Section -->
-        <section class="section">
-            <h2>The Vision</h2>
             <p>
                 Modern web development is often bogged down by heavy client-side frameworks and complex build pipelines.
                 It’s time to bring the power back to the server.
@@ -198,7 +201,6 @@
                 It uses YottaDB for efficient persistence through a native Nim DSL, while Datastar handles SSE to
                 deliver dynamic updates.
                 This approach simplifies development by keeping state and component rendering on the server.</p>
-        </section>
 
         <hr>
 
@@ -489,6 +491,7 @@
         <!-- Call to Action -->
         <section class="section contact-box">
             <h2>Sourcecode & Contact</h2>
+            <h3><i>This is a 'Proof of Concept' and ongoing work.</i></h3>
             <div class="cta-buttons">
                 <a href="https://github.com/ljoeckel/nimydbsamples.git" class="btn primary">GitHub Repository</a>
                 <a href="mailto:lothar.joeckel@gmail.com" class="btn primary">Contact me</a>

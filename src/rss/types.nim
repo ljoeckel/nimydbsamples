@@ -58,11 +58,10 @@ type
 
 
     Registration* = object
-        id*: string
-        userid* {.INDEX: "id".} : string
+        userid*: string
         name*: string
         password*: string
-        email* {.INDEX: "id".} : string
+        email* {.INDEX: "userid".} : string
         message*: string
         country*: string
         plan*: string = "starter"

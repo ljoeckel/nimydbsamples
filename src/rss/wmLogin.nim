@@ -6,8 +6,7 @@ import wmFeedConfig
 
 proc getRegistration(req: Request): Registration =
     let userid = getSignal(req, "userid")
-    let id = Query ^RegistrationUSERID(userid).keys
-    loadObject[Registration](id[1])
+    loadObject[Registration](userid)
 
 
 proc handleLogin(req: Request) =
@@ -48,13 +47,11 @@ proc handleClearForm(req: Request) =
 
 proc handleSubmitRegistration(req: Request) =
     # Save Registration
-    let signals = getSignals(req)
     var reg: Registration
-    reg.fillFrom(signals)
+    reg.fillFrom(getSignals(req))
     reg.password = generateSHA1(reg.password)
     reg.time = $now()
-    reg.id = $Increment ^CNT("registration")
-    saveObject(reg.id, reg)
+    saveObject(reg.userid, reg)
 
     # Update browser
     SSE(req):
@@ -76,20 +73,18 @@ proc handleEditRegistration(req: Request) =
 
 proc handleUpdateRegistration(req: Request) =
     var reg = getRegistration(req)
-    let signals = getSignals(req)
-    reg.fillFrom(signals)
+    reg.fillFrom(getSignals(req))
     reg.password = generateSHA1(reg.password) # in signal 'password' is the plain pw
     reg.time = $now()
-    saveObject(reg.id, reg)
+    saveObject(reg.userid, reg)
     
     SSE(req):
-        forward(sse, "./html/login.html")
+        forward(sse, "./html/livefeed.html")
 
 
 proc handleValidateEmail(req: Request) =
     # check if email is already registered
-    let signals = getSignals(req)
-    let email = signals["email"].getStr()
+    let email = getSignal(req, "email")
     if email != "":
         let isInvalid = 0 < Data ^RegistrationEMAIL(email)
         SSE(req):
@@ -101,10 +96,9 @@ proc handleValidateEmail(req: Request) =
 
 proc handleValidateUserid(req: Request) =
     # check if a userid is already registered
-    let signals = getSignals(req)
-    let userid = signals["userid"].getStr()
+    let userid = getSignal(req, "userid")
     if userid != "":
-        let isInvalid = 0 < Data ^RegistrationUSERID(userid)
+        let isInvalid = 0 < Data ^Registration(userid)
         SSE(req):
             patchSignals(sse, %*{
                 "useridInvalid": isInvalid,
