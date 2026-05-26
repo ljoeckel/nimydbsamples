@@ -91,7 +91,7 @@ proc handleGetFeeds(req: Request) {.gcsafe.} =
     tbody.add("</tbody>")
 
     SSE(req):
-        patchElements(sse, tbody)
+        patchElements(sse, tbody, userid)
 
 
 proc handleToggleFeed(req: Request) {.gcsafe.} =

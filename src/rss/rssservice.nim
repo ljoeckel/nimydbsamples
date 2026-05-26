@@ -11,59 +11,56 @@ import wmSearch
 import wmStats
 import wmWordcloud
 
-
 proc handleUpdateClock(req: Request) =
     let userid = getSignal(req, USERID)
+    let loggedIn = if userid.len > 0 and getSignal(req, "loggedIn") == "true": true else: false
     var lastSHA1: string
 
     # /update-clock and RSSItems (Do not close the connection)
     var sse = req.respondSSE()
-    while true:
+    while loggedIn:
         try:
-            let loggedIn = if userid.len > 0 and getSignal(userid, "loggedIn") == "true": true else: false
             let msg = if loggedIn: getWallClock() else: ""
-
             let wc = fmt"""
                 <h3 id='wallclock'>{msg}</h3>
             """
-            patchElements(sse, wc) # Update Wall-Clock
+            patchElements(sse, wc, userid) # Update Wall-Clock
 
-            if loggedIn:
-                # Show articles for logged in users
-                let formId = getSignal(userid, "formId")
-                let keyword = strip(getSignal(userid, "keyword"))
-                let sort = getSignal(userid, "sort")
-                let direction = getSignal(userid, "direction")
-                let sortBy = getSortBy(sort, direction)
+            # Show articles for logged in users
+            let formId = getSignal(req, "formId")
+            let keyword = strip(getSignal(req, "keyword"))
+            let sort = getSignal(req, "sort")
+            let direction = getSignal(req, "direction")
+            let sortBy = getSortBy(sort, direction)
 
-                if formId == "livefeed" and keyword.len == 0:
-                    let format = getSignal(userid, "format")
-                    let articlesCount = parseInt(getSignal(userid, "articles"))
+            if formId == "livefeed" and keyword.len == 0:
+                let format = getSignal(req, "format")
+                let articlesCount = parseInt(getSignal(req, "articles"))
 
-                    var rssItems: seq[RssItem]
-                    var cardsContent: string
-                    let info = meassure:
-                        rssItems = getLatestRSSItems(articlesCount, userid, sortBy)
+                var rssItems: seq[RssItem]
+                var cardsContent: string
+                let info = meassure:
+                    rssItems = getLatestRSSItems(articlesCount, userid, sortBy)
 
-                    let infoRender = meassure:
-                        for rssItem in rssItems:
-                            if format == "card":
-                                cardsContent.add(createRSSItemCard(rssItem))
-                            else:
-                                cardsContent.add(createRSSItemList(rssItem))
+                let infoRender = meassure:
+                    for rssItem in rssItems:
+                        if format == "card":
+                            cardsContent.add(createRSSItemCard(rssItem))
+                        else:
+                            cardsContent.add(createRSSItemList(rssItem))
 
-                    # Check for new acticles
-                    let sha1 = generateSHA1(cardsContent)
-                    if sha1 != lastSHA1:
-                        lastSHA1 = sha1
-                        let articles = fmt"{rssItems.len} articles"
-                        let infotxt = if rssItems.len > 0: fmt"{articles} in {info} + {infoRender}" else: fmt"Fetch in {info}"
-                        let infoContainer = fmt"""{{<h3 id="info">{infotxt}</h3>}}"""
-                        patchElements(sse, infoContainer)
+                # Check for new acticles
+                let sha1 = generateSHA1(cardsContent)
+                if sha1 != lastSHA1:
+                    lastSHA1 = sha1
+                    let articles = fmt"{rssItems.len} articles"
+                    let infotxt = if rssItems.len > 0: fmt"{articles} in {info} + {infoRender}" else: fmt"Fetch in {info}"
+                    let infoContainer = fmt"""{{<h3 id="info">{infotxt}</h3>}}"""
+                    patchElements(sse, infoContainer, userid)
 
-                        var containerClass = if format == "card": "rsscard-container" else: "rsslist-container"
-                        let rssContainer = fmt"<div id='rsscards' class='{containerClass}'>{cardsContent}</div>"
-                        patchElements(sse, rssContainer)
+                    var containerClass = if format == "card": "rsscard-container" else: "rsslist-container"
+                    let rssContainer = fmt"<div id='rsscards' class='{containerClass}'>{cardsContent}</div>"
+                    patchElements(sse, rssContainer, userid)
             else:
                 echo "Leaving WallClock loop. No longer loggedIn"
                 break  # no longer loggedIn
@@ -80,6 +77,7 @@ proc handleUpdateClock(req: Request) =
 proc handleShowRSSItem(req: Request) =
     # Display the raw RSS/RSSItem data in a popup window
     let signals = getSignals(req)
+    let userid = getSignal(req, USERID)
     let id = signals["id"].getStr()
     let subscript = id.split(',')
     let rssFields = getRSSFields(subscript)
@@ -96,7 +94,7 @@ proc handleShowRSSItem(req: Request) =
     tbody.add("</tbody>")
 
     SSE(req):
-        patchElements(sse, tbody) # set new data
+        patchElements(sse, tbody, userid) # set new data
 
 
 if isMainModule:

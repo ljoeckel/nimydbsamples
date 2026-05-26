@@ -52,8 +52,8 @@ proc handleSearch(req: Request) =
     #let keywordContainer = fmt"""<div id="keywords">{$keywords}</div>"""
 
     SSE(req): 
-        patchElements(sse, infoContainer)
-        patchElements(sse, rssContainer)
+        patchElements(sse, infoContainer, userid)
+        patchElements(sse, rssContainer, userid)
         #patchElements(sse, keywordContainer)
 
 

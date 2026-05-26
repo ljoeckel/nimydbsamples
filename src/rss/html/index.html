@@ -114,7 +114,7 @@
             </a>
         </div>
 
-        <a href="#wordcloud" data-show="$loggedIn"  data-on:click="$menuOpen = false; @get('goto/wordcloud.html')" title='Show the latest Word-Cloud'><i class="bi bi-radar"></i></a>
+        <a href="#wordcloud" data-show="$loggedIn"  data-on:click="$menuOpen = false; @get('goto/wordcloud.html')" title='Show the latest Word-Cloud'><i class="bi bi-cloud"></i></a>
         <a href="#stats" title="Database Statistics" data-show="$loggedIn"  data-on:click="$menuOpen = false; @get('goto/stats.html')"><i class="bi bi-database"></i></a>
 
         <a href="#about" data-on:click="$menuOpen = false; @get('/about.html')" title="About"><i class="bi bi-question-circle"></i></a>
@@ -141,7 +141,7 @@
     </div>
 
     <!-- 'container' is the placeholder for content -->
-    <div id="container" data-init="@get('/login.html')"></div>
+    <div id="container" data-init="@get('./html/login.html')"></div>
 </body>
 
 </html>
