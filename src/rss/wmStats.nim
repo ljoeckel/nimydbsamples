@@ -41,7 +41,6 @@ proc countGlobalDetail(gbl: string): DBStats =
 
 
 proc handleStats(req: Request) =
-    let userid = getSignal(req, "userid")
     var sse = req.respondSSE()
     var totalOrder, totalQuery, totalKeylen, totalValuelen = 0
     let timestamp = datetimeToUnix()
@@ -74,7 +73,7 @@ proc handleStats(req: Request) =
                     <td align='right'>{unit}</td>
                 </tr>
                 """
-            patchElements(sse, tr, userid, selector="#stats-body", mode=Append)
+            patchElements(sse, tr, selector="#stats-body", mode=Append)
             
             inc(totalOrder, stats.ordercnt)
             inc(totalQuery, stats.querycnt)
@@ -87,7 +86,7 @@ proc handleStats(req: Request) =
 
 
     # Empty line
-    patchElements(sse, emptyline, userid, selector="#stats-body", mode=Append)
+    patchElements(sse, emptyline, selector="#stats-body", mode=Append)
     # Summary line
     let totalTime = totalDuration.split(" ")[0]
     let totalUnit = totalDuration.split(" ")[1]
@@ -108,7 +107,7 @@ proc handleStats(req: Request) =
             <td align='right'>{totalUnit}</td>
         </tr>
         """
-    patchElements(sse, tr, userid, selector="#stats-body", mode=Append)
+    patchElements(sse, tr, selector="#stats-body", mode=Append)
 
     sse.close()
 

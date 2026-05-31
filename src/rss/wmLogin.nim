@@ -1,4 +1,4 @@
-import std/[json, strutils, times]
+import std/[json, strutils, strformat, times, oids]
 import mummy, mummy/routers, mummy/datastar
 import nimrss
 import wmFeedConfig
@@ -8,13 +8,17 @@ proc handleLogin(req: Request) =
     let userid = getSignal(req, "userid")
     let password = getSignal(req, "password")
     let reg = loadObject[Registration](userid)
-    if reg.password == generateSHA1(password):
+
+    if reg.password == generateSHA1(password): # valid password given
         checkFeedConfiguration(reg.userid)
-        SSE(req):
-            patchSignals(sse, %*{
-                "loggedIn": true,
-            }, userid)
-            forward(sse, "./html/livefeed.html", userid)
+        let oid = $genOid()
+        var sse = req.respondSSE(cookie=fmt"token={oid}; Secure; HttpOnly; SameSite=Strict; Path=/")
+        defer: sse.close()            
+        Set: ^Session(userid, "oid") = oid
+        patchSignals(sse, %*{
+            "loggedIn": true,
+        })
+        forward(sse, "html/livefeed.html")
     else:
         SSE(req):
             patchElements(sse, "<div id='response-message' class='formerror'>Invalid 'userid' or 'password'</div>", userid)
@@ -22,20 +26,22 @@ proc handleLogin(req: Request) =
 
 proc handleLogout(req: Request) =
     let userid = getSignal(req, "userid")
-    SSE(req):
-        patchSignals(sse, %*{
-            "loggedIn": false,
-            "userid": "",
-            "password": "",
-        }, userid)        
-        forward(sse, "./html/index.html", userid)
+    var sse = req.respondSSE(cookie=fmt"token=; Max-Age=0; Secure; HttpOnly; Path=/; SameSite=Strict;")
+    defer: sse.close()
+    Kill ^Session(userid, "oid")
+    patchSignals(sse, %*{
+        "loggedIn": false,
+        "userid": "",
+        "password": "",
+    })        
+    forward(sse, "./html/index.html")
 
 
 proc clearForm(sse: SSEConnection, userid: string) =
     patchSignals(sse, %*{
         "userid": "", "password": "", "name": "", "email": "", "country": "",
         "terms": false, "plan": "", "emailInvalid": false, "useridInvalid": false,
-    }, userid)
+    })
 
 proc handleClearForm(req: Request) =
     let userid = getSignal(req, "userid")
@@ -53,21 +59,21 @@ proc handleSubmitRegistration(req: Request) =
 
     # Update browser
     SSE(req):
-        patchElements(sse, "<div id='response-message' class='formsuccess'>Registration saved!</div>", reg.userid)
+        patchElements(sse, "<div id='response-message' class='formsuccess'>Registration saved!</div>")
         clearForm(sse, reg.userid)
-        forward(sse, "./html/login.html", reg.userid)
+        forward(sse, "./html/login.html")
 
 
 proc handleEditRegistration(req: Request) =
     let userid = getSignal(req, "userid")
     let reg = loadObject[Registration](userid)
     SSE(req):
-        forward(sse, "./html/registration-update.html", userid)
+        forward(sse, "./html/registration-update.html")
         # fill the form fields
         patchSignals(sse, %*{
             "userid": reg.userid, "name": reg.name, "email": reg.email, "country": reg.country,
             "terms": reg.terms, "plan": reg.plan, "emailInvalid": false, "useridInvalid": false,
-        }, userid)
+        })
 
 
 proc handleUpdateRegistration(req: Request) =
@@ -79,12 +85,11 @@ proc handleUpdateRegistration(req: Request) =
     saveObject(reg.userid, reg)
     
     SSE(req):
-        forward(sse, "./html/livefeed.html", reg.userid)
+        forward(sse, "./html/livefeed.html")
 
 
 proc handleValidateEmail(req: Request) =
     # check if email is already registered
-    let userid = getSignal(req, "userid")
     let email = getSignal(req, "email")
     if email != "":
         let isInvalid = 0 < Data ^RegistrationEMAIL(email)
@@ -92,7 +97,7 @@ proc handleValidateEmail(req: Request) =
             patchSignals(sse, %*{
                 "emailInvalid": isInvalid,
                 "canSubmit": not isInvalid
-            }, userid)
+            })
 
 
 proc handleValidateUserid(req: Request) =
@@ -104,7 +109,7 @@ proc handleValidateUserid(req: Request) =
             patchSignals(sse, %*{
                 "useridInvalid": isInvalid,
                 "canSubmit": not isInvalid
-            }, userid)
+            })
 
 
 # Callback for router registration

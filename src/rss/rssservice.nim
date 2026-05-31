@@ -1,6 +1,6 @@
 ## Run 'nimble demo'
 
-import std/[os, times, strutils, strformat, typetraits, json]
+import std/[os, times, strutils, strformat, typetraits]
 import mummy, mummy/routers, mummy/datastar
 import nimrss
 
@@ -24,7 +24,7 @@ proc handleUpdateClock(req: Request) =
             let wc = fmt"""
                 <h3 id='wallclock'>{msg}</h3>
             """
-            patchElements(sse, wc, userid) # Update Wall-Clock
+            patchElements(sse, wc) # Update Wall-Clock
 
             # Show articles for logged in users
             let formId = getSignal(req, "formId")
@@ -56,11 +56,11 @@ proc handleUpdateClock(req: Request) =
                     let articles = fmt"{rssItems.len} articles"
                     let infotxt = if rssItems.len > 0: fmt"{articles} in {info} + {infoRender}" else: fmt"Fetch in {info}"
                     let infoContainer = fmt"""{{<h3 id="info">{infotxt}</h3>}}"""
-                    patchElements(sse, infoContainer, userid)
+                    patchElements(sse, infoContainer)
 
                     var containerClass = if format == "card": "rsscard-container" else: "rsslist-container"
                     let rssContainer = fmt"<div id='rsscards' class='{containerClass}'>{cardsContent}</div>"
-                    patchElements(sse, rssContainer, userid)
+                    patchElements(sse, rssContainer)
             else:
                 echo "Leaving WallClock loop. No longer loggedIn"
                 break  # no longer loggedIn
@@ -76,9 +76,7 @@ proc handleUpdateClock(req: Request) =
 
 proc handleShowRSSItem(req: Request) =
     # Display the raw RSS/RSSItem data in a popup window
-    let signals = getSignals(req)
-    let userid = getSignal(req, USERID)
-    let id = signals["id"].getStr()
+    let id = getSignal(req, "id")
     let subscript = id.split(',')
     let rssFields = getRSSFields(subscript)
     
@@ -94,7 +92,7 @@ proc handleShowRSSItem(req: Request) =
     tbody.add("</tbody>")
 
     SSE(req):
-        patchElements(sse, tbody, userid) # set new data
+        patchElements(sse, tbody) # set new data
 
 
 if isMainModule:

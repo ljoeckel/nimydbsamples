@@ -75,22 +75,25 @@ func stripSignal*(signal: string): string =
         result = result[1..^2]
 
 
-proc getSignal*(req: Request, signal: string): string = 
+proc getSignal*(req: Request, name: string): string = 
     let signals = getSignals(req)
     let userid = if USERID in signals: stripSignal($signals[USERID]) else: ""
-    # Persist all signals
-    for k, v in signals.pairs:
-        Set: ^Session(userid, k) = stripSignal($v)
-    # Get requested signal
-    result = Get ^Session(userid, signal)
+    if userid.len > 0:
+        # Persist all signals
+        for k, v in signals.pairs:
+            Set: ^Session(userid, k) = stripSignal($v)
+        # Get requested signal
+        result = Get ^Session(userid, name)
+    else:
+        if signals.contains(name):
+            result = $signals[name]
 
 
 proc handleGoto*(req: Request) =
     # process menu links g.E. <a href="#form" data-on:click="$menuOpen = false; @get('goto/form.html')">Registration</a>
     let page = req.path.split("/goto/")[1]
-    let userid = getSignal(req, USERID)
     SSE(req):
-        forward(sse, HTML_DIR & page, userid)
+        forward(sse, HTML_DIR & page)
 
 
 proc getCurrentDay*(datetime: int): string =
