@@ -9,6 +9,7 @@ import common
 
 const TIME_FORMATS* = [
     "yyyy-MM-dd'T'HH:mm:sszzz",
+    "yyyy-MM-dd'T'HH:mm:ss.fff'Z'", #'2026-06-01T03:50:57.000Z
     "ddd, d MMM yyyy HH:mm:ss ZZZ",
     "ddd, d MMM yyyy HH:mm:ss 'GMT'",
     "ddd, d MMM yyyy HH:mm:ss 'UTC'",
@@ -36,7 +37,7 @@ proc getUnixTimestamp*(dts: string): string =
         except:
             continue
   
-    raise newException(YdbError, "No matching timeformat found to create timestamp for '" & $dts)
+    raise newException(YdbError, "No matching timeformat found to create timestamp for '" & $dts & "'")
 
 
 proc getRSSFeedConfiguration*(path: string): Table[string, seq[string]] =
@@ -206,6 +207,8 @@ proc getLatestRSSItems*(max: int, userid: string, sortBy: SortBy): seq[RSSItem] 
     # Iterate from new to old
     for key  in QueryItr ^RSSItemPUBDATE.reverse.keys:  # youngest first
         let pubDate = fastParseInt(key[0])
+        if pubDate > todayTo: continue # ignore items in the future
+
         let idxKey = key[1]
         let feedId = Order ^RSSItemIDXREF(idxkey,"")
         if feedId in feedtable:
@@ -213,7 +216,7 @@ proc getLatestRSSItems*(max: int, userid: string, sortBy: SortBy): seq[RSSItem] 
             let rssItem = loadObject[RSSItem](itemKey)
             case sortBy:
             of ByTodayAscending, ByTodayDescending:
-                if pubDate >= todayFrom and pubDate <= todayTo:
+                if pubDate >= todayFrom:
                     result.add(rssItem)
                 if pubDate < todayFrom:
                     break

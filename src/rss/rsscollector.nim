@@ -89,7 +89,8 @@ proc processFeed(rss: var RSS): (int, int) =
 
     if newItems.len > 0:
         # Create a new id for ^RSS, ^RSSItem, ... used in serialization
-        var normalizedTitle = normalizeChannelTitle(rss.title.get())
+        let title = if isSome(rss.title): rss.title.get() else: rss.description.get()
+        var normalizedTitle = normalizeChannelTitle(title)
         let feedId = generateSHA1(normalizedTitle)  # Feed-Title 'Deutschlandfunk' > abckdkd93,d;-
         let id = Increment ^RSSCNT("RSS")
         rss.id = some($feedId & "," & $id)

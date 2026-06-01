@@ -55,7 +55,12 @@
 }
  
 .rsscard-title a:hover {
-    color: #9b323f;
+    color: rgb(68, 68, 231);
+    font-weight: 600;
+}
+
+.rsscard-title a:visited {
+    color: darkgray;
     font-weight: 600;
 }
 

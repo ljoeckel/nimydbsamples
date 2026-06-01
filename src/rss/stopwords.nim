@@ -10,6 +10,7 @@ const STOPWORDS = {
     "ALL": "^stopwordsALL",
     "WC": "^stopwordsWC",
     "DE": "^stopwordsDE",
+    "GER": "^stopwordsDE",
     "EN": "^stopwordsEN",
     "ES": "^stopwordsES",
     "XX": "^stopwordsALL"
