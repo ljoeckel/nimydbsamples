@@ -1,4 +1,4 @@
-<div id="container" class="card" data-signals="{formId: 'registration'}">
+<div id="container" class="card" data-signals="{formId: 'registration', userid: '', password: '', name: '', email: '', country: '', terms: false, plan: 'starter'}">
     <div>
         <div class="header">
             <div class="form-group header">
@@ -10,7 +10,10 @@
         </div>
 
         <form class="form" data-on:submit__prevent="@post('/submit-registration')">
-            <userid-field data-ignore-morph></userid-field>
+            <userid-field 
+                data-ignore-morph
+                data-init="document.getElementById('userid').focus()" >
+            </userid-field>
             <name-field data-ignore-morph></name-field>
             <email-field data-ignore-morph></email-field>
             <password-field data-ignore-morph></password-field>

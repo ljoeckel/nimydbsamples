@@ -8,7 +8,6 @@ class UserIdField extends HTMLElement {
             </div>
             <input
                 id="userid"
-                data-init="document.getElementById('userid').focus()" 
                 data-bind:userid type="text"
                 data-class="{'input-error': $useridInvalid}"
                 data-on:input__debounce.500ms="@post('/validate-userid')"
@@ -25,7 +24,6 @@ class NameField extends HTMLElement {
             <label for="name">Name</label>
             <input
                 id="name"
-                data-init="document.getElementById('name').focus()" 
                 data-bind:name type="text"
                 required
                 placeholder="Your Name" autofocus />
