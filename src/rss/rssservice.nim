@@ -11,72 +11,41 @@ import wmSearch
 import wmStats
 import wmWordcloud
 
-proc handleUpdateClock(req: Request) =
-    let userid = getSignal(req, USERID)
-    let loggedIn = if userid.len > 0 and getSignal(req, "loggedIn") == "true": true else: false
-    var lastSHA1: string
+proc updateWallClock(sse: SSEConnection) =
+    let wc = now().format("dd.MM.yyyy - HH:mm")
+    patchElements(sse, fmt"<h3 id='wallclock'>{wc}</h3>") # Update Wall-Clock
 
-    # /update-clock and RSSItems (Do not close the connection)
+
+proc handleUpdateClock(req: Request) =
+    let userid = getUserId(req)
+    let loggedIn = if userid.len > 0 and getSignal(userid, "loggedIn") == "true": true else: false
     var sse = req.respondSSE()
+
     while loggedIn:
         try:
-            let msg = if loggedIn: getWallClock() else: ""
-            let wc = fmt"""
-                <h3 id='wallclock'>{msg}</h3>
-            """
-            patchElements(sse, wc) # Update Wall-Clock
-
-            # Show articles for logged in users
-            let formId = getSignal(req, "formId")
-            let keyword = strip(getSignal(req, "keyword"))
-            let sort = getSignal(req, "sort")
-            let direction = getSignal(req, "direction")
-            let sortBy = getSortBy(sort, direction)
-
-            if formId == "livefeed" and keyword.len == 0:
-                let format = getSignal(req, "format")
-                let articlesCount = parseInt(getSignal(req, "articles"))
-
-                var rssItems: seq[RssItem]
-                var cardsContent: string
-                let info = meassure:
-                    rssItems = getLatestRSSItems(articlesCount, userid, sortBy)
-
-                let infoRender = meassure:
-                    for rssItem in rssItems:
-                        if format == "card":
-                            cardsContent.add(createRSSItemCard(rssItem))
-                        else:
-                            cardsContent.add(createRSSItemList(rssItem))
-
-                # Check for new acticles
-                let sha1 = generateSHA1(cardsContent)
-                if sha1 != lastSHA1:
-                    lastSHA1 = sha1
-                    let articles = fmt"{rssItems.len} articles"
-                    let infotxt = if rssItems.len > 0: fmt"{articles} in {info} + {infoRender}" else: fmt"Fetch in {info}"
-                    let infoContainer = fmt"""{{<h3 id="info">{infotxt}</h3>}}"""
-                    patchElements(sse, infoContainer)
-
-                    var containerClass = if format == "card": "rsscard-container" else: "rsslist-container"
-                    let rssContainer = fmt"<div id='rsscards' class='{containerClass}'>{cardsContent}</div>"
-                    patchElements(sse, rssContainer)
-            else:
-                echo "Leaving WallClock loop. No longer loggedIn"
-                break  # no longer loggedIn
-
+            updateWallClock(sse)
             let msToNextMinute = 60000 - (now().second * 1000 + now().nanosecond div 1_000_000)
-            sleep(msToNextMinute)
-            
+            #sleep(msToNextMinute)
+            sleep(5000)
+            let formId = getSignal(userid, "formId")
+            #let lastScroll = parseFloat(getSignal(userid, "lastScroll")) # mouse scroll
+            let lastCollectorRun = Get ^Session("rsscollector", "lastRun").int # any new news?
+            let lastRun = Get ^Session(userid, "lastRun").int        
+
+            if lastCollectorRun != lastRun and formId == "livefeed":
+                Set: ^Session(userid, "lastRun") = lastCollectorRun
+                let timeFrom = Get ^Session("rsscollector", "oldestPubDate").int
+                handleUpdateSearch(sse, timeFrom + 1)
         except:
             echo "Leaving handleUpdateClock: ", getCurrentExceptionMsg()
-            sse.close()
             break
+    sse.close()
 
 
 proc handleShowRSSItem(req: Request) =
     # Display the raw RSS/RSSItem data in a popup window
-    let id = getSignal(req, "id")
+    let userid = getUserId(req)
+    let id = getSignal(userid, "id")
     let subscript = id.split(',')
     let rssFields = getRSSFields(subscript)
     
@@ -93,6 +62,11 @@ proc handleShowRSSItem(req: Request) =
 
     SSE(req):
         patchElements(sse, tbody) # set new data
+
+
+proc handleUpdateScroll(req: Request) =
+    # Dummy handler to allow lastScroll signal update
+    discard
 
 
 if isMainModule:
@@ -113,6 +87,7 @@ if isMainModule:
 
     router.get("/update-clock", handleUpdateClock)
     router.get("/show-rssitem", handleShowRSSItem)
+    router.post("/update-scroll", handleUpdateScroll)
 
     # Standard handlers
     router.get("/goto/**", handleGoto)

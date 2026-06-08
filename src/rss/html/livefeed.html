@@ -289,7 +289,7 @@
         </button>
         <!-- Scroll to top controlling -->
         <div
-            data-on:scroll__window__throttle.50ms="$showButton = (window.scrollY < $lastScroll && window.scrollY > 300); $lastScroll = window.scrollY">
+            data-on:scroll__window__throttle.50ms="$showButton = (window.scrollY < $lastScroll && window.scrollY > 300); $lastScroll = window.scrollY; @post('/update-scroll')">
         </div>
 
 

@@ -1,5 +1,5 @@
 import std/[strutils, strformat, times]
-import mummy, mummy/routers
+import mummy, mummy/routers, mummy/datastar
 import nimrss
 import nimpy
 
@@ -79,7 +79,8 @@ proc createWordCloudForAllDays(): int =
 
 
 proc handleGetWordcloud(req: Request) =
-    var lang = getSignal(req, "lang")
+    let userid = getUserId(req)
+    var lang = getSignal(userid, "lang")
     if lang.len == 0: lang = "DE"
     let processed = createWordCloudForToday()
     echo fmt"Processed {processed} Articles"

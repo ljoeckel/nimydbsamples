@@ -69,26 +69,6 @@ func fastParseInt*(s: string): int {.inline.} =
       break # Stopp at first non numeric character
 
 
-func stripSignal*(signal: string): string =
-    result = strip(signal)
-    if result.startsWith("\"") and result.endsWith("\""): # Remove "xxxx" -> xxxx
-        result = result[1..^2]
-
-
-proc getSignal*(req: Request, name: string): string = 
-    let signals = getSignals(req)
-    let userid = if USERID in signals: stripSignal($signals[USERID]) else: ""
-    if userid.len > 0:
-        # Persist all signals
-        for k, v in signals.pairs:
-            Set: ^Session(userid, k) = stripSignal($v)
-        # Get requested signal
-        result = Get ^Session(userid, name)
-    else:
-        if signals.contains(name):
-            result = $signals[name]
-
-
 proc handleGoto*(req: Request) =
     # process menu links g.E. <a href="#form" data-on:click="$menuOpen = false; @get('goto/form.html')">Registration</a>
     let page = req.path.split("/goto/")[1]
@@ -99,7 +79,12 @@ proc handleGoto*(req: Request) =
 proc getCurrentDay*(datetime: int): string =
     let timeObj = fromUnix(datetime)
     let dt = timeObj.local
-    result = dt.format("yyyy-MM-dd")
+    dt.format("yyyy-MM-dd")
+
+proc toDateTime*(datetime: int): string =
+    let timeObj = fromUnix(datetime)
+    let dt = timeObj.local
+    dt.format("yyyy-MM-dd HH:mm:ss")
 
 
 proc currentDayFromTo*(): (int, int) =
@@ -115,10 +100,6 @@ proc datetimeToUnix*(): int =
     result = tm.toUnix()
 
     
-proc getWallClock*(): string =
-    result = now().format("dd.MM.yyyy - HH:mm")
-
-
 proc getEnabledFeeds*(userid: string): seq[string] =
     let userFeeds = loadObject[UserFeeds](userid)
     for feed in userFeeds.feeds:

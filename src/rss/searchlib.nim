@@ -199,15 +199,14 @@ proc getFTI*(keyword: string, lang: string, userid: string, sortBy: SortBy): seq
             result.add(sr)
 
 
-proc getLatestRSSItems*(max: int, userid: string, sortBy: SortBy): seq[RSSItem] =
+iterator getLatestRSSItems*(timeFrom: int, timeTo: int, userid: string, sortBy: SortBy): RSSItem =
     var feedtable = getEnabledFeeds(userid)
-   
-    # get current day from/to
-    let (todayFrom, todayTo) = currentDayFromTo()
+  
     # Iterate from new to old
     for key  in QueryItr ^RSSItemPUBDATE.reverse.keys:  # youngest first
         let pubDate = fastParseInt(key[0])
-        if pubDate > todayTo: continue # ignore items in the future
+        if pubDate > timeTo or pubDate < timeFrom: continue # ignore items outside range
+        #echo "timeFrom=", timeFrom, " timeTo=", timeTo, " pubDate=", pubDate
 
         let idxKey = key[1]
         let feedId = Order ^RSSItemIDXREF(idxkey,"")
@@ -216,15 +215,10 @@ proc getLatestRSSItems*(max: int, userid: string, sortBy: SortBy): seq[RSSItem] 
             let rssItem = loadObject[RSSItem](itemKey)
             case sortBy:
             of ByTodayAscending, ByTodayDescending:
-                if pubDate >= todayFrom:
-                    result.add(rssItem)
-                if pubDate < todayFrom:
-                    break
+                if pubDate >= timeFrom:
+                    yield rssItem
             else:
-                result.add(rssItem)
-
-        if result.len >= max:
-            break
+                yield rssItem
 
 
 proc getLatestRSSItemKeys*(max: int): seq[seq[string]] =
@@ -378,3 +372,15 @@ proc getRSSFields*(subscript: seq[string]): seq[(string, string)] =
         result.add(("updated", getOption(rssItem.updated)))
         result.add(("topic", getOption(rssItem.topic)))
         result.add(("keywords", rssItem.keywords.join(" ")))
+
+
+if isMainModule:
+    echo "main"
+    let userid = "ljoeckel"
+    let timeFrom = Get ^Session("rsscollector", "oldestPubDate").int
+    let timeTo = datetimeToUnix()
+    echo "timeFrom:", timeFrom, " ", toDateTime(timeFrom), " timeTo:", timeTo, " ", toDateTime(timeTo)
+    var cnt = 0
+    for item in getLatestRSSItems(timeFrom, timeTo, userid, SortBy.ByTodayAscending):
+        inc cnt
+        echo cnt, " ", item.pubDate, " ", toDateTime(parseInt(item.pubDate.get)), " ", item.title

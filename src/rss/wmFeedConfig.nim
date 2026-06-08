@@ -31,7 +31,7 @@ proc createTRFeed(feed: Feed): string =
 
 
 proc handleGetFeeds(req: Request) {.gcsafe.} =
-    let userid = getSignal(req, USERID)
+    let userid = getUserId(req)
     var userFeeds = loadObject[UserFeeds](userid)
     if userFeeds.feeds.len == 0: # init user feeds from base config
         userFeeds.userid = userid
@@ -96,8 +96,8 @@ proc handleGetFeeds(req: Request) {.gcsafe.} =
 
 proc handleToggleFeed(req: Request) {.gcsafe.} =
     # Toggle Row
-    let userid = getSignal(req, USERID)
-    let id = getSignal(req, "id")
+    let userid = getUserid(req)
+    let id = getSignal(userid, "id")
     let userFeeds = loadObject[UserFeeds](userid)
 
     # Update DB
@@ -117,8 +117,8 @@ proc handleToggleFeed(req: Request) {.gcsafe.} =
 
 proc handleToggleFeedGroup(req: Request) =
     # Toggle a feedgroup
-    let group = getSignal(req, "id")
-    let userid = getSignal(req, USERID)
+    let userid = getUserId(req)
+    let group = getSignal(userid, "id")
     var init, flip: bool
     var userFeeds = loadObject[UserFeeds](userid)
 

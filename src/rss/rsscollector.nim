@@ -8,6 +8,7 @@ const
     DOCUMENTS = "DOCUMENTS"
     DOCUMENTS_SIZE = "DOCUMENTS_SIZE"
 
+var lastPubDate = 9999999999
 
 
 proc getGUID(item: RSSItem): (string, bool) =
@@ -97,6 +98,7 @@ proc processFeed(rss: var RSS): (int, int) =
         for cnt, item in enumerate(newItems.mitems):
             item.idxref = fmt"{id},{cnt}" # idxref="33,1"
             item.feedId = some(feedId)
+            lastPubDate = min(lastPubDate, parseInt(item.pubDate.get))
             # Calculation for FTI BM25
             discard Increment ^RSSCNT(DOCUMENTS)
             let documentLen = (getOption(item.title)).len + (getOption(item.description)).len
@@ -205,8 +207,19 @@ if isMainModule:
     if liveFeed:
         echo "Running Live-Feed"
         while true:
+            # Get the pubDate of the oldest article in the database
+            let now = datetimeToUnix()
+            for keys in QueryItr ^RSSItemPUBDATE.reverse.keys:
+                let pubDate = parseInt(keys[0])
+                if pubDate <= now: # ignore articles from the future
+                    Set: ^Session("rsscollector", "oldestPubDate") = pubDate
+                    echo "Written ", pubDate, " (", toDateTime(pubDate), ") to session"
+                    break
+
             processFeeds(feedPath)
             processWordCloud()
+            Set: ^Session("rsscollector", "lastRun") = dateTimeToUnix()
+
             if minutes == 0: break
             echo "Sleep for ", minutes, " minutes"
             nimSleep(1000 * 60 * minutes) # sleep for minutes

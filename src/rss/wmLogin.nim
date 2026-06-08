@@ -3,10 +3,17 @@ import mummy, mummy/routers, mummy/datastar
 import nimrss
 import wmFeedConfig
 
+proc cleanSession(userid: string) =
+    Kill:
+        ^Session(userid, "oid")
+        ^Session(userid, "keyword")
+
 
 proc handleLogin(req: Request) =
-    let userid = getSignal(req, "userid")
-    let password = getSignal(req, "password")
+    let userid = getUserId(req)
+    cleanSession(userid)
+
+    let password = getSignal(userid, "password")
     let reg = loadObject[Registration](userid)
 
     if reg.password == generateSHA1(password): # valid password given
@@ -25,10 +32,11 @@ proc handleLogin(req: Request) =
 
 
 proc handleLogout(req: Request) =
-    let userid = getSignal(req, "userid")
+    let userid = getUserId(req)
+    cleanSession(userid)
+
     var sse = req.respondSSE(cookie=fmt"token=; Max-Age=0; Secure; HttpOnly; Path=/; SameSite=Strict;")
     defer: sse.close()
-    Kill ^Session(userid, "oid")
     patchSignals(sse, %*{
         "loggedIn": false,
         "userid": "",
@@ -44,7 +52,7 @@ proc clearForm(sse: SSEConnection, userid: string) =
     })
 
 proc handleClearForm(req: Request) =
-    let userid = getSignal(req, "userid")
+    let userid = getUserId(req)
     SSE(req):
         clearForm(sse, userid)
 
@@ -65,7 +73,7 @@ proc handleSubmitRegistration(req: Request) =
 
 
 proc handleEditRegistration(req: Request) =
-    let userid = getSignal(req, "userid")
+    let userid = getUserId(req)
     let reg = loadObject[Registration](userid)
     SSE(req):
         forward(sse, "./html/registration-update.html")
@@ -77,7 +85,7 @@ proc handleEditRegistration(req: Request) =
 
 
 proc handleUpdateRegistration(req: Request) =
-    let userid = getSignal(req, "userid")
+    let userid = getUserId(req)
     var reg = loadObject[Registration](userid)
     reg.fillFrom(getSignals(req))
     reg.password = generateSHA1(reg.password) # in signal 'password' is the plain pw
@@ -90,7 +98,8 @@ proc handleUpdateRegistration(req: Request) =
 
 proc handleValidateEmail(req: Request) =
     # check if email is already registered
-    let email = getSignal(req, "email")
+    let userid = getUserId(req)
+    let email = getSignal(userid, "email")
     if email != "":
         let isInvalid = 0 < Data ^RegistrationEMAIL(email)
         SSE(req):
@@ -102,7 +111,7 @@ proc handleValidateEmail(req: Request) =
 
 proc handleValidateUserid(req: Request) =
     # check if a userid is already registered
-    let userid = getSignal(req, "userid")
+    let userid = getUserId(req)
     if userid != "":
         let isInvalid = 0 < Data ^Registration(userid)
         SSE(req):
