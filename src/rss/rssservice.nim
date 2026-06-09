@@ -1,6 +1,6 @@
 ## Run 'nimble demo'
 
-import std/[os, times, strutils, strformat, typetraits]
+import std/[os, times, strutils, strformat, typetraits, json]
 import mummy, mummy/routers, mummy/datastar
 import nimrss
 
@@ -65,8 +65,13 @@ proc handleShowRSSItem(req: Request) =
 
 
 proc handleUpdateScroll(req: Request) =
-    # Dummy handler to allow lastScroll signal update
-    discard
+    # Dummy handler to allow 'lastScroll' signal update
+    # A empty patchSignals must be send, otherwise the client waits for an answer
+    # When the next request is then made, the client aborts the previous connection
+    # with NS_BINDING_ABORTED
+    SSE(req):
+        patchSignals(sse, %*{})
+
 
 
 if isMainModule:

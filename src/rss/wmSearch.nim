@@ -1,4 +1,4 @@
-import std/[times, strutils, strformat, sequtils]
+import std/[times, strutils, strformat]
 import std/[typetraits]
 import mummy, mummy/routers, mummy/datastar
 import nimrss
@@ -40,8 +40,6 @@ proc handleSearch*(sse: SSEConnection, toTS: int = 0) =
     let (todayFrom, todayTo) = currentDayFromTo()
     var timeFrom = if sortBy == ByTodayAscending or sortBy == ByTodayDescending: todayFrom else: toTS
     var timeTo = todayTo
-    #if toTS > 0: timeTo = toTS
-    echo "sortBy=", sortBy, " toTS:", toTS, " timeFrom=", timeFrom, " timeTo=", timeTo
 
     let queryTime = meassure:
         if keyword.len == 0:
@@ -51,7 +49,6 @@ proc handleSearch*(sse: SSEConnection, toTS: int = 0) =
                 if articleCount >= maxArticles: break
                 let pubDate = parseInt(getOption(rssItem.pubDate))
                 if incremental and pubDate <= toTS: break
-                echo "cnt:", articleCount, " toTS:", toTS, " pubdate:", pubDate
                 if incremental:
                     patchElements(sse, card, selector="#rsscards", mode=Prepend)
                 else:
@@ -68,7 +65,6 @@ proc handleSearch*(sse: SSEConnection, toTS: int = 0) =
                     patchElements(sse, card, selector="#rsscards", mode=Append)
                 except:
                     echo "ERROR wmsearch 100:patchelements: ", getCurrentExceptionMsg()
-                    #echo "keyword:", keyword, ", card:", card
                 inc articleCount
                 if articleCount >= maxArticles: break
 
@@ -76,7 +72,6 @@ proc handleSearch*(sse: SSEConnection, toTS: int = 0) =
 
 
 proc handleUpdateSearch*(sse: SSEConnection, toTS: int) =
-    let incremental = true
     let userid = getUserId(sse)
     let keyword = strip(getSignal(userid, "keyword"))
     var lang = getSignal(userid, "lang")
@@ -88,8 +83,6 @@ proc handleUpdateSearch*(sse: SSEConnection, toTS: int) =
     let maxArticles = parseInt(getSignal(userid, "articles"))    
 
     var articleCount = 0
-    var containerClass = if format == "card": "rsscard-container" else: "rsslist-container"
-    let rssContainer = fmt"""<div id="rsscards" class="{containerClass}"></div>"""
 
     let (todayFrom, todayTo) = currentDayFromTo()
     var timeFrom = if sortBy == ByTodayAscending or sortBy == ByTodayDescending: todayFrom else: toTS
@@ -120,7 +113,6 @@ proc handleUpdateSearch*(sse: SSEConnection, toTS: int) =
                     patchElements(sse, card, selector="#rsscards", mode=Append)
                 except:
                     echo "ERROR wmsearch 100:patchelements: ", getCurrentExceptionMsg()
-                    #echo "keyword:", keyword, ", card:", card
                 inc articleCount
                 if articleCount >= maxArticles: break
 

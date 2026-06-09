@@ -205,8 +205,8 @@ iterator getLatestRSSItems*(timeFrom: int, timeTo: int, userid: string, sortBy: 
     # Iterate from new to old
     for key  in QueryItr ^RSSItemPUBDATE.reverse.keys:  # youngest first
         let pubDate = fastParseInt(key[0])
-        if pubDate > timeTo or pubDate < timeFrom: continue # ignore items outside range
-        #echo "timeFrom=", timeFrom, " timeTo=", timeTo, " pubDate=", pubDate
+        if pubDate > timeTo: continue
+        if pubDate < timeFrom: break
 
         let idxKey = key[1]
         let feedId = Order ^RSSItemIDXREF(idxkey,"")
@@ -372,15 +372,3 @@ proc getRSSFields*(subscript: seq[string]): seq[(string, string)] =
         result.add(("updated", getOption(rssItem.updated)))
         result.add(("topic", getOption(rssItem.topic)))
         result.add(("keywords", rssItem.keywords.join(" ")))
-
-
-if isMainModule:
-    echo "main"
-    let userid = "ljoeckel"
-    let timeFrom = Get ^Session("rsscollector", "oldestPubDate").int
-    let timeTo = datetimeToUnix()
-    echo "timeFrom:", timeFrom, " ", toDateTime(timeFrom), " timeTo:", timeTo, " ", toDateTime(timeTo)
-    var cnt = 0
-    for item in getLatestRSSItems(timeFrom, timeTo, userid, SortBy.ByTodayAscending):
-        inc cnt
-        echo cnt, " ", item.pubDate, " ", toDateTime(parseInt(item.pubDate.get)), " ", item.title

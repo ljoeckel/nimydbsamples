@@ -15,12 +15,11 @@ proc handleLogin(req: Request) =
 
     let password = getSignal(userid, "password")
     let reg = loadObject[Registration](userid)
-
     if reg.password == generateSHA1(password): # valid password given
         checkFeedConfiguration(reg.userid)
         let oid = $genOid()
         var sse = req.respondSSE(cookie=fmt"token={oid}; Secure; HttpOnly; SameSite=Strict; Path=/")
-        defer: sse.close()            
+        defer: sse.close()
         Set: ^Session(userid, "oid") = oid
         patchSignals(sse, %*{
             "loggedIn": true,
@@ -28,7 +27,7 @@ proc handleLogin(req: Request) =
         forward(sse, "html/livefeed.html")
     else:
         SSE(req):
-            patchElements(sse, "<div id='response-message' class='formerror'>Invalid 'userid' or 'password'</div>", userid)
+            patchElements(sse, "<div id='login-message'>Invalid [userid] or [password]</div>")
 
 
 proc handleLogout(req: Request) =
@@ -67,7 +66,6 @@ proc handleSubmitRegistration(req: Request) =
 
     # Update browser
     SSE(req):
-        patchElements(sse, "<div id='response-message' class='formsuccess'>Registration saved!</div>")
         clearForm(sse, reg.userid)
         forward(sse, "./html/login.html")
 

@@ -14,7 +14,7 @@
 
         .login-form {
             background: #ffffff;
-            padding: 2.5rem;
+            padding: 2rem;
             border-radius: 12px;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
             width: 100%;
@@ -109,6 +109,16 @@
             background: #eee;
             margin: 0 10px;
         }
+
+        #login-message {
+            margin-top: 1rem;
+            font-size: 1.2rem;
+            color: #dc3545; /* Rote Farbe für Fehlermeldungen */
+            min-height: 1.2rem; /* Reserviert Platz für ca. 2 Zeilen Text */
+            display: flex;
+            align-items: center; /* Zentriert einzeiligen Text vertikal im reservierten Raum */
+            justify-content: center;
+        }
     </style>
 
 
@@ -144,6 +154,6 @@
             data-on:click__stop="@get('/goto/registration.html')"
             <i class='bi bi-person-circle person-btn'></i>Register
         </button>
-        <div id='response-message'></div>
+        <div id="login-message"></div>
     </form>
 </div>

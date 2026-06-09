@@ -289,8 +289,9 @@
         </button>
         <!-- Scroll to top controlling -->
         <div
-            data-on:scroll__window__throttle.50ms="$showButton = (window.scrollY < $lastScroll && window.scrollY > 300); $lastScroll = window.scrollY; @post('/update-scroll')">
+            data-on:scroll__window__debounce.300ms="$showButton = (window.scrollY < $lastScroll && window.scrollY > 300); $lastScroll = window.scrollY; @post('/update-scroll')">
         </div>
+    </div>
 
 
         <!-- RSS Detail Popover -->
