@@ -154,26 +154,27 @@ proc sortFTIResult*(data: var seq[TimeSearchEntry], sortBy: SortBy) =
             return res
 
 
-proc getFTI*(keyword: string, lang: string, userid: string, sortBy: SortBy): seq[TimeSearchEntry] =
+proc getFTI*(p: SearchParams): seq[TimeSearchEntry] =
     # Search Full Text Index
-    if keyword.isEmptyOrWhitespace or keyword.len < MIN_KEYWORD_LEN: 
-        return # check minimum length of keywords
-
+    if p.keyword.len < MIN_KEYWORD_LEN: return # check minimum length of keywords
+    let lastPubDate = p.lastPubdate
     # Get enabled feeds
-    let feedtable = getEnabledFeeds(userid)
+    let feedtable = getEnabledFeeds(p.userid)
 
     # resultTable holds for each search word a sequence of TimeSearchEntry
     var resultTable = initTable[string, seq[TimeSearchEntry]]()
     # Find entries for each search word
-    for kw in split(toLower(trim(keyword))," "):
+    for kw in split(toLower(trim(p.keyword))," "):
         var items: seq[TimeSearchEntry]
-        let stemword = stem(kw, lang)
+        let stemword = stem(kw, p.lang)
         for keys in QueryItr ^RSSItemFTI(stemword).keys:
             if not keys[0].startsWith(stemword): break
-            # check if item is in active feed
-            let feedId = Order ^RSSItemIDXREF(keys[1] & "," & keys[2] ,"")
-            if feedId in feedtable:
-                items.add(TimeSearchEntry(subscript: @[keys[1], keys[2] ]))
+            let pubDate = parseInt(keys[1])
+            if pubDate <= lastPubDate:
+                # check if item is in active feed
+                let feedId = Order ^RSSItemIDXREF(keys[2] & "," & keys[3] ,"")
+                if feedId in feedtable:
+                    items.add(TimeSearchEntry(subscript: @[keys[2], keys[3] ]))
         # save found items under stemword
         resultTable[stemword] = items
 
@@ -191,7 +192,7 @@ proc getFTI*(keyword: string, lang: string, userid: string, sortBy: SortBy): seq
         var sr = entry
         let subscript = entry.subscript
         sr.time = Get ^RSSItem(subscript, "pubDate").int # get time from DB
-        case sortBy
+        case p.sortBy
         of ByTodayAscending, ByTodayDescending:
             if sr.time >= todayFrom and sr.time <= todayTo:
                 result.add(sr)
@@ -199,26 +200,16 @@ proc getFTI*(keyword: string, lang: string, userid: string, sortBy: SortBy): seq
             result.add(sr)
 
 
-iterator getLatestRSSItems*(timeFrom: int, timeTo: int, userid: string, sortBy: SortBy): RSSItem =
+iterator getLatestRSSItems*(timeFrom: int, idxref: string, userid: string, sortBy: SortBy): RSSItem =
     var feedtable = getEnabledFeeds(userid)
-  
+    let gbl = if idxref.isEmptyOrWhitespace: fmt"^RSSItemPUBDATE({timeFrom})" else: fmt"""^RSSItemPUBDATE({timeFrom}, "{idxref}")"""
     # Iterate from new to old
-    for key  in QueryItr ^RSSItemPUBDATE.reverse.keys:  # youngest first
-        let pubDate = fastParseInt(key[0])
-        if pubDate > timeTo: continue
-        if pubDate < timeFrom: break
-
+    for key  in QueryItr @gbl.reverse.keys:  # youngest first
         let idxKey = key[1]
         let feedId = Order ^RSSItemIDXREF(idxkey,"")
         if feedId in feedtable:
             let itemKey = idxKey.split(",")
-            let rssItem = loadObject[RSSItem](itemKey)
-            case sortBy:
-            of ByTodayAscending, ByTodayDescending:
-                if pubDate >= timeFrom:
-                    yield rssItem
-            else:
-                yield rssItem
+            yield loadObject[RSSItem](itemKey)
 
 
 proc getLatestRSSItemKeys*(max: int): seq[seq[string]] =

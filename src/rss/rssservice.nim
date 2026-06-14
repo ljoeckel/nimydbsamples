@@ -24,18 +24,25 @@ proc handleUpdateClock(req: Request) =
     while loggedIn:
         try:
             updateWallClock(sse)
+
             let msToNextMinute = 60000 - (now().second * 1000 + now().nanosecond div 1_000_000)
             #sleep(msToNextMinute)
             sleep(5000)
-            let formId = getSignal(userid, "formId")
-            #let lastScroll = parseFloat(getSignal(userid, "lastScroll")) # mouse scroll
-            let lastCollectorRun = Get ^Session("rsscollector", "lastRun").int # any new news?
-            let lastRun = Get ^Session(userid, "lastRun").int        
 
-            if lastCollectorRun != lastRun and formId == "livefeed":
+            let formId = getSignal(userid, "formId")
+            let lastPubDate = getSignal(userid, "lastPubDate")
+            let lastIdxRef = getSignal(userid, "lastIdxRef")
+
+            let lastRun = Get ^Session(userid, "lastRun").int        
+            let lastCollectorRun = Get ^Session("rsscollector", "lastRun").int # any new news?
+            #echo "lastCollectorRun=", lastCollectorRun, " lastRun=", lastRun, " lastPubDate=", lastPubDate, " lastIdxRef=", lastIdxRef
+            if lastRun > 0 and lastCollectorRun > lastRun and formId == "livefeed":
                 Set: ^Session(userid, "lastRun") = lastCollectorRun
                 let timeFrom = Get ^Session("rsscollector", "oldestPubDate").int
-                handleUpdateSearch(sse, timeFrom + 1)
+                var p = getSearchParams(sse)
+                p.searchType = SearchType.Incremental
+                p.lastPubDate = timeFrom + 1
+                handleSearch(sse, p)
         except:
             echo "Leaving handleUpdateClock: ", getCurrentExceptionMsg()
             break
@@ -73,7 +80,6 @@ proc handleUpdateScroll(req: Request) =
         patchSignals(sse, %*{})
 
 
-
 if isMainModule:
     ## Handler für Ctrl+C (SIGINT)
     proc shutdown() {.noconv.} =
@@ -90,9 +96,10 @@ if isMainModule:
     wmStatsModule.register(router)
     wmWordcloud.register(router)
 
-    router.get("/update-clock", handleUpdateClock)
+    router.post("/update-clock", handleUpdateClock)
     router.get("/show-rssitem", handleShowRSSItem)
     router.post("/update-scroll", handleUpdateScroll)
+    
 
     # Standard handlers
     router.get("/goto/**", handleGoto)

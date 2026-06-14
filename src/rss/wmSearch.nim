@@ -1,15 +1,35 @@
-import std/[times, strutils, strformat]
+import std/[times, strutils, strformat, json, enumerate]
 import std/[typetraits]
 import mummy, mummy/routers, mummy/datastar
 import nimrss
 
-proc getSortBy*(sort: string, direction: string): SortBy =
-    if sort == "today":
-        result = if direction == "up": ByTodayAscending else: ByTodayDescending
-    elif sort == "time":
-        result = if direction == "up": ByTimeAscending else: ByTimeDescending
-    elif sort == "relevance":
-        result = if direction == "up": ByRelevanceAscending else: ByRelevanceDescending
+
+proc getSearchParams*(sse: SSEConnection): SearchParams =
+    var p = SearchParams()
+   
+    p.userid = getUserId(sse)
+    p.keyword = strip(getSignal(p.userid, "keyword"))
+
+    p.lang = getSignal(p.userid, "lang")
+    if p.lang.len == 0: p.lang = "DE"
+
+    p.sort = getSignal(p.userid, "sort")
+    p.direction = getSignal(p.userid, "direction")
+    if p.sort == "today":
+        p.sortBy = if p.direction == "up": ByTodayAscending else: ByTodayDescending
+    elif p.sort == "time":
+        p.sortBy = if p.direction == "up": ByTimeAscending else: ByTimeDescending
+    elif p.sort == "relevance":
+        p.sortBy = if p.direction == "up": ByRelevanceAscending else: ByRelevanceDescending
+
+    p.lastIdxRef = getSignal(p.userid, "lastIdxRef")
+
+    p.maxArticles = parseInt(getSignal(p.userid, "articles"))
+    p.format = getSignal(p.userid, "format")
+
+    (p.todayFrom, p.todayTo) = currentDayFromTo()
+
+    return p
 
 
 proc getHTMLForRSSItem(format: string, rssItem: RSSItem): string =
@@ -19,115 +39,96 @@ proc getHTMLForRSSItem(format: string, rssItem: RSSItem): string =
             createRSSItemList(rssItem)
 
 
-proc handleSearch*(sse: SSEConnection, toTS: int = 0) =
-    let incremental = if toTS != 0: true else: false
-    let userid = getUserId(sse)
-    let keyword = strip(getSignal(userid, "keyword"))
-    var lang = getSignal(userid, "lang")
-    if lang.len == 0: lang = "DE"
-    let sort = getSignal(userid, "sort")
-    let direction = getSignal(userid, "direction")
-    let sortBy = getSortBy(sort, direction)
-    let maxArticles = parseInt(getSignal(userid, "articles"))
-    let format = getSignal(userid, "format")
-    
-    var articleCount = 0
-    var containerClass = if format == "card": "rsscard-container" else: "rsslist-container"
-    let rssContainer = fmt"""<div id="rsscards" class="{containerClass}"></div>"""
-    if not incremental:
-        patchElements(sse, rssContainer)
+proc handleSearch*(sse: SSEConnection, p: SearchParams) =
+    var timeFrom = min(p.todayTo, p.lastPubDate)
+    echo "timeFrom=", timeFrom, " ", toDateTime(timeFrom)
+    var lastRSSItem: RSSItem
+    var articles = 0
 
-    let (todayFrom, todayTo) = currentDayFromTo()
-    var timeFrom = if sortBy == ByTodayAscending or sortBy == ByTodayDescending: todayFrom else: toTS
-    var timeTo = todayTo
+    proc searchByKeyword() =
+        #let lastPubDate = parseInt(getSignal(p.userid, "lastPubDate"))
+        #var searchResults = getFTI(p, lastPubDate) # @["1158,4", "118,10"...]
+        var searchResults = getFTI(p) # @["1158,4", "118,10"...]
+        searchResults.sortFTIResult(p.sortBy)
+        # Reduce result to max_search_results
+        let mx: int = min(searchResults.len, p.maxArticles)
+        for idx in 0..mx-1:
+            let rssItem = loadObject[RSSItem](searchResults[idx].subscript)
+            let card = trim(getHTMLForRSSItem(p.format, rssItem))
+            patchElements(sse, card, selector="#rsscards", mode=Append)
+            lastRSSItem = rssItem
+        articles = mx
 
-    let queryTime = meassure:
-        if keyword.len == 0:
-            for rssItem in getLatestRSSItems(timeFrom, timeTo, userid, sortBy):
-                let card = getHTMLForRSSItem(format, rssItem)
-                inc articleCount
-                if articleCount >= maxArticles: break
-                let pubDate = parseInt(getOption(rssItem.pubDate))
-                if incremental and pubDate <= toTS: break
-                if incremental:
-                    patchElements(sse, card, selector="#rsscards", mode=Prepend)
-                else:
-                    patchElements(sse, card, selector="#rsscards", mode=Append)
-        else:
-            var searchResults = getFTI(keyword, lang, userid, sortBy) # @["1158,4", "118,10"...]
-            searchResults.sortFTIResult(sortBy)
-            # Reduce result to max_search_results
-            let mx: int = min(searchResults.len, maxArticles)
-            for idx in 0..mx-1:
-                let rssItem = loadObject[RSSItem](searchResults[idx].subscript)
-                let card = getHTMLForRSSItem(format, rssItem)
-                try:
-                    patchElements(sse, card, selector="#rsscards", mode=Append)
-                except:
-                    echo "ERROR wmsearch 100:patchelements: ", getCurrentExceptionMsg()
-                inc articleCount
-                if articleCount >= maxArticles: break
+    proc search() =
+        var cards: seq[string]
+        for (cnt, rssItem) in enumerate(getLatestRSSItems(timeFrom, p.lastIdxRef, p.userid, p.sortBy)):
+            if cnt >= p.maxArticles: break
+            let pubDate = parseInt(getOption(rssItem.pubDate))
+            #echo cnt, " ", toDateTime(pubDate), " ", rssItem.idxref, " ", getOption(rssItem.title)
+            lastRSSItem = rssItem
+            if p.sortBy in {ByTodayAscending, ByTodayDescending} and pubDate < p.todayFrom: break
+            cards.add(trim(getHTMLForRSSItem(p.format, rssItem)))
+            articles = cnt + 1
 
-    patchElements(sse, fmt"""<h3 id="info">{articleCount} Articles in {queryTime}</h3>""")
-
-
-proc handleUpdateSearch*(sse: SSEConnection, toTS: int) =
-    let userid = getUserId(sse)
-    let keyword = strip(getSignal(userid, "keyword"))
-    var lang = getSignal(userid, "lang")
-    if lang.len == 0: lang = "DE"
-    let sort = getSignal(userid, "sort")
-    let direction = getSignal(userid, "direction")
-    let sortBy = getSortBy(sort, direction)
-    let format = getSignal(userid, "format")
-    let maxArticles = parseInt(getSignal(userid, "articles"))    
-
-    var articleCount = 0
-
-    let (todayFrom, todayTo) = currentDayFromTo()
-    var timeFrom = if sortBy == ByTodayAscending or sortBy == ByTodayDescending: todayFrom else: toTS
-    var timeTo = todayTo
-
-    let queryTime = meassure:
-        if keyword.len == 0:
-            var cards: seq[string]
-            for rssItem in getLatestRSSItems(timeFrom, timeTo, userid, sortBy):
-                let card = getHTMLForRSSItem(format, rssItem)
-                inc articleCount
-                let pubDate = parseInt(getOption(rssItem.pubDate))
-                if pubDate <= toTS: break
-                cards.add(card)
-                
-            # Insert from old to young
+        if p.searchType == Incremental:
             for idx in countdown(cards.len-1, 0):
                 patchElements(sse, cards[idx], selector="#rsscards", mode=Prepend)
         else:
-            var searchResults = getFTI(keyword, lang, userid, sortBy) # @["1158,4", "118,10"...]
-            searchResults.sortFTIResult(sortBy)
-            # Reduce result to max_search_results
-            let mx: int = min(searchResults.len, maxArticles)
-            for idx in 0..mx-1:
-                let rssItem = loadObject[RSSItem](searchResults[idx].subscript)
-                let card = getHTMLForRSSItem(format, rssItem)
-                try:
-                    patchElements(sse, card, selector="#rsscards", mode=Append)
-                except:
-                    echo "ERROR wmsearch 100:patchelements: ", getCurrentExceptionMsg()
-                inc articleCount
-                if articleCount >= maxArticles: break
+            for idx in 0..cards.len-1:
+                patchElements(sse, cards[idx], selector="#rsscards", mode=Append)
 
-    patchElements(sse, fmt"""<h3 id="info">{articleCount} Articles in {queryTime}</h3>""")
+    case p.searchType:
+    of Basic:
+        let containerClass = if p.format == "card": "rsscard-container" else: "rsslist-container"
+        let rssContainer = fmt"""<div id="rsscards" class="{containerClass}"></div>"""
+        patchElements(sse, rssContainer) # remove old entries on fresh search
+    of Append:
+        # Remove the intersect element
+        patchElements(sse, "", selector="#intersect", mode=Remove)
+    of Incremental:
+        discard
+
+    let queryTime = meassure:
+        if p.keyword.isEmptyOrWhitespace:
+            search()
+        else:
+            searchByKeyword()
+
+    # Intersect element to continue search on scroll at the end
+    if articles >= p.maxArticles:
+        let intersect = """<div id="intersect" data-on-intersect="@post('/search-more')">/div>"""
+        patchElements(sse, intersect, selector="#rsscards", mode=Append)
+
+    # Update info
+    patchElements(sse, fmt"""<h3 id="info">{articles} Articles in {queryTime}</h3>""")
+    if lastRssItem.idxref.len > 0:
+        let lastPubDate = parseInt(getOption(lastRssItem.pubDate))
+        let lastIdxref = lastRssItem.idxref
+        patchSignals(sse, %*{"lastPubDate": lastPubdate, "lastIdxRef": lastIdxRef})
+
 
 
 proc handleSearch*(req: Request) =
-    var sse = req.respondSSE()
-    handleSearch(sse)
-    sse.close()
+    SSE(req):
+        var p = getSearchParams(sse)
+        p.lastPubdate = datetimeToUnix()
+        handleSearch(sse, p)
+
+
+proc handleSearchMore(req: Request) =
+    let userid = getUserId(req)
+    let lastPubDate = parseInt(getSignal(userid, "lastPubDate"))
+    SSE(req):
+        var p = getSearchParams(sse)
+        p.searchType = SearchType.Append
+        p.lastPubDate = lastPubDate
+        handleSearch(sse, p)
 
 
 # Callback for router registration
 proc register*(router: var Router) =
     router.post("/search", handleSearch)
+    router.post("/search-more", handleSearchMore)
 
 # Create module instance
 let wmSearchModule* = WebModule(

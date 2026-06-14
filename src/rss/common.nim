@@ -54,6 +54,8 @@ proc trim*(s: string): string =
     
     result = result.multiReplace(
         ("&lt;strong&gt;", " "), ("&lt;/strong&gt;", ""),
+        ("\n", ""),
+        ("<img ", "<img loading='lazy' "),
     )
 
 

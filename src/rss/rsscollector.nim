@@ -78,12 +78,18 @@ proc setPubDate(rss: var RSS) =
 
 proc processFeed(rss: var RSS): (int, int) =
     setPubDate(rss)
+    let now = datetimeToUnix()
 
     # Collect new items
     var newItems: seq[RSSItem]
     var wordCount: int
     for cnt, item in enumerate(rss.items.mitems):
         let (guid, isNew) = getGUID(item)
+        let pubDate = parseInt(getOption(item.pubDate))
+        if pubDate > now: 
+            echo "Article ignored because in future: ", toDateTime(pubDate), " ", rss.title
+            continue   # ignore articles in the future
+
         if isNew: # New item
             item.guid = some(guid)
             newItems.add(item)
@@ -98,7 +104,8 @@ proc processFeed(rss: var RSS): (int, int) =
         for cnt, item in enumerate(newItems.mitems):
             item.idxref = fmt"{id},{cnt}" # idxref="33,1"
             item.feedId = some(feedId)
-            lastPubDate = min(lastPubDate, parseInt(item.pubDate.get))
+            let pubDate = parseInt(getOption(item.pubDate))
+            lastPubDate = min(lastPubDate, pubDate)
             # Calculation for FTI BM25
             discard Increment ^RSSCNT(DOCUMENTS)
             let documentLen = (getOption(item.title)).len + (getOption(item.description)).len

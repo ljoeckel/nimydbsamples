@@ -1,6 +1,6 @@
 <div id="container" data-signals="{formId: 'livefeed', lastScroll: 0, showButton: false}"
     data-signals:format__ifmissing="'card'" data-signals:direction__ifmissing="'down'"
-    data-signals:sort__ifmissing="'time'" data-signals:articles__ifmissing=100 data-effect="@get('/update-clock')">
+    data-signals:sort__ifmissing="'time'" data-signals:articles__ifmissing=100 data-effect="@post('/update-clock')">
     
     <style>
         .toolbar {
@@ -12,6 +12,10 @@
             background: var(--bg);
             border: 1px solid #ddd;
             /*border-radius: 8px;*/
+            /* Fixierung: */
+            position: sticky;
+            top: 48px;
+            z-index: 90;
         }
 
         .search-group {

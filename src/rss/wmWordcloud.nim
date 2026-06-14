@@ -88,7 +88,8 @@ proc handleGetWordcloud(req: Request) =
 
 # Callback for router registration
 proc register*(router: var Router) =
-    router.get("/get-wordcloud", handleGetWordcloud)
+    #router.get("/get-wordcloud", handleGetWordcloud) # disabled due to python GIL problem
+    discard
 
 # Create module instance
 let wmWordcloudModule* = WebModule(

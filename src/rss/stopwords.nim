@@ -5,6 +5,7 @@ import std/tables
 import types
 import yottadb
 import stemmer
+import common
 
 const STOPWORDS = {
     "ALL": "^stopwordsALL",
@@ -108,9 +109,10 @@ proc createFTIndex*(item: RSSItem, lang: string): int =
     #var wordCount = 0
     let categories = item.category.join(" ")
     let keywords = item.keywords.join(" ")
-    let topic = if item.topic.isSome: item.topic.get() else: ""
-    let title = if item.title.isSome: item.title.get() else: ""
-    let description = if item.description.isSome: item.description.get() else: ""
+    let topic = getOption(item.topic)
+    let title = getOption(item.title)
+    let description = getOption(item.description)
+    let pubDate = parseInt(getOption(item.pubDate))
     let keys = item.idxref.split(',') # the db key rss,article
     let (k0, k1) = (keys[0], keys[1])
 
@@ -126,7 +128,7 @@ proc createFTIndex*(item: RSSItem, lang: string): int =
             let stemWord = stem(word, lang)
             #echo "stemword=", stemWord, " word=", word, " lang=", lang
             if stemWord.len > 0:
-                Set: ^RSSItemFTI(stemWord, k0, k1) = cnt
+                Set: ^RSSItemFTI(stemWord, pubDate, k0, k1) = cnt
 
     return wordtable.len
 

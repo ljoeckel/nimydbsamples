@@ -44,6 +44,26 @@ type
         ByRelevanceDescending,
         ByRelevanceAscending
 
+    SearchType* = enum 
+        Basic,       # Clear, 0..100
+        Incremental, # Prepend at 0
+        Append       # Append at 100
+
+    SearchParams* = object
+        userid*: string
+        keyword*: string
+        lang*: string
+        sort*: string
+        direction*: string
+        format*: string
+        lastIdxRef*: string
+        maxArticles*: int
+        todayFrom*: int
+        todayTo*: int
+        lastPubdate*: int = int.high
+        sortBy*: SortBy
+        searchType*: SearchType = Basic
+
     DBStats* = object
         ordercnt*: int
         querycnt*: int

@@ -114,7 +114,7 @@ proc handleStats(req: Request) =
 
 # Callback for router registration
 proc register*(router: var Router) =
-    router.get("/get-stats", handleStats)
+    router.post("/get-stats", handleStats)
 
 # Create module instance
 let wmStatsModule* = WebModule(

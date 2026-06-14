@@ -3,10 +3,10 @@ import mummy, mummy/routers, mummy/datastar
 import nimrss
 import wmFeedConfig
 
+
 proc cleanSession(userid: string) =
-    Kill:
-        ^Session(userid, "oid")
-        ^Session(userid, "keyword")
+    for val in @["oid", "keyword", "lastPubDate", "lastIdxRef", "lastRun"]:
+        Kill ^Session(userid, val)
 
 
 proc handleLogin(req: Request) =
@@ -122,10 +122,10 @@ proc handleValidateUserid(req: Request) =
 # Callback for router registration
 proc register*(router: var Router) =
     router.post("/login", handleLogin)
-    router.get("/logout", handleLogout)
-    router.get("/clear-form", handleClearForm)
+    router.post("/logout", handleLogout)
+    router.post("/clear-form", handleClearForm)
     router.post("/submit-registration", handleSubmitRegistration)
-    router.get("/edit-registration", handleEditRegistration)
+    router.post("/edit-registration", handleEditRegistration)
     router.post("/update-registration", handleUpdateRegistration)    
     router.post("/validate-email", handleValidateEmail)
     router.post("/validate-userid", handleValidateUserid)
