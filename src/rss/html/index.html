@@ -111,7 +111,7 @@
     }
 </style>
 
-<body data-signals="{formId:'index', userid:'', password:'', loggedIn: false, menuOpen: false}">
+<body data-signals="{formId:'index', userid:'', password:'', loggedIn: false, menuOpen: false, action: ''}">
     <!-- The navigation menu -->
     <div class="navbar">
         <div class="subnav" data-show="$loggedIn">
@@ -123,7 +123,22 @@
         </div>
 
         <a href="#wordcloud" data-show="$loggedIn"  data-on:click="$menuOpen = false; @get('goto/wordcloud.html')" title='Show the latest Word-Cloud'><i class="bi bi-cloud"></i></a>
-        <a href="#stats" title="Database Statistics" data-show="$loggedIn"  data-on:click="$menuOpen = false; @get('goto/stats.html')"><i class="bi bi-database"></i></a>
+
+        <div class="subnav" 
+            data-show="$loggedIn" 
+            data-on:mouseenter="$menuOpen = true" 
+            data-on:mouseleave="$menuOpen = false">
+            <button class="subnavbtn">
+                <i class="bi bi-database"></i>
+            </button>
+            <div class="subnav-content" data-show="$menuOpen">
+                <a href="#dbstats1" data-on:click="$menuOpen = false; $action = 'keys'; @get('goto/stats.html')"><i class="bi bi-bar-chart"></i> Keycount</a>
+                <a href="#dbstats1" data-on:click="$menuOpen = false; $action = 'full'; @get('goto/stats.html')"><i class="bi bi-bar-chart-fill"></i> Full Scan</a>
+                <a href="#dbstats2" data-on:click="$menuOpen = false; @post('/edit-registration')"><i class="bi bi-activity"></i> Monitor</a>
+                <a href="#dbstats3" data-on:click="$menuOpen = false; @post('/logout')"><i class="bi bi-pencil"></i> Globals Editor</a>
+            </div>
+        </div>
+
 
         <a href="#about" data-on:click="$menuOpen = false; @post('/about.html')" title="About"><i class="bi bi-question-circle"></i></a>
         <a href="#login" data-show="!$loggedIn" data-on:click="$menuOpen = false; @post('/index.html')"><i class="bi bi-box-arrow-in-right"></i> Login</a>        

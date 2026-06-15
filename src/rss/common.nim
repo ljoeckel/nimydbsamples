@@ -83,6 +83,7 @@ proc getCurrentDay*(datetime: int): string =
     let dt = timeObj.local
     dt.format("yyyy-MM-dd")
 
+
 proc toDateTime*(datetime: int): string =
     let timeObj = fromUnix(datetime)
     let dt = timeObj.local
@@ -101,7 +102,15 @@ proc datetimeToUnix*(): int =
     let tm = now().toTime()
     result = tm.toUnix()
 
-    
+
+proc getFirstPubDate*(): int =
+    let now = datetimeToUnix()
+    for keys in QueryItr ^RSSItemPUBDATE.reverse.keys:
+        result = parseInt(keys[0])
+        if result > now: continue
+        break
+
+
 proc getEnabledFeeds*(userid: string): seq[string] =
     let userFeeds = loadObject[UserFeeds](userid)
     for feed in userFeeds.feeds:

@@ -61,6 +61,7 @@ type
         todayFrom*: int
         todayTo*: int
         lastPubdate*: int = int.high
+        lowerBoundPubdate*: int
         sortBy*: SortBy
         searchType*: SearchType = Basic
 

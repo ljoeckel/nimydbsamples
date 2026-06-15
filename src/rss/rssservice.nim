@@ -20,6 +20,8 @@ proc handleUpdateClock(req: Request) =
     let userid = getUserId(req)
     let loggedIn = if userid.len > 0 and getSignal(userid, "loggedIn") == "true": true else: false
     var sse = req.respondSSE()
+    var endPubDate = getFirstPubDate()
+    echo "first endPubDate=", toDateTime(endPubDate)
 
     while loggedIn:
         try:
@@ -30,19 +32,22 @@ proc handleUpdateClock(req: Request) =
             sleep(5000)
 
             let formId = getSignal(userid, "formId")
-            let lastPubDate = getSignal(userid, "lastPubDate")
-            let lastIdxRef = getSignal(userid, "lastIdxRef")
-
             let lastRun = Get ^Session(userid, "lastRun").int        
             let lastCollectorRun = Get ^Session("rsscollector", "lastRun").int # any new news?
-            #echo "lastCollectorRun=", lastCollectorRun, " lastRun=", lastRun, " lastPubDate=", lastPubDate, " lastIdxRef=", lastIdxRef
+
             if lastRun > 0 and lastCollectorRun > lastRun and formId == "livefeed":
-                Set: ^Session(userid, "lastRun") = lastCollectorRun
-                let timeFrom = Get ^Session("rsscollector", "oldestPubDate").int
+                #let pubDateFrom = Get ^Session("rsscollector", "pubDateFrom").int # last pubDate before collector run
+                #let pubDateTo = Get ^Session("rsscollector", "pubDateTo").int # last pubDate from after collector run
+                #echo "lastCollectorRun=", toDateTime(lastCollectorRun), " lastRun=", toDateTime(lastRun), " pubDateFrom=", toDateTime(pubDateFrom), " pubDateTo=", toDateTime(pubDateTo)
                 var p = getSearchParams(sse)
                 p.searchType = SearchType.Incremental
-                p.lastPubDate = timeFrom + 1
+                p.lastPubDate = int.high 
+                p.lowerBoundPubdate = endPubDate
+                #endPubDate
                 handleSearch(sse, p)
+                Set: ^Session(userid, "lastRun") = datetimeToUnix()
+                endPubDate = getFirstPubDate()
+                echo "new endPubDate=", toDateTime(endPubDate)
         except:
             echo "Leaving handleUpdateClock: ", getCurrentExceptionMsg()
             break

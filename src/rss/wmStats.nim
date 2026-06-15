@@ -21,6 +21,16 @@ func hrb(bytes: int): string =
     elif bytes < 1024^4: return $(bytes div 1024^3) & "g"
     
 
+proc countKeys(gbl: string): DBStats =
+    var stats = DBStats()
+    let global = if gbl.startsWith("^"): gbl else: "^" & gbl
+    stats.global = global
+
+    for cnt in OrderItr @global.count:
+        stats.orderCnt = cnt
+
+    return stats
+
 proc countGlobalDetail(gbl: string): DBStats =
     var stats = DBStats()
     let global = if gbl.startsWith("^"): gbl else: "^" & gbl
@@ -40,7 +50,59 @@ proc countGlobalDetail(gbl: string): DBStats =
     return stats
 
 
-proc handleStats(req: Request) =
+proc scanKeys(req: Request) =
+    var sse = req.respondSSE()
+    var totalOrder = 0
+
+    let totalDuration = meassure:
+        for gbl in globals:
+            let duration = meassure:
+                var stats = countKeys(gbl)
+                let avgKey: float = (stats.keylen / stats.querycnt)
+                let avgValue: float = (stats.valuelen / stats.querycnt)
+
+            stats.duration = duration
+
+            let time = stats.duration.split(" ")[0]
+            let unit = stats.duration.split(" ")[1]
+            let tr = fmt"""
+                <tr>
+                    <td align='left'>{gbl}</td>
+                    <td align='right'>{stats.ordercnt}</td>
+                    <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                    <td align='right'>{time}</td>
+                    <td align='right'>{unit}</td>
+                </tr>
+                """
+            patchElements(sse, tr, selector="#stats-body", mode=Append)
+            inc(totalOrder, stats.ordercnt)
+            
+    # Empty line
+    patchElements(sse, emptyline, selector="#stats-body", mode=Append)
+    # Summary line
+    let totalTime = totalDuration.split(" ")[0]
+    let totalUnit = totalDuration.split(" ")[1]
+    let tr = fmt"""
+        <tr>
+            <td align='left'>Totals:</td>
+            <td align='right'>{totalOrder}</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+            <td align='right'>{totalTime}</td>
+            <td align='right'>{totalUnit}</td>
+        </tr>
+        """
+    patchElements(sse, tr, selector="#stats-body", mode=Append)
+
+    sse.close()
+
+
+proc scanFull(req: Request) =
+    let userid = getUserId(req)
+    if userid != "admin":
+        SSE(req):
+            patchElements(sse, "<h4>'admin' only!</h4>", selector="#stats-body", mode=Replace)
+            return
+
     var sse = req.respondSSE()
     var totalOrder, totalQuery, totalKeylen, totalValuelen = 0
     let timestamp = datetimeToUnix()
@@ -82,8 +144,6 @@ proc handleStats(req: Request) =
 
             # Save in DB
             saveObject[DBStats](@[$timestamp, stats.global], stats)
-            
-
 
     # Empty line
     patchElements(sse, emptyline, selector="#stats-body", mode=Append)
@@ -97,12 +157,7 @@ proc handleStats(req: Request) =
             <td align='right'>{totalQuery}</td>
             <td align='right'>{hrb(totalKeylen)}</td>
             <td align='right'>{hrb(totalValuelen)}</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
+            <td></td><td></td><td></td><td></td><td></td><td></td>
             <td align='right'>{totalTime}</td>
             <td align='right'>{totalUnit}</td>
         </tr>
@@ -110,6 +165,17 @@ proc handleStats(req: Request) =
     patchElements(sse, tr, selector="#stats-body", mode=Append)
 
     sse.close()
+
+
+proc handleStats(req: Request) =
+    let userid = getUserId(req)
+    let action = getSignal(userid, "action")
+    if action == "keys":
+        scanKeys(req)
+    elif action == "full":
+        scanFull(req)
+    else:
+        echo "Unhandled action: ", action
 
 
 # Callback for router registration

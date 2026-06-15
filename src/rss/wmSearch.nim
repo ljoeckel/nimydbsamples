@@ -23,10 +23,8 @@ proc getSearchParams*(sse: SSEConnection): SearchParams =
         p.sortBy = if p.direction == "up": ByRelevanceAscending else: ByRelevanceDescending
 
     p.lastIdxRef = getSignal(p.userid, "lastIdxRef")
-
     p.maxArticles = parseInt(getSignal(p.userid, "articles"))
     p.format = getSignal(p.userid, "format")
-
     (p.todayFrom, p.todayTo) = currentDayFromTo()
 
     return p
@@ -40,14 +38,11 @@ proc getHTMLForRSSItem(format: string, rssItem: RSSItem): string =
 
 
 proc handleSearch*(sse: SSEConnection, p: SearchParams) =
-    var timeFrom = min(p.todayTo, p.lastPubDate)
-    echo "timeFrom=", timeFrom, " ", toDateTime(timeFrom)
+    var timeFrom = p.lastPubDate
     var lastRSSItem: RSSItem
     var articles = 0
 
     proc searchByKeyword() =
-        #let lastPubDate = parseInt(getSignal(p.userid, "lastPubDate"))
-        #var searchResults = getFTI(p, lastPubDate) # @["1158,4", "118,10"...]
         var searchResults = getFTI(p) # @["1158,4", "118,10"...]
         searchResults.sortFTIResult(p.sortBy)
         # Reduce result to max_search_results
@@ -64,11 +59,11 @@ proc handleSearch*(sse: SSEConnection, p: SearchParams) =
         for (cnt, rssItem) in enumerate(getLatestRSSItems(timeFrom, p.lastIdxRef, p.userid, p.sortBy)):
             if cnt >= p.maxArticles: break
             let pubDate = parseInt(getOption(rssItem.pubDate))
-            #echo cnt, " ", toDateTime(pubDate), " ", rssItem.idxref, " ", getOption(rssItem.title)
-            lastRSSItem = rssItem
-            if p.sortBy in {ByTodayAscending, ByTodayDescending} and pubDate < p.todayFrom: break
+            if p.searchType == Incremental and pubDate < p.lowerBoundPubdate: break # ignore older articles than from update
+            if p.sortBy in {ByTodayAscending, ByTodayDescending} and pubDate < p.todayFrom: break # only Todays articles
             cards.add(trim(getHTMLForRSSItem(p.format, rssItem)))
             articles = cnt + 1
+            lastRSSItem = rssItem
 
         if p.searchType == Incremental:
             for idx in countdown(cards.len-1, 0):
@@ -96,15 +91,19 @@ proc handleSearch*(sse: SSEConnection, p: SearchParams) =
 
     # Intersect element to continue search on scroll at the end
     if articles >= p.maxArticles:
-        let intersect = """<div id="intersect" data-on-intersect="@post('/search-more')">/div>"""
+        let intersect = """<div id="intersect" data-on-intersect__threshold.25="@post('/search-more')"></div>"""
         patchElements(sse, intersect, selector="#rsscards", mode=Append)
 
     # Update info
-    patchElements(sse, fmt"""<h3 id="info">{articles} Articles in {queryTime}</h3>""")
+    let nextRun = Get ^Session("rsscollector", "nextRun").int
+    patchElements(sse, fmt"""<h3 id="info" title="Next collector run at '{toDateTime(nextRun)}'">{articles} Articles in {queryTime}</h3>""")
     if lastRssItem.idxref.len > 0:
-        let lastPubDate = parseInt(getOption(lastRssItem.pubDate))
-        let lastIdxref = lastRssItem.idxref
-        patchSignals(sse, %*{"lastPubDate": lastPubdate, "lastIdxRef": lastIdxRef})
+        patchSignals(sse, %*{
+            "lastPubDate": parseInt(getOption(lastRssItem.pubDate)),
+            "firstPubDate": getFirstPubDate(),
+            "lastIdxRef": lastRssItem.idxref,
+            "lastRun": datetimetoUnix()
+        })
 
 
 

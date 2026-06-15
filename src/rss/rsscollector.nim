@@ -215,19 +215,14 @@ if isMainModule:
         echo "Running Live-Feed"
         while true:
             # Get the pubDate of the oldest article in the database
-            let now = datetimeToUnix()
-            for keys in QueryItr ^RSSItemPUBDATE.reverse.keys:
-                let pubDate = parseInt(keys[0])
-                if pubDate <= now: # ignore articles from the future
-                    Set: ^Session("rsscollector", "oldestPubDate") = pubDate
-                    echo "Written ", pubDate, " (", toDateTime(pubDate), ") to session"
-                    break
-
             processFeeds(feedPath)
             processWordCloud()
-            Set: ^Session("rsscollector", "lastRun") = dateTimeToUnix()
-
             if minutes == 0: break
+
+            Set: 
+                ^Session("rsscollector", "lastRun") = dateTimeToUnix()
+                ^Session("rsscollector", "nextRun") = datetimeToUnix() + 60 * minutes
+
             echo "Sleep for ", minutes, " minutes"
             nimSleep(1000 * 60 * minutes) # sleep for minutes
 
