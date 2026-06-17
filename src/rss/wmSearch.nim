@@ -48,7 +48,8 @@ proc handleSearch*(sse: SSEConnection, p: SearchParams) =
         # Reduce result to max_search_results
         let mx: int = min(searchResults.len, p.maxArticles)
         for idx in 0..mx-1:
-            let rssItem = loadObject[RSSItem](searchResults[idx].subscript)
+            let subs = searchResults[idx].subscript
+            let rssItem = loadObject[RSSItem](subs[1..^1]) # 0=pubDate, 1=rss, 2=article
             let card = trim(getHTMLForRSSItem(p.format, rssItem))
             patchElements(sse, card, selector="#rsscards", mode=Append)
             lastRSSItem = rssItem

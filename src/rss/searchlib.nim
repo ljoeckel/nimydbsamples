@@ -100,36 +100,21 @@ proc hash*(x: TimeSearchEntry): Hash =
   h = h !& hash(x.subscript)
   result = !$h
 
-
-proc getWordCountFromFTI(word: string, subscript: seq[string]): int =
-    Get ^RSSItemFTI(word, subscript).int
-
-
-template append(result: var HashSet[TimeSearchEntry], keyword: string, wc: int, item: TimeSearchEntry) =
-    var itm = item # cannot not modify a HashSet items because the hash would change
-    inc(itm.wordCount, getWordCountFromFTI(keyword, item.subscript) + wc)
-    incl(result, itm)
-
-
 proc intersect(keyword: string, s1: var HashSet[TimeSearchEntry], s2: var HashSet[TimeSearchEntry]): HashSet[TimeSearchEntry] =
     if s1.len == 0:
         for item in s2:
-            let wc = s2[item].wordCount
-            result.append(keyword, wc, item)
+            result.incl(item)
     elif s2.len == 0:
         for item in s1: 
-            let wc = s1[item].wordCount
-            result.append(keyword, wc, item)
+            result.incl(item)
     elif s1.len < s2.len:
         for item in s1:
             if item in s2: 
-                let wc = s2[item].wordCount
-                result.append(keyword, wc, item)
+                result.incl(item)
     else:
         for item in s2:
             if item in s1: 
-                let wc = s1[item].wordCount
-                result.append(keyword, wc, item)
+                result.incl(item)
 
 
 proc sortFTIResult*(data: var seq[TimeSearchEntry], sortBy: SortBy) =
@@ -174,7 +159,8 @@ proc getFTI*(p: SearchParams): seq[TimeSearchEntry] =
                 # check if item is in active feed
                 let feedId = Order ^RSSItemIDXREF(keys[2] & "," & keys[3] ,"")
                 if feedId in feedtable:
-                    items.add(TimeSearchEntry(subscript: @[keys[2], keys[3] ]))
+                    let wc = Get ^RSSItemFTI(keys).int
+                    items.add(TimeSearchEntry(time: pubDate, wordCount: wc, subscript: @[keys[1], keys[2], keys[3]]))
         # save found items under stemword
         resultTable[stemword] = items
 
@@ -185,19 +171,15 @@ proc getFTI*(p: SearchParams): seq[TimeSearchEntry] =
         common = intersect(key, common, s2)
 
     # Update TimeSearchEntry with pubDate
-    # get current day from/to
     let (todayFrom, todayTo) = currentDayFromTo()
 
     for entry in common:
-        var sr = entry
-        let subscript = entry.subscript
-        sr.time = Get ^RSSItem(subscript, "pubDate").int # get time from DB
         case p.sortBy
         of ByTodayAscending, ByTodayDescending:
-            if sr.time >= todayFrom and sr.time <= todayTo:
-                result.add(sr)
+            if entry.time >= todayFrom and entry.time <= todayTo:
+                result.add(entry)
         else:
-            result.add(sr)
+            result.add(entry)
 
 
 iterator getLatestRSSItems*(timeFrom: int, idxref: string, userid: string, sortBy: SortBy): RSSItem =
