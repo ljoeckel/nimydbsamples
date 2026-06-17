@@ -36,18 +36,13 @@ proc handleUpdateClock(req: Request) =
             let lastCollectorRun = Get ^Session("rsscollector", "lastRun").int # any new news?
 
             if lastRun > 0 and lastCollectorRun > lastRun and formId == "livefeed":
-                #let pubDateFrom = Get ^Session("rsscollector", "pubDateFrom").int # last pubDate before collector run
-                #let pubDateTo = Get ^Session("rsscollector", "pubDateTo").int # last pubDate from after collector run
-                #echo "lastCollectorRun=", toDateTime(lastCollectorRun), " lastRun=", toDateTime(lastRun), " pubDateFrom=", toDateTime(pubDateFrom), " pubDateTo=", toDateTime(pubDateTo)
                 var p = getSearchParams(sse)
                 p.searchType = SearchType.Incremental
                 p.lastPubDate = int.high 
                 p.lowerBoundPubdate = endPubDate
-                #endPubDate
                 handleSearch(sse, p)
                 Set: ^Session(userid, "lastRun") = datetimeToUnix()
                 endPubDate = getFirstPubDate()
-                echo "new endPubDate=", toDateTime(endPubDate)
         except:
             echo "Leaving handleUpdateClock: ", getCurrentExceptionMsg()
             break
@@ -92,6 +87,7 @@ if isMainModule:
         quit(0)
     setControlCHook(shutdown)
 
+    Kill ^DBSTATS
 
     var router = Router()
     # Register WebModules

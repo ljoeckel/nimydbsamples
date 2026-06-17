@@ -72,6 +72,11 @@ proc handleSubmitRegistration(req: Request) =
 
 proc handleEditRegistration(req: Request) =
     let userid = getUserId(req)
+    if userid == "guest":
+        SSE(req):
+            patchElements(sse, "<div id='info' class='error'>You may not change the 'guest' profile</div>")        
+            return
+
     let reg = loadObject[Registration](userid)
     SSE(req):
         forward(sse, "./html/registration-update.html")

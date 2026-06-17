@@ -56,21 +56,25 @@ proc handleSearch*(sse: SSEConnection, p: SearchParams) =
 
     proc search() =
         var cards: seq[string]
-        for (cnt, rssItem) in enumerate(getLatestRSSItems(timeFrom, p.lastIdxRef, p.userid, p.sortBy)):
-            if cnt >= p.maxArticles: break
+        for rssItem in getLatestRSSItems(timeFrom, p.lastIdxRef, p.userid, p.sortBy):
             let pubDate = parseInt(getOption(rssItem.pubDate))
-            if p.searchType == Incremental and pubDate < p.lowerBoundPubdate: break # ignore older articles than from update
             if p.sortBy in {ByTodayAscending, ByTodayDescending} and pubDate < p.todayFrom: break # only Todays articles
-            cards.add(trim(getHTMLForRSSItem(p.format, rssItem)))
-            articles = cnt + 1
+            let card = trim(getHTMLForRSSItem(p.format, rssItem))
+
+            if p.searchType == Incremental:
+                if pubDate < p.lowerBoundPubdate: break # ignore older articles than from update
+                cards.add(card)    
+            else:
+                patchElements(sse, card, selector="#rsscards", mode=Append)
+            
             lastRSSItem = rssItem
+            inc articles
+            if articles >= p.maxArticles: break
 
         if p.searchType == Incremental:
             for idx in countdown(cards.len-1, 0):
                 patchElements(sse, cards[idx], selector="#rsscards", mode=Prepend)
-        else:
-            for idx in 0..cards.len-1:
-                patchElements(sse, cards[idx], selector="#rsscards", mode=Append)
+
 
     case p.searchType:
     of Basic:

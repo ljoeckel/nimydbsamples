@@ -1,0 +1,120 @@
+<div id="container" class="card" data-signals="{formId: 'dbmonitor'}">
+    <style>
+        /* ==========================================
+            1. Haupt-Wrapper (Das native Viereck eliminieren)
+        ========================================== */
+        .has-tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+
+        /* ==========================================
+            2. Tooltip-Box (Light Theme)
+        ========================================== */
+        .has-tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            z-index: 999;
+
+            /* WICHTIG: Komplett aus dem Render-Baum nehmen, solange nicht aktiv */
+            display: none !important;
+
+            /* Design: Helles Design */
+            background-color: #ffffff;
+            color: #1e293b;
+            border: 1px solid #e2e8f0;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.4;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+
+            /* Textumbruch für lange Texte */
+            width: max-content;
+            max-width: 350px;
+            white-space: normal;
+        }
+
+        /* ==========================================
+            3. Kleiner Pfeil (Struktur)
+        ========================================== */
+        .has-tooltip::before {
+            content: "" !important;
+            position: absolute;
+            z-index: 1000;
+
+            /* WICHTIG: Verhindert, dass der Pfeil als schwarzes Quadrat startet */
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+            border-style: solid;
+        }
+
+        /* ==========================================
+            4. Sichtbarkeit bei Hover aktivieren
+        ========================================== */
+        .has-tooltip:hover::after,
+        .has-tooltip:hover::before {
+            display: block !important;
+            /* Wird erst beim Hover physikalisch erzeugt */
+        }
+
+        /* ==========================================
+            5. Positionierung: RECHTS
+        ========================================== */
+        .tooltip-right::after {
+            top: 90%;
+            left: 108%;
+            transform: translateY(-50%);
+        }
+
+        .tooltip-right::before {
+            top: 50%;
+            left: 102%;
+            transform: translateY(-50%);
+            border-width: 6px 6px 6px 0;
+            border-color: transparent #eb6070 transparent transparent;
+            /* Pfeil zeigt nach links */
+        }
+
+        /* ==========================================
+            6. Positionierung: UNTEN
+        ========================================== */
+        .tooltip-bottom::after {
+            top: 108%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .tooltip-bottom::before {
+            top: 102%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 0 6px 6px 6px;
+            border-color: transparent transparent #e2e8f0 transparent;
+            /* Pfeil zeigt nach oben */
+        }
+    </style>
+
+    <div class="header">
+        <h1>Database Monitor</h1>
+        <h4>Interval: 5 seconds</h4>
+    </div>
+
+    <div class="table-container">
+        <table data-on-interval__duration.5000.leading="@post('/get-rtstats')">
+            <tt>
+                <thead>
+                    <tr>
+                        <th align="left" width="160px">Mnemonic</th>
+                        <th align="right" width="120px">Current</th>
+                        <th align="right" width="120px">Delta</th>
+                    </tr>
+                </thead>
+                <!-- The backend will target this ID to insert rows -->
+                <tbody id="rtstats"></tbody>
+            </tt>
+        </table>
+    </div>
+</div>
