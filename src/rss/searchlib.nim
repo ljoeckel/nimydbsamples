@@ -102,11 +102,9 @@ proc hash*(x: TimeSearchEntry): Hash =
 
 proc intersect(keyword: string, s1: var HashSet[TimeSearchEntry], s2: var HashSet[TimeSearchEntry]): HashSet[TimeSearchEntry] =
     if s1.len == 0:
-        for item in s2:
-            result.incl(item)
+        result.incl(s2)
     elif s2.len == 0:
-        for item in s1: 
-            result.incl(item)
+        result.incl(s1)
     elif s1.len < s2.len:
         for item in s1:
             if item in s2: 
@@ -125,18 +123,18 @@ proc sortFTIResult*(data: var seq[TimeSearchEntry], sortBy: SortBy) =
         data.sort((x, y) => cmp(y.time, x.time))
     of ByRelevanceAscending:
         data.sort do (x, y: TimeSearchEntry) -> int:
-            var res: int
-            res = cmp(x.wordCount, y.wordCount) # sort by wordCount
-            if res == 0:
-                res = cmp(x.time, y.time) # by 'time' if 'wordCont' is 0 (equal)
-            return res
+            let res = cmp(x.wordCount, y.wordCount) # sort by wordCount
+            if res == 0: # wordCount is equal
+                return cmp(x.time, y.time) # further sort by 'time'
+            else:
+                return res
     of ByRelevanceDescending:
         data.sort do (x, y: TimeSearchEntry) -> int:
-            var res: int
-            res = cmp(y.wordCount, x.wordCount) # sort by wordCount
+            let res = cmp(y.wordCount, x.wordCount) # sort by wordCount
             if res == 0:
-                res = cmp(y.time, x.time) # by 'time' if 'wordCont' is 0 (equal)
-            return res
+                return cmp(y.time, x.time) # by 'time' if 'wordCont' is 0 (equal)
+            else:
+                return res
 
 
 proc getFTI*(p: SearchParams): seq[TimeSearchEntry] =
