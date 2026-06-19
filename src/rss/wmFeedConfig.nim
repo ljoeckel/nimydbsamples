@@ -110,9 +110,15 @@ proc handleToggleFeed(req: Request) {.gcsafe.} =
             Set: ^Feed(userid, $idx, "enabled") = flip # update db
         elif feed.rssid == id:
             Set: ^Feed(userid, $idx, "enabled") = (not feed.enabled) # update db
+            var updFeed = feed
+            updFeed.enabled = (not feed.enabled)
+            let tr = createTRFeed(updFeed)
+            SSE(req):
+                patchElements(sse, tr)
     
     # Update gui    
-    handleGetFeeds(req)
+    if id == "ALL":
+        handleGetFeeds(req)
    
 
 proc handleToggleFeedGroup(req: Request) =
