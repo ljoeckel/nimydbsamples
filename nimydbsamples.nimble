@@ -12,9 +12,7 @@ requires "https://github.com/ljoeckel/nim-yottadb.git"
 requires "https://github.com/ljoeckel/mummyDS.git"
 requires "checksums"
 requires "nimpy"
-requires "regex"
-requires "unicodedb"
 
 # Tasks
-task demo, "formtx":
-  exec "cd src/datastar && nim c -r -d:release --threads:on --hints:off --verbosity:0 formtx.nim"
+task demo, "rss":
+  exec "cd src/rss && nim c -r -d:release --threads:on rssservice.nim"
