@@ -21,15 +21,13 @@ proc handleUpdateClock(req: Request) =
     let loggedIn = if userid.len > 0 and getSignal(userid, "loggedIn") == "true": true else: false
     var sse = req.respondSSE()
     var endPubDate = getFirstPubDate()
-    echo "first endPubDate=", toDateTime(endPubDate)
 
     while loggedIn:
         try:
             updateWallClock(sse)
 
             let msToNextMinute = 60000 - (now().second * 1000 + now().nanosecond div 1_000_000)
-            #sleep(msToNextMinute)
-            sleep(5000)
+            sleep(msToNextMinute)
 
             let formId = getSignal(userid, "formId")
             let lastRun = Get ^Session(userid, "lastRun").int        

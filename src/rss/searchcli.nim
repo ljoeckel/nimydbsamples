@@ -22,16 +22,19 @@ proc fullDump*(global: string) =
 
         
 proc search(lang: string = "DE", userid: string = "guest") =
+    var searchParams = SearchParams(userid: userid, lang: lang, sortBy: SortBy.ByTimeDescending)
+    
     while true:
         stdout.write("Search for: ")
         stdout.flushFile()
-        var searchFor = readLine(stdin)
-        if searchFor == "": quit(0)
-
+        var keyword = readLine(stdin)
+        if keyword == "": quit(0)
+        searchParams.keyword = keyword
         timed:
-            let results = getFTI(searchFor, lang, userid, SortBy.ByTimeDescending)
+            let results = getFTI(searchParams)
             for tse in results:
-                showRSSItem(tse.subscript)
+                let subs = tse.subscript[1..2]
+                showRSSItem(subs)
         echo fmt"Found {results.len} results"
 
 
