@@ -1,5 +1,52 @@
-<div id="container" class="card" data-signals="{formId: 'dbmonitor'}">
-    <style>
+<div id="container" data-signals="{formId: 'dbmonitor'}">
+
+<style>
+:root {
+    --row-height: 24px;
+    --header-height: 24px;
+    --shadow-height: 3px;
+}
+
+.ljtable {
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: max-content;
+}
+
+.ljtable th {
+    background: #e4e3e3;
+    color: darkslategrey;
+    border: 1px solid #ddd;
+    padding: 4px;
+    /*text-align: left;*/
+    height: var(--header-height);
+}
+
+.ljtable thead tr {
+    background: #3b82f6;
+    color: #ffffff;
+    text-align: left;
+}
+
+.ljtable tr {
+    height: var(--row-height);
+}
+
+.ljtable td {
+    border: 1px solid #ddd;
+    padding-left: 4px;
+    white-space: nowrap;
+    /*text-align: left;*/
+}
+
+.ljtable tr:hover {
+    outline: 2px solid darkgray;
+    outline-offset: -2px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    transition: box-shadow 0.3s ease;
+}
+
+
         /* ==========================================
             1. Haupt-Wrapper (Das native Viereck eliminieren)
         ========================================== */
@@ -16,13 +63,12 @@
             content: attr(data-tooltip);
             position: absolute;
             z-index: 999;
-
             /* WICHTIG: Komplett aus dem Render-Baum nehmen, solange nicht aktiv */
             display: none !important;
 
             /* Design: Helles Design */
-            background-color: #ffffff;
-            color: #1e293b;
+            background-color: #f1f3f6;
+            color: black;
             border: 1px solid #e2e8f0;
             padding: 10px 14px;
             border-radius: 8px;
@@ -102,8 +148,8 @@
         <h4>Interval: 5 seconds</h4>
     </div>
 
-    <div class="table-container">
-        <table data-on-interval__duration.5000.leading="@post('/get-rtstats')">
+    <div>
+        <table class="ljtable" data-on-interval__duration.5000.leading="@post('/get-rtstats')">
             <tt>
                 <thead>
                     <tr>

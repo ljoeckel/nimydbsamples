@@ -104,6 +104,7 @@ proc handleSearch*(sse: SSEConnection, p: SearchParams) =
     patchElements(sse, fmt"""<h3 id="info" title="Next collector run at '{toDateTime(nextRun)}'">{articles} Articles in {queryTime}</h3>""")
     if lastRssItem.idxref.len > 0:
         patchSignals(sse, %*{
+            "userid": p.userid,
             "lastPubDate": parseInt(getOption(lastRssItem.pubDate)),
             "firstPubDate": getFirstPubDate(),
             "lastIdxRef": lastRssItem.idxref,

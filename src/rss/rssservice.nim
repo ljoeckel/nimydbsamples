@@ -32,7 +32,7 @@ proc handleUpdateClock(req: Request) =
             let formId = ctx.getStr("formId")
             let lastRun = ctx.getInt("lastRun")
             let lastCollectorRun = ctx.getInt("rsscollector", "lastRun") # any new news?
-
+            echo "User: ", ctx.userid, " formId:", formId, " lastRun:", toDateTime(lastRun), " lastCollectorRun:", toDateTime(lastCollectorRun)
             if lastRun > 0 and lastCollectorRun > lastRun and formId == "livefeed":
                 var p = getSearchParams(sse)
                 p.searchType = SearchType.Incremental

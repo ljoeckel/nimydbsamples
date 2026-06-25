@@ -217,12 +217,11 @@ if isMainModule:
             # Get the pubDate of the oldest article in the database
             processFeeds(feedPath)
             processWordCloud()
-            if minutes == 0: break
-
             Set: 
                 ^Session("rsscollector", "lastRun") = dateTimeToUnix()
                 ^Session("rsscollector", "nextRun") = datetimeToUnix() + 60 * minutes
 
+            if minutes == 0: break
             echo "Sleep for ", minutes, " minutes"
             nimSleep(1000 * 60 * minutes) # sleep for minutes
 

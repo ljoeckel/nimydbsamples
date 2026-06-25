@@ -384,9 +384,7 @@ proc handleEditGlobal(req: Request) =
         let k = keys.join(", ")
         result.add(fmt"""
             <tr>
-                <td>{(page-1) * TABLE_PAGESIZE + cnt}</td>
                 <td>{k}</td>
-                <td></td>
                 <td>{value}</td>
             </tr>
             """)
