@@ -6,15 +6,15 @@ import nimrss
 
 proc getSearchParams*(sse: SSEConnection): SearchParams =
     var p = SearchParams()
-   
-    p.userid = getUserId(sse)
-    p.keyword = strip(getSignal(p.userid, "keyword"))
+    let ctx = getContext(sse)
+    p.userid = ctx.userid
+    p.keyword = strip(ctx.getStr("keyword"))
 
-    p.lang = getSignal(p.userid, "lang")
+    p.lang = ctx.getStr("lang")
     if p.lang.len == 0: p.lang = "DE"
 
-    p.sort = getSignal(p.userid, "sort")
-    p.direction = getSignal(p.userid, "direction")
+    p.sort = ctx.getStr("sort")
+    p.direction = ctx.getStr("direction")
     if p.sort == "today":
         p.sortBy = if p.direction == "up": ByTodayAscending else: ByTodayDescending
     elif p.sort == "time":
@@ -22,9 +22,9 @@ proc getSearchParams*(sse: SSEConnection): SearchParams =
     elif p.sort == "relevance":
         p.sortBy = if p.direction == "up": ByRelevanceAscending else: ByRelevanceDescending
 
-    p.lastIdxRef = getSignal(p.userid, "lastIdxRef")
-    p.maxArticles = parseInt(getSignal(p.userid, "articles"))
-    p.format = getSignal(p.userid, "format")
+    p.lastIdxRef = ctx.getStr("lastIdxRef")
+    p.maxArticles = ctx.getInt("articles")
+    p.format = ctx.getStr("format")
     (p.todayFrom, p.todayTo) = currentDayFromTo()
 
     return p
@@ -120,12 +120,11 @@ proc handleSearch*(req: Request) =
 
 
 proc handleSearchMore(req: Request) =
-    let userid = getUserId(req)
-    let lastPubDate = parseInt(getSignal(userid, "lastPubDate"))
+    let ctx = getContext(req)
     SSE(req):
         var p = getSearchParams(sse)
         p.searchType = SearchType.Append
-        p.lastPubDate = lastPubDate
+        p.lastPubDate = ctx.getInt("lastPubDate")
         handleSearch(sse, p)
 
 

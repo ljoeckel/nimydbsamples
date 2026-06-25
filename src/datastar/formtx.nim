@@ -95,9 +95,11 @@ proc handleGoto(req: Request) =
         forward(sse, HTML_DIR & page)
 
 proc getId(req: Request):string =
+    let ctx = getContext(req)
+    trimString(ctx.getStr("id"))
     # get the Id field from the current form
-    let signals = getSignals(req)
-    trimString($signals["id"])
+    #let signals = getSignals(req)
+    #trimString($signals["id"])
 
 proc getRow[T](id: string): string =
     let obj = loadObject[T](id)
@@ -111,8 +113,9 @@ proc getTableRows[T](sse: SSEConnection) =
     let gbl = "^" & $T
 
     # Load Tabledata 
-    let signals = getSignals(sse.request)
-    let maxrows = if signals.contains("maxrows"): signals["maxrows"].getInt() else: 0
+    let ctx = getContext(sse)
+    #let signals = getSignals(sse.request)
+    let maxrows = ctx.getInt("maxrows")
     if maxrows > 0:  # table paging
         var rowcount = maxrows
         var page = signals["page"].getInt()
@@ -144,8 +147,9 @@ proc getTableRows[T](sse: SSEConnection) =
 # -------------------
 proc isEmailRegistered(req: Request) =
     # check if email is already registered
-    let signals = getSignals(req)
-    let email = signals["email"].getStr()
+    #let signals = getSignals(req)
+    let ctx = getContext(req)
+    let email = ctx.getStr("email")
     if email != "":
         let isInvalid = 0 < Data ^RegistrationEMAIL(email)
         SSE(req):
@@ -307,8 +311,9 @@ proc handleDeleteCountryRow(req: Request) =
 
 proc handleGetCountry(req: Request) =
     # Get Country data
-    let signals = getSignals(req)
-    let id = toUpper(signals["id"].getStr())
+    #let signals = getSignals(req)
+    let ctx = getContext(req)
+    let id = toUpper(ctx.getStr("id"))
     var country = loadObject[Country](id)
     if country.id == "": country.id = id # hold back the last 'id' field
     # Update form fields

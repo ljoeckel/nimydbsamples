@@ -17,8 +17,8 @@ proc updateWallClock(sse: SSEConnection) =
 
 
 proc handleUpdateClock(req: Request) =
-    let userid = getUserId(req)
-    let loggedIn = if userid.len > 0 and getSignal(userid, "loggedIn") == "true": true else: false
+    let ctx = getContext(req)
+    let loggedIn = if ctx.userid.len > 0 and ctx.getBool("loggedIn"): true else: false
     var sse = req.respondSSE()
     var endPubDate = getFirstPubDate()
 
@@ -29,9 +29,9 @@ proc handleUpdateClock(req: Request) =
             let msToNextMinute = 60000 - (now().second * 1000 + now().nanosecond div 1_000_000)
             sleep(msToNextMinute)
 
-            let formId = getSignal(userid, "formId")
-            let lastRun = Get ^Session(userid, "lastRun").int        
-            let lastCollectorRun = Get ^Session("rsscollector", "lastRun").int # any new news?
+            let formId = ctx.getStr("formId")
+            let lastRun = ctx.getInt("lastRun")
+            let lastCollectorRun = ctx.getInt("rsscollector", "lastRun") # any new news?
 
             if lastRun > 0 and lastCollectorRun > lastRun and formId == "livefeed":
                 var p = getSearchParams(sse)
@@ -39,7 +39,7 @@ proc handleUpdateClock(req: Request) =
                 p.lastPubDate = int.high 
                 p.lowerBoundPubdate = endPubDate
                 handleSearch(sse, p)
-                Set: ^Session(userid, "lastRun") = datetimeToUnix()
+                ctx.save("lastRun", datetimeToUnix())
                 endPubDate = getFirstPubDate()
         except:
             echo "Leaving handleUpdateClock: ", getCurrentExceptionMsg()
@@ -49,8 +49,8 @@ proc handleUpdateClock(req: Request) =
 
 proc handleShowRSSItem(req: Request) =
     # Display the raw RSS/RSSItem data in a popup window
-    let userid = getUserId(req)
-    let id = getSignal(userid, "id")
+    let ctx = getContext(req)
+    let id = ctx.getStr("id")
     let subscript = id.split(',')
     let rssFields = getRSSFields(subscript)
     

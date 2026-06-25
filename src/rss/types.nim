@@ -65,6 +65,12 @@ type
         sortBy*: SortBy
         searchType*: SearchType = Basic
 
+
+    ListDirection* = enum
+        Up,
+        Down
+
+
     DBStats* = object
         ordercnt*: int
         querycnt*: int

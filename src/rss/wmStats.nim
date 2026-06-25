@@ -1,4 +1,4 @@
-import std/[strutils, strformat, math, tables]
+import std/[strutils, strformat, math, tables, json]
 import mummy, mummy/routers, mummy/datastar
 import nimrss
 
@@ -98,6 +98,9 @@ const
 
     emptyline = "<tr><td line-height:12px;' colspan=4>&nbsp;</td></tr>"
 
+const
+    TABLE_PAGESIZE = 20
+
 func hrb(bytes: int): string =
     # return number of bytes as b/k/m/g
     if bytes < 1024:     return $bytes & "b"
@@ -152,7 +155,15 @@ proc scanKeys(req: Request) =
             let unit = stats.duration.split(" ")[1]
             let tr = fmt"""
                 <tr>
-                    <td align='left'>{gbl}</td>
+                    <td align='left'>
+                        <a href=#{gbl} 
+                            data-on:click="
+                                $page=-1;
+                                $global='{gbl}';
+                                @post('/editglobal')">
+                            {gbl}
+                        </a>
+                    </td>
                     <td align='right'>{stats.ordercnt}</td>
                     <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
                     <td align='right'>{time}</td>
@@ -182,8 +193,8 @@ proc scanKeys(req: Request) =
 
 
 proc scanFull(req: Request) =
-    let userid = getUserId(req)
-    if userid != "admin":
+    let ctx = getContext(req)
+    if ctx.userid != "admin":
         SSE(req):
             patchElements(sse, "<h4>'admin' only!</h4>", selector="#stats-body", mode=Replace)
             return
@@ -253,8 +264,8 @@ proc scanFull(req: Request) =
 
 
 proc handleStats(req: Request) =
-    let userid = getUserId(req)
-    let action = getSignal(userid, "action")
+    let ctx = getContext(req)
+    let action = ctx.getStr("action")
     if action == "keys":
         scanKeys(req)
     elif action == "full":
@@ -304,10 +315,129 @@ proc handleRTStats(req: Request) =
         updateDBStats(sse)
 
 
+proc handleEditGlobal(req: Request) =
+    let
+        ctx = getContext(req)
+        global = ctx.getStr("global")
+        lastPage = ctx.getInt("lastPage")
+    var 
+        btn = ctx.getStr("btn")
+        subscripts_low = getSeq[string](ctx, "subscripts_low")
+        subscripts_high = getSeq[string](ctx, "subscripts_high")    
+        page = ctx.getInt("page")
+        cnt = 0
+        direction: ListDirection
+        rows = ""
+        entries: seq[seq[string]]
+    
+    # cleanup when global changes
+    if page <= 0 or btn == "firstPage":
+        page = 1
+        btn = ""
+        direction = Up
+        subscripts_low = @[]
+        subscripts_high = @[]
+    elif btn == "lastPage":
+        page = 99999
+        direction = Down
+        subscripts_low = @[]
+        subscripts_high = @[]
+    elif btn == "nextPage":
+        direction = Up
+    elif btn == "currentPageInput":
+        if page > lastPage: direction = Up else: direction = Down
+    else:
+        direction = Down
+
+    proc incrementSubscripts(subscripts: var seq[string], maxCount: int) =
+        var cnt = 0
+        for keys in QueryItr @global(subscripts).keys:
+            subscripts = keys
+            inc cnt
+            if cnt >= maxCount:
+                break
+
+    proc decrementSubscripts(subscripts: var seq[string], maxCount: int) =
+        var cnt = 0
+        for keys in QueryItr @global(subscripts).keys.reverse:
+            subscripts = keys
+            inc cnt
+            if cnt >= maxCount:
+                break
+
+    echo "page=", page, " lastpage=", lastpage, " btn=", btn, " direction=", direction
+    echo "subscripts_high=", subscripts_high
+
+    let pageDelta = page - lastPage
+    if subscripts_high.len > 0 and pageDelta > 1:
+        for i in 0..pageDelta:
+            incrementSubscripts(subscripts_high, TABLE_PAGESIZE)
+    elif subscripts_high.len > 0 and pageDelta < -1:
+        for i in 0..abs(pageDelta):
+            incrementSubscripts(subscripts_low, TABLE_PAGESIZE)
+    
+    
+    #proc createGlobalsTR(keys: seq[string], value: string): string =
+    proc createGlobalsTR(idx: int): string =
+        let keys = entries[idx]
+        let value = Get @global(keys)
+        let k = keys.join(", ")
+        result.add(fmt"""
+            <tr>
+                <td>{(page-1) * TABLE_PAGESIZE + cnt}</td>
+                <td>{k}</td>
+                <td></td>
+                <td>{value}</td>
+            </tr>
+            """)
+
+    if direction == Up:
+        for keys in QueryItr @global(subscripts_high).keys:
+            entries.add(keys)
+            inc cnt
+            if cnt >= TABLE_PAGESIZE: break
+
+        for idx in 0..<entries.len:
+            rows.add(createGlobalsTR(idx))
+        
+        if entries.len > 0:
+            ctx.save("subscripts_low", entries[0])
+            ctx.save("subscripts_high", entries[entries.len-1])
+    else:
+        for keys in QueryItr @global(subscripts_low).keys.reverse:
+            entries.add(keys)
+            inc cnt
+            if cnt >= TABLE_PAGESIZE: break
+
+        for idx in countdown(entries.len-1, 0):
+            rows.add(createGlobalsTR(idx))
+
+        if entries.len > 0:
+            ctx.save("subscripts_low", entries[entries.len-1])
+            ctx.save("subscripts_high", entries[0])
+
+    let table = fmt"""
+        <tbody id="globaltbody">
+            {rows}
+        </tbody>
+        """
+
+    SSE(req):
+        patchSignals(sse, %*{
+            "showGlobals": true, 
+            "page": page,
+            "lastPage": page,
+        })
+        patchElements(sse, table, selector="#globaltbody", mode=Replace)
+
+
+
+
 # Callback for router registration
 proc register*(router: var Router) =
     router.post("/get-stats", handleStats)
     router.post("/get-rtstats", handleRTStats)
+    router.post("/editglobal", handleEditGlobal)
 
 # Create module instance
 let wmStatsModule* = WebModule(

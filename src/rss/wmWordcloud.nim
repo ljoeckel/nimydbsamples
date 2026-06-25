@@ -79,8 +79,8 @@ proc createWordCloudForAllDays(): int =
 
 
 proc handleGetWordcloud(req: Request) =
-    let userid = getUserId(req)
-    var lang = getSignal(userid, "lang")
+    let ctx = getContext(req)
+    var lang = ctx.getStr("lang")
     if lang.len == 0: lang = "DE"
     let processed = createWordCloudForToday()
     echo fmt"Processed {processed} Articles"

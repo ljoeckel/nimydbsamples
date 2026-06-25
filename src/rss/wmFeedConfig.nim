@@ -31,13 +31,13 @@ proc createTRFeed(feed: Feed): string =
 
 
 proc handleGetFeeds(req: Request) {.gcsafe.} =
-    let userid = getUserId(req)
-    var userFeeds = loadObject[UserFeeds](userid)
+    let ctx = getContext(req)
+    var userFeeds = loadObject[UserFeeds](ctx.userid)
     if userFeeds.feeds.len == 0: # init user feeds from base config
-        userFeeds.userid = userid
+        userFeeds.userid = ctx.userid
         userFeeds.feeds = getFeeds()
-        saveObject[UserFeeds](userid, userFeeds)
-        echo fmt"Created UserFeeds for '{userid}', Number of feeds: {userFeeds.feeds.len}"
+        saveObject[UserFeeds](ctx.userid, userFeeds)
+        echo fmt"Created UserFeeds for '{ctx.userid}', Number of feeds: {userFeeds.feeds.len}"
 
     # Sort by group / title
     let feeds = userFeeds.feeds.sortedByIt(toUpper(it.group) & toUpper(it.title))
@@ -96,9 +96,9 @@ proc handleGetFeeds(req: Request) {.gcsafe.} =
 
 proc handleToggleFeed(req: Request) {.gcsafe.} =
     # Toggle Row
-    let userid = getUserid(req)
-    let id = getSignal(userid, "id")
-    let userFeeds = loadObject[UserFeeds](userid)
+    let ctx = getContext(req)
+    let id = ctx.getStr("id")
+    let userFeeds = loadObject[UserFeeds](ctx.userid)
 
     # Update DB
     var init, flip: bool
@@ -107,9 +107,9 @@ proc handleToggleFeed(req: Request) {.gcsafe.} =
             if not init:
                 flip = (not feed.enabled)
                 init = true
-            Set: ^Feed(userid, $idx, "enabled") = flip # update db
+            Set: ^Feed(ctx.userid, $idx, "enabled") = flip # update db
         elif feed.rssid == id:
-            Set: ^Feed(userid, $idx, "enabled") = (not feed.enabled) # update db
+            Set: ^Feed(ctx.userid, $idx, "enabled") = (not feed.enabled) # update db
             var updFeed = feed
             updFeed.enabled = (not feed.enabled)
             let tr = createTRFeed(updFeed)
@@ -123,10 +123,10 @@ proc handleToggleFeed(req: Request) {.gcsafe.} =
 
 proc handleToggleFeedGroup(req: Request) =
     # Toggle a feedgroup
-    let userid = getUserId(req)
-    let group = getSignal(userid, "id")
+    let ctx = getContext(req)
+    let group = ctx.getStr("id")
     var init, flip: bool
-    var userFeeds = loadObject[UserFeeds](userid)
+    var userFeeds = loadObject[UserFeeds](ctx.userid)
 
     for feed in userFeeds.feeds.mitems:
         if feed.group == group:
@@ -134,7 +134,7 @@ proc handleToggleFeedGroup(req: Request) =
                 flip = (not feed.enabled)
                 init = true
             feed.enabled = flip
-    saveObject[UserFeeds](userid, userFeeds) # update db
+    saveObject[UserFeeds](ctx.userid, userFeeds) # update db
     handleGetFeeds(req) # update gui
 
 

@@ -1,5 +1,6 @@
-<div id="container" class="card" data-signals="{formId: 'dbstats'}">
-    
+<div id="container" class="card" data-signals="{formId: 'dbstats', showGlobals: false, btn: '', page: 1}">
+<style>
+</style>
     <div class="header">
         <h1>Database statistics</h1>
     </div>
@@ -27,5 +28,32 @@
             <!-- The backend will target this ID to insert rows -->
             <tbody id="stats-body" data-init="@post('/get-stats')"></tbody>
         </table>
+
+        <div data-show="$showGlobals">
+            <table>
+                <thead>
+                    <tr>
+                        <td data-text="$global"></td>
+                    </tr>
+                    <tr>
+                        <td>#</td>
+                        <td>Subscripts</td>
+                        <td width="10px"></td>
+                        <td>Value</td>
+                    </tr>
+                </thead>
+                <tbody id="globaltbody">
+                </tbody>
+
+            </table>
+            <div class=".pagination-container">
+            <div class="item"><button id="firstPage" data-on:click="$btn=el.id; $page=1; $subscript=''; @post('/editglobal')"><i class="bi bi-chevron-bar-left"></i></button></div>
+            <div class="item"><button class="item" id="prevPage" data-on:click="$btn=el.id; $page=parseInt($page)-1; @post('/editglobal')"><i class="bi bi-chevron-left"></i></button></div>
+            <div class="item"><input class="item" type="number" id="currentPageInput" min="1" data-bind:page data-on:change="$btn=el.id; @post('/editglobal')"></div>
+            <div class="item"><button class="item" id="nextPage" data-on:click="$btn=el.id; $page=parseInt($page)+1; @post('/editglobal')"><i class="bi bi-chevron-right"></i></button></div>
+            <div class="item"><button class="item" id="lastPage" data-on:click="$btn=el.id; $page=99999999; $subscript=''; @post('/editglobal')"><i class="bi bi-chevron-bar-right"></i></button></div>
+            </div>
+        </div>
+
     </div>
 </div>
