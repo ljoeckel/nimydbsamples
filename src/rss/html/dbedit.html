@@ -1,0 +1,164 @@
+<!-- data-init="@post('/getGlobalList'); @post('/editglobal')" -->
+<div id="container" data-signals="{formId: 'dbedit', page: 1, lastpage: 1, btn: 'firstPage'}"
+data-signals:global__ifmissing=''
+>
+
+    <style>
+        :root {
+            --row-height: 26px;
+            --header-height: 26px;
+            --shadow-height: 3px;
+            --th-background: #e4e3e3;
+            --th-color: darkslategray;
+        }
+
+        /*
+        .table-container {
+            height: 100vh;
+            overflow-y: auto;
+            scrollbar-gutter: stable;
+            border: 1px solid #e5e7eb;
+            width: max-content;
+        }
+            */
+
+        .ljtable {
+            border-collapse: collapse;
+            table-layout: fixed;
+            width: max-content;
+        }
+
+        .ljtable th {
+            position: sticky;
+            top: 0;
+            background: #e4e3e3;
+            color: var(--th-color);
+            z-index: 10;
+            border: 1px solid #ddd;
+            padding: 8px;
+            height: var(--header-height);
+        }
+
+        .ljtable tr {
+            height: var(--row-height);
+        }
+
+        .ljtable table {
+            border-collapse: collapse;
+            table-layout: fixed;
+            width: 100%;
+        }
+
+        .ljtable thead tr {
+            background: var(--th-background);
+            color: var(--th-color);
+        }
+
+        .ljtable td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            overflow: auto;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .ljtable td a {
+            color: var(--th-color);
+            text-decoration: underline;
+            text-decoration-style: dotted;
+        }
+
+        .ljtable tbody tr {
+            cursor: pointer;
+            font-size: 14px;
+            color: black;
+        }
+
+        .ljtable tr:hover {
+            outline: 2px solid darkgray;
+            outline-offset: -2px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transition: box-shadow 0.3s ease;
+        }
+
+
+        .pagination {
+            display: flex;
+            padding: 0 10px;
+            justify-content: center;
+            align-items: center;
+            background-color: rgb(218, 202, 232);
+        }
+
+        .pagination-list {
+            display: flex;
+            list-style: none;
+            align-items: center;
+            flex-wrap: wrap;
+            background-color: antiquewhite;
+        }
+
+        .pagination-item {
+            list-style: none;
+            margin: 10 3px 3px 10;
+            background-color: white;
+            border-radius: 5px;
+            border: 1px solid var(--brand-color);
+        }
+    </style>
+
+    <div class="header">
+        <h1>Globals</h1>
+    </div>
+   
+    <select
+        id="globals" 
+        name="globals" 
+        data-bind="global"
+        data-init="@post('/getGlobalList')"
+        data-on:change="@post('/editglobal')">
+    </select>
+
+    <!-- Globals Table -->
+    <table class="ljtable">
+        <thead>
+            <tr>
+                <td>Subscripts</td>
+                <td>Value</td>
+            </tr>
+        </thead>
+        <tbody id="globaltbody" data-effect="@post('/editglobal')">
+        </tbody>
+
+    </table>
+
+    <div class="pagination">
+        <div class="pagination-list">
+            <div class="pagination-item">
+                <button id="firstPage" data-on:click="$btn=el.id; $page=1; $subscript=''; @post('/editglobal')">
+                    <i class="bi bi-chevron-bar-left"></i></button></div>
+
+            <div class="pagination-item">
+                <button id="prevPage" data-on:click="$btn=el.id; $page=parseInt($page)-1; @post('/editglobal')">
+                    <i class="bi bi-chevron-left"></i></button></div>
+
+            <div class="pagination-item">
+                <input maxlength="5" type="number" id="currentPageInput" min="1" 
+                    data-bind:page
+                    data-on:change="$btn=el.id; @post('/editglobal')">
+                </input>
+            </div>
+
+            <div class="pagination-item">
+                <button id="nextPage" data-on:click="$btn=el.id; $page=parseInt($page)+1; @post('/editglobal')">
+                    <i class="bi bi-chevron-right"></i></button>
+            </div>
+
+            <div class="pagination-item">
+                <button id="lastPage" data-on:click="$btn=el.id; $page=99999999; $subscript=''; @post('/editglobal')"><i
+                        class="bi bi-chevron-bar-right"></i></button>
+            </div>
+        </div>
+    </div>
+
+</div>

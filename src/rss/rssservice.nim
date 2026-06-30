@@ -18,32 +18,44 @@ proc updateWallClock(sse: SSEConnection) =
 
 proc handleUpdateClock(req: Request) =
     let ctx = getContext(req)
-    let loggedIn = if ctx.userid.len > 0 and ctx.getBool("loggedIn"): true else: false
     var sse = req.respondSSE()
     var endPubDate = getFirstPubDate()
+    echo toDateTime(datetimeToUnix()),": User: ", ctx.userid, " enter handleUpdateClock"
 
+    try:
+        updateWallClock(sse)
+        var p = getSearchParams(sse)
+        p.searchType = SearchType.Basic
+        handleSearch(sse, p)
+    except:
+        echo "ERROR: ", getCurrentExceptionMsg()
+
+    var loggedIn = if ctx.userid.len > 0 and ctx.getBool("loggedIn"): true else: false
     while loggedIn:
         try:
-            updateWallClock(sse)
-
             let msToNextMinute = 60000 - (now().second * 1000 + now().nanosecond div 1_000_000)
             sleep(msToNextMinute)
 
+            loggedIn = ctx.getBool("loggedIn")
             let formId = ctx.getStr("formId")
             let lastRun = ctx.getInt("lastRun")
             let lastCollectorRun = ctx.getInt("rsscollector", "lastRun") # any new news?
-            echo "User: ", ctx.userid, " formId:", formId, " lastRun:", toDateTime(lastRun), " lastCollectorRun:", toDateTime(lastCollectorRun)
+            
+            echo toDateTime(datetimeToUnix()),": User: ", ctx.userid, " formId:", formId, " lastRun:", toDateTime(lastRun), " lastCollectorRun:", toDateTime(lastCollectorRun)
             if lastRun > 0 and lastCollectorRun > lastRun and formId == "livefeed":
                 var p = getSearchParams(sse)
                 p.searchType = SearchType.Incremental
                 p.lastPubDate = int.high 
                 p.lowerBoundPubdate = endPubDate
                 handleSearch(sse, p)
-                ctx.save("lastRun", datetimeToUnix())
                 endPubDate = getFirstPubDate()
+            
+            updateWallClock(sse)
+
         except:
             echo "Leaving handleUpdateClock: ", getCurrentExceptionMsg()
             break
+        
     sse.close()
 
 

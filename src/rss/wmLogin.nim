@@ -41,7 +41,7 @@ proc handleLogout(req: Request) =
         "userid": "",
         "password": "",
     })        
-    forward(sse, "./html/index.html")
+    forward(sse, "./html/login.html")
 
 
 proc clearForm(sse: SSEConnection, userid: string) =

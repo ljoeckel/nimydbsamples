@@ -13,6 +13,8 @@
     --nav-bg: rgb(160, 14, 14);
     --nav-fg: white;
     --radius: 14px;
+
+    --brand-color: #8fc31f;
 }
 
 body {
@@ -275,6 +277,7 @@ input[type="radio"] {
 
 
 /* StyledTable */
+/*
 .pagination {
     margin-top: 15px;
     display: flex;
@@ -296,6 +299,7 @@ input[type="radio"] {
     background-color: #cccccc;
     cursor: not-allowed;
 }
+*/
 
 /* disable submit button */
 form:has(:invalid) button[type="submit"] {

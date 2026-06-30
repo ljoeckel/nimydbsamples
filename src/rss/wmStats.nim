@@ -89,11 +89,15 @@ const mnemomics = {
 
 const
     globals = @[
-        "^Author", "^ConfigFeed", "^DBStats", "^Feed", "^RSS", "^RSSCNT", "^RSSEnclosure",
+        "^Author", "^ConfigFeed", "^Feed", "^RSS", "^RSSCNT", "^RSSEnclosure",
         "^RSSFTI", "^RSSImage", "^RSSItem",  "^RSSItemFTI",
-        "^RSSItemGUID", "^RSSItemIDXREF", "^RSSItemPUBDATE", "^Session", "^UserFeeds",
+        "^RSSItemGUID", "^RSSItemIDXREF", "^RSSItemPUBDATE", 
         "^stopwordsEN", "^stopwordsDE", "^stopwordsES", "^stopwordsWC",
-        "^Registration", "^RegistrationEMAIL", "^DBSTATS"
+        ]
+const
+    adminglobals = @[
+        "^Session", "^UserFeeds",
+        "^Registration", "^RegistrationEMAIL", "^DBStats"
         ]
 
     emptyline = "<tr><td line-height:12px;' colspan=4>&nbsp;</td></tr>"
@@ -159,8 +163,9 @@ proc scanKeys(req: Request) =
                         <a href=#{gbl} 
                             data-on:click="
                                 $page=-1;
+                                $lastpage=-1;
                                 $global='{gbl}';
-                                @post('/editglobal')">
+                                @get('/dbedit.html')">
                             {gbl}
                         </a>
                     </td>
@@ -194,7 +199,7 @@ proc scanKeys(req: Request) =
 
 proc scanFull(req: Request) =
     let ctx = getContext(req)
-    if ctx.userid != "admin":
+    if not ctx.isAdmin():
         SSE(req):
             patchElements(sse, "<h4>'admin' only!</h4>", selector="#stats-body", mode=Replace)
             return
@@ -316,10 +321,15 @@ proc handleRTStats(req: Request) =
 
 
 proc handleEditGlobal(req: Request) =
+    echo "*** handleEditGlobal ***"
     let
         ctx = getContext(req)
         global = ctx.getStr("global")
         lastPage = ctx.getInt("lastPage")
+    
+    echo "global=", global
+    if global.isEmptyOrWhitespace: return
+
     var 
         btn = ctx.getStr("btn")
         subscripts_low = getSeq[string](ctx, "subscripts_low")
@@ -376,8 +386,6 @@ proc handleEditGlobal(req: Request) =
         for i in 0..abs(pageDelta):
             incrementSubscripts(subscripts_low, TABLE_PAGESIZE)
     
-    
-    #proc createGlobalsTR(keys: seq[string], value: string): string =
     proc createGlobalsTR(idx: int): string =
         let keys = entries[idx]
         let value = Get @global(keys)
@@ -429,6 +437,27 @@ proc handleEditGlobal(req: Request) =
         patchElements(sse, table, selector="#globaltbody", mode=Replace)
 
 
+proc handleGetGlobalList(req: Request) =
+    echo "*** handleGetGlobalList ***"
+    let ctx = getContext(req)
+    let selected = ctx.getStr("global")
+    echo "global selected=", selected
+
+    var options = "<option value='' selected disabled>Select Global</option>"
+    for global in globals:
+        if global == selected:
+            options.add(fmt"""<option value={global} selected>{global}</option>""")
+        else:
+            options.add(fmt"""<option value={global}>{global}</option>""")
+    
+    if ctx.isAdmin():
+        for global in adminglobals:
+            options.add(fmt"""<option value={global}>{global}</option>""")
+
+    SSE(req):
+        patchElements(sse, options, selector="#globals", mode=Inner)
+
+
 
 
 # Callback for router registration
@@ -436,6 +465,7 @@ proc register*(router: var Router) =
     router.post("/get-stats", handleStats)
     router.post("/get-rtstats", handleRTStats)
     router.post("/editglobal", handleEditGlobal)
+    router.post("/getGlobalList", handleGetGlobalList)
 
 # Create module instance
 let wmStatsModule* = WebModule(
