@@ -155,6 +155,14 @@ proc handleChart1(req: Request) =
             }
         })
 
+        # cleanup the big array. TODO: find other solution
+        patchSignals(sse, %*{
+            fmt"{chartid}": {
+                "x": [],
+                "y": [],
+            }
+        })
+
         #let script = fmt"updateChart('{chartId}', '{mnemonic}', '{domain}', [{xAxisData}], [{yAxisData}]);"
         #sse.executeScript(script)
 
