@@ -218,13 +218,11 @@ proc handleRTStats(req: Request) =
 
 
 proc handleEditGlobal(req: Request) =
-    echo "*** handleEditGlobal ***"
     let
         ctx = getContext(req)
         global = ctx.getStr("global")
         lastpage = ctx.getInt("lastpage")
     
-    echo "global=", global
     if global.isEmptyOrWhitespace: return
 
     var 
@@ -271,9 +269,6 @@ proc handleEditGlobal(req: Request) =
             inc cnt
             if cnt >= maxCount:
                 break
-
-    echo "page=", page, " lastpage=", lastpage, " btn=", btn, " direction=", direction
-    echo "subscripts_high=", subscripts_high
 
     let pageDelta = page - lastpage
     if subscripts_high.len > 0 and pageDelta > 1:
@@ -335,10 +330,8 @@ proc handleEditGlobal(req: Request) =
 
 
 proc handleGetGlobalList(req: Request) =
-    echo "*** handleGetGlobalList ***"
     let ctx = getContext(req)
     let selected = ctx.getStr("global")
-    echo "global selected=", selected
 
     var options = "<option value='' selected disabled>Select Global</option>"
     for global in globals:
