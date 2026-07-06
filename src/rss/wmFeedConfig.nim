@@ -153,7 +153,7 @@ proc checkFeedConfiguration*(userid: string) =
 
 # Callback for router registration
 proc register*(router: var Router) =
-    router.get("/get-feeds", handleGetFeeds)
+    router.post("/get-feeds", handleGetFeeds)
     router.post("/toggle-feed", handleToggleFeed)
     router.post("/toggle-feedgroup", handleToggleFeedGroup)
 

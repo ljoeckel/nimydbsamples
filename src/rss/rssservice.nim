@@ -10,6 +10,7 @@ import wmLogin
 import wmSearch
 import wmStats
 import wmWordcloud
+import wmDbMonitor
 
 proc updateWallClock(sse: SSEConnection) =
     let wc = now().format("dd.MM.yyyy - HH:mm")
@@ -33,6 +34,7 @@ proc handleUpdateClock(req: Request) =
     var loggedIn = if ctx.userid.len > 0 and ctx.getBool("loggedIn"): true else: false
     while loggedIn:
         try:
+            updateDBStats("srv")
             let msToNextMinute = 60000 - (now().second * 1000 + now().nanosecond div 1_000_000)
             sleep(msToNextMinute)
 
@@ -97,8 +99,6 @@ if isMainModule:
         quit(0)
     setControlCHook(shutdown)
 
-    Kill ^DBSTATS
-
     var router = Router()
     # Register WebModules
     wmFeedConfigModule.register(router)
@@ -106,14 +106,15 @@ if isMainModule:
     wmSearchModule.register(router)
     wmStatsModule.register(router)
     wmWordcloud.register(router)
+    wmDbMonitor.register(router)
 
     router.post("/update-clock", handleUpdateClock)
-    router.get("/show-rssitem", handleShowRSSItem)
+    router.post("/show-rssitem", handleShowRSSItem)
     router.post("/update-scroll", handleUpdateScroll)
     
 
     # Standard handlers
-    router.get("/goto/**", handleGoto)
+    router.post("/goto/**", handleGoto)
     router.notFoundHandler = serveStatic
 
     let (host, port) = ("localhost", 8080)

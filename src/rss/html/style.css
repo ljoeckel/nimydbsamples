@@ -14,7 +14,12 @@
     --nav-fg: white;
     --radius: 14px;
 
-    --brand-color: #8fc31f;
+    /* tables */
+    --row-height: 24px;
+    --header-height: 24px;
+    --shadow-height: 3px;
+    --th-background: #e4e3e3;
+    --th-color: darkslategray;
 }
 
 body {

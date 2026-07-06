@@ -221,6 +221,8 @@ if isMainModule:
                 ^Session("rsscollector", "lastRun") = dateTimeToUnix()
                 ^Session("rsscollector", "nextRun") = datetimeToUnix() + 60 * minutes
 
+            updateDBStats("clc")
+
             if minutes == 0: break
             echo "Sleep for ", minutes, " minutes"
             nimSleep(1000 * 60 * minutes) # sleep for minutes
