@@ -1,10 +1,10 @@
 <div id="container"
     data-signals="{
         domain: 'srv',
-        chart1: { id: 'chart1', mnemonic: 'GET', x: [], y: [], processed: 123 },
-        chart2: { id: 'chart2', mnemonic: 'SET', x: [], y: [], processed: 456 },
-        chart3: { id: 'chart3', mnemonic: 'ORD', x: [], y: [], processed: 456 },
-        chart4: { id: 'chart4', mnemonic: 'QRY', x: [], y: [], processed: 456 },
+        chart1: { id: 'chart1', mnemonic: 'GET', x: [], y: [] },
+        chart2: { id: 'chart2', mnemonic: 'SET', x: [], y: [] },
+        chart3: { id: 'chart3', mnemonic: 'ORD', x: [], y: [] },
+        chart4: { id: 'chart4', mnemonic: 'QRY', x: [], y: [] },
     }">
     
     <select data-bind="domain" 
@@ -14,9 +14,9 @@
         <option value="clc">RSSCollector</option>
     </select>
 
-    <div id="chart1" style="width: 100%; height: 200px;" data-effect="window.updateChart($chart1.id, $chart1.mnemonic, $domain, $chart1.x, $chart1.y)"></div>
-    <div id="chart2" style="width: 100%; height: 200px;" data-effect="window.updateChart($chart2.id, $chart2.mnemonic, $domain, $chart2.x, $chart2.y)"></div>
-    <div id="chart3" style="width: 100%; height: 200px;" data-effect="window.updateChart($chart3.id, $chart3.mnemonic, $domain, $chart3.x, $chart3.y)"></div>
-    <div id="chart4" style="width: 100%; height: 200px;" data-effect="window.updateChart($chart4.id, $chart4.mnemonic, $domain, $chart4.x, $chart4.y)"></div>
+    <div id="chart1" style="width: 100%; height: 200px;" data-effect="window.updateChart($chart1)"></div>
+    <div id="chart2" style="width: 100%; height: 200px;" data-effect="window.updateChart($chart2)"></div>
+    <div id="chart3" style="width: 100%; height: 200px;" data-effect="window.updateChart($chart3)"></div>
+    <div id="chart4" style="width: 100%; height: 200px;" data-effect="window.updateChart($chart4)"></div>
     
 </div>

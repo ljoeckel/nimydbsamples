@@ -1,5 +1,4 @@
-import std/[strutils, strformat, math, json]
-import std/[tables, algorithm]
+import std/[strutils, strformat, math, json, tables]
 import mummy, mummy/routers, mummy/datastar
 import nimrss
 
@@ -66,8 +65,6 @@ proc scanKeys(req: Request) =
         for gbl in globals:
             let duration = meassure:
                 var stats = countKeys(gbl)
-                let avgKey: float = (stats.keylen / stats.querycnt)
-                let avgValue: float = (stats.valuelen / stats.querycnt)
 
             stats.duration = duration
 
@@ -257,14 +254,6 @@ proc handleEditGlobal(req: Request) =
     proc incrementSubscripts(subscripts: var seq[string], maxCount: int) =
         var cnt = 0
         for keys in QueryItr @global(subscripts).keys:
-            subscripts = keys
-            inc cnt
-            if cnt >= maxCount:
-                break
-
-    proc decrementSubscripts(subscripts: var seq[string], maxCount: int) =
-        var cnt = 0
-        for keys in QueryItr @global(subscripts).keys.reverse:
             subscripts = keys
             inc cnt
             if cnt >= maxCount:

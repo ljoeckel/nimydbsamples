@@ -1,9 +1,7 @@
-window.updateChart = function(chartId, mnemonic, domainName, x, y) {
-    console.log("in UpdateChart")
-    if (!x || x.length === 0) return;
-    var chartDom = document.getElementById(chartId);
+window.updateChart = function(chart) {
+    if (!chart.x || chart.x.length === 0) return;
+    var chartDom = document.getElementById(chart.id);
     if (!chartDom) return;
-    console.log("have chartDom")
     // 2. Bestehende Instanz holen oder neu erstellen
     var myChart = echarts.getInstanceByDom(chartDom);
     if (!myChart) {
@@ -11,9 +9,9 @@ window.updateChart = function(chartId, mnemonic, domainName, x, y) {
     }
     // 3. Optionen setzen (ECharts merged das automatisch)
     var option = {
-        title: { text: mnemonic},
+        title: { text: chart.mnemonic},
         tooltip: { trigger: 'axis', axisPointer: { animation: false } },
-        legend: { data: [mnemonic], left: 10 },
+        legend: { data: [chart.mnemonic], left: 10 },
         toolbox: { feature: { dataZoom: { yAxisIndex: 'none' }, restore: {}, saveAsImage: {} } },
         axisPointer: { link: [{ xAxisIndex: 'all' }] },
         dataZoom: [
@@ -26,7 +24,7 @@ window.updateChart = function(chartId, mnemonic, domainName, x, y) {
         ],                      
         xAxis: {
             type: 'category',
-            data: x // Datastar-Signal liefert direkt das JS-Array
+            data: chart.x // Datastar-Signal liefert direkt das JS-Array
         },
         yAxis: {
             type: 'log',
@@ -35,9 +33,9 @@ window.updateChart = function(chartId, mnemonic, domainName, x, y) {
         },
         series: [
             {
-                name: mnemonic,
+                name: chart.mnemonic,
                 type: 'line',
-                data: y // Datastar-Signal liefert direkt das JS-Array
+                data: chart.y // Datastar-Signal liefert direkt das JS-Array
             }
         ]
     };

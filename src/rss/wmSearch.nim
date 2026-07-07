@@ -1,4 +1,4 @@
-import std/[times, strutils, strformat, json, enumerate]
+import std/[times, strutils, strformat, json]
 import std/[typetraits]
 import mummy, mummy/routers, mummy/datastar
 import nimrss

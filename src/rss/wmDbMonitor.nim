@@ -1,4 +1,4 @@
-import std/[strutils, strformat, times, tables, algorithm, sequtils, json]
+import std/[strutils, strformat, tables, algorithm, sequtils, json]
 import mummy, mummy/routers, mummy/datastar
 import nimrss
 
@@ -42,22 +42,19 @@ proc handleChart(req: Request) =
     let params = ctx.getJson(chartid)
     let mnemonic = params["mnemonic"].getStr()
     let domain = ctx.getStr("domain")
-    #echo "handleChart chartid=", chartid, " mnemonic=", mnemonic, " domain=", domain
 
-    let duration = meassure:
-        let stats = getStats(mnemonic, domain)
-        var xAxis: seq[int]
-        var yAxis: seq[int]
-        for (k, v) in stats.pairs():
-            xAxis.add(k)
-            yAxis.add(v[0].delta)
+    let stats = getStats(mnemonic, domain)
+    var xAxis: seq[int]
+    var yAxis: seq[int]
+    for (k, v) in stats.pairs():
+        xAxis.add(k)
+        yAxis.add(v[0].delta)
 
     SSE(req):
         patchSignals(sse, %*{
             fmt"{chartid}": {
                 "x": xAxis,
                 "y": yAxis,
-                "processed": duration
             }
         })
 
