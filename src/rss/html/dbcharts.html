@@ -1,16 +1,77 @@
 <div id="container"
     data-signals="{
+        poll: false,
         domain: 'srv',
-        period: 'Hour',
-        chartType: 'line',
+        period: 'Day',
+        chartType: 'bar',
         chart1: { id: 'chart1', mnemonic: 'GET', x: [], y: [] },
         chart2: { id: 'chart2', mnemonic: 'SET', x: [], y: [] },
         chart3: { id: 'chart3', mnemonic: 'ORD', x: [], y: [] },
         chart4: { id: 'chart4', mnemonic: 'QRY', x: [], y: [] }
     }">
 
+    <style>
+        .select-group {
+            display: flex;
+            gap: 8px;
+            justify-content: left;
+            align-items: center;
+            height: 36px;
+
+        }
+        .select-group label {
+            width: 80px;
+            background: white;
+            text-align: right;
+        }
+        .select-group select {
+            width: 125px;
+        }
+
+        .led-red {
+          display: inline-block;
+          width: 16px;
+          height: 16px;
+          background-color: rgb(134, 205, 129);
+          border-radius: 50%;
+          box-shadow: rgba(0, 0, 0, 0.2) 0 -1px 7px 1px, inset #441313 0 -1px 9px, rgba(19, 138, 44, 0.5) 0 2px 12px;
+        }        
+
+        .led-red {
+          animation: blinkRed 1s infinite;
+        }
+
+        @keyframes blinkRed {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+    </style>
+
+
     <div data-init="@post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4')">
         <div class="select-group">
+            <div class="select-group">
+                <button 
+                    title="Refresh the statistics"
+                    data-indicator="isLoading"
+                    data-on:click="@post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4')">
+                <i class="bi bi-arrow-clockwise"></i>
+                </button>
+                <div class="checkbox full">
+                    <label for="auto" title="Auto Update">Auto</label>
+                    <input 
+                        id="auto"
+                        type="checkbox" 
+                        data-bind="poll"
+                        data-indicator="isLoading"
+                        data-on-interval__duration.10s="if ($poll) { @post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4') }">
+                    </input>
+                </div>
+                
+                <span data-show="$isLoading" class="led-red"></span>
+                <svg data-show="!$isLoading" width="16" height="16"></svg>
+            </div>
+            
             <div class="select-group">
                 <label for="domain">Process:</label>
                 <select id="domain" data-bind="domain" 
@@ -25,12 +86,12 @@
                 <select id="period" data-bind="period" 
                     data-indicator="isLoading"
                     data-on:change="@post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4')">
-                    <option value="Hour">Hour by minute</option>
-                    <option value="Day">Day by hour</option>
-                    <option value="Week">Week by day</option>
-                    <option value="Month">Month by day</option>
-                    <option value="YearByDay">Year by day</option>
-                    <option value="YearByMonth">Year by month</option>
+                    <option value="Hour">Last hour</option>
+                    <option value="Day">Day 24h</option>
+                    <option value="Week">Week 7d</option>
+                    <option value="Month">Month 31d</option>
+                    <option value="YearByDay">Year 365d</option>
+                    <option value="YearByMonth">Year 12m</option>
                     <option value="All">All datapoints</option>
                 </select>
             </div>                
@@ -44,11 +105,6 @@
                     <option value="scatter">Scatter</option>
                 </select>
             </div>
-            <svg data-show="$isLoading" width="5" height="5">
-                <circle cx="3" cy="3" r="3" fill="red" />
-            </svg>
-            <svg data-show="!$isLoading" width="5" height="5">
-            </svg>
         </div>
     </div>
 

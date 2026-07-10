@@ -175,15 +175,19 @@ proc toDateTime*(datetime: int): string =
     dt.format("yyyy-MM-dd HH:mm:ss")
 
 
-proc currentDayFromTo*(): (int, int) =
-    # Get time range for the current day    
-    let date = getDateStr(now())
-    let dt1 = parse(date & " 00:00:00", "yyyy-MM-dd HH:mm:ss")
-    let dt2 = parse(date & " 23:59:59", "yyyy-MM-dd HH:mm:ss")
-    return (dt1.toTime().toUnix(),  dt2.toTime().toUnix())
+proc getCurrentDayBounds(dt: DateTime): (DateTime, DateTime) =
+  let startOfDay = dateTime(dt.year, dt.month, dt.monthday, 0, 0, 0, 0).toTime()
+  let endOfDay = dateTime(dt.year, dt.month, dt.monthday, 23, 59, 59, 999_000_000).toTime()
+  return (startOfDay.local(), endOfDay.local())
 
 
-proc getWeekBounds*(dt: DateTime): (DateTime, DateTime) =
+proc getCurrentHourBounds(dt: DateTime): (DateTime, DateTime) =
+  let startOfHour = dateTime(dt.year, dt.month, dt.monthday, dt.hour, 0, 0, 0).toTime()
+  let endOfHour = dateTime(dt.year, dt.month, dt.monthday, dt.hour, 59, 59, 999_000_000).toTime()
+  return (startOfHour.local(), endOfHour.local())
+
+
+proc getWeekBounds(dt: DateTime): (DateTime, DateTime) =
   let daysFromStart = ord(dt.weekday)
   let daysUntilEnd = 6 - daysFromStart
   let startDay = dt - days(daysFromStart)
@@ -193,17 +197,28 @@ proc getWeekBounds*(dt: DateTime): (DateTime, DateTime) =
   return (startOfWeekRaw.local(), endOfWeekRaw.local())
 
 
-proc getMonthBounds*(dt: DateTime): (DateTime, DateTime) =
+proc getMonthBounds(dt: DateTime): (DateTime, DateTime) =
   let lastDay = getDaysInMonth(dt.month, dt.year)
   let startOfMonthRaw = dateTime(dt.year, dt.month, 1, 0, 0, 0, 0).toTime()
   let endOfMonthRaw = dateTime(dt.year, dt.month, lastDay, 23, 59, 59, 999_000_000).toTime()
   return (startOfMonthRaw.local(), endOfMonthRaw.local())
 
 
-proc getYearBounds*(dt: DateTime): (DateTime, DateTime) =
+proc getYearBounds(dt: DateTime): (DateTime, DateTime) =
   let startOfYearRaw = dateTime(dt.year, mJan, 1, 0, 0, 0, 0).toTime()
   let endOfYearRaw = dateTime(dt.year, mDec, 31, 23, 59, 59, 999_000_000).toTime()
   return (startOfYearRaw.local(), endOfYearRaw.local())
+
+
+proc currentHourFromTo*(): (int, int) =
+    let dt = now()
+    let (startDt, endDt) = getCurrentHourBounds(dt)
+    return (startDt.toTime().toUnix(),  endDt.toTime().toUnix())
+
+proc currentDayFromTo*(): (int, int) =
+    let dt = now()
+    let (startDt, endDt) = getCurrentDayBounds(dt)
+    return (startDt.toTime().toUnix(),  endDt.toTime().toUnix())
 
 
 proc currentWeekFromTo*(): (int, int) =
