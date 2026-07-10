@@ -314,3 +314,20 @@ form:has(:invalid) button[type="submit"] {
     cursor: not-allowed;
 }
 
+
+.select-group {
+        display: flex;
+        gap: 8px;
+        justify-content: left;
+        align-items: center;
+        height: 36px;
+
+    }
+    .select-group label {
+        width: 90px;
+        background: white;
+        text-align: right;
+    }
+    .select-group select {
+        width: 150px;
+    }

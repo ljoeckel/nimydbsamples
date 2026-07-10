@@ -183,6 +183,47 @@ proc currentDayFromTo*(): (int, int) =
     return (dt1.toTime().toUnix(),  dt2.toTime().toUnix())
 
 
+proc getWeekBounds*(dt: DateTime): (DateTime, DateTime) =
+  let daysFromStart = ord(dt.weekday)
+  let daysUntilEnd = 6 - daysFromStart
+  let startDay = dt - days(daysFromStart)
+  let endDay = dt + days(daysUntilEnd)
+  let startOfWeekRaw = dateTime(startDay.year, startDay.month, startDay.monthday, 0, 0, 0, 0).toTime()
+  let endOfWeekRaw = dateTime(endDay.year, endDay.month, endDay.monthday, 23, 59, 59, 999_000_000).toTime()
+  return (startOfWeekRaw.local(), endOfWeekRaw.local())
+
+
+proc getMonthBounds*(dt: DateTime): (DateTime, DateTime) =
+  let lastDay = getDaysInMonth(dt.month, dt.year)
+  let startOfMonthRaw = dateTime(dt.year, dt.month, 1, 0, 0, 0, 0).toTime()
+  let endOfMonthRaw = dateTime(dt.year, dt.month, lastDay, 23, 59, 59, 999_000_000).toTime()
+  return (startOfMonthRaw.local(), endOfMonthRaw.local())
+
+
+proc getYearBounds*(dt: DateTime): (DateTime, DateTime) =
+  let startOfYearRaw = dateTime(dt.year, mJan, 1, 0, 0, 0, 0).toTime()
+  let endOfYearRaw = dateTime(dt.year, mDec, 31, 23, 59, 59, 999_000_000).toTime()
+  return (startOfYearRaw.local(), endOfYearRaw.local())
+
+
+proc currentWeekFromTo*(): (int, int) =
+    let dt = now()
+    let (startDt, endDt) = getWeekBounds(dt)
+    return (startDt.toTime().toUnix(),  endDt.toTime().toUnix())
+
+
+proc currentMonthFromTo*(): (int, int) =
+    let dt = now()
+    let (startDt, endDt) = getMonthBounds(dt)
+    return (startDt.toTime().toUnix(),  endDt.toTime().toUnix())
+
+
+proc currentYearFromTo*(): (int, int) =
+    let dt = now()
+    let (startDt, endDt) = getYearBounds(dt)
+    return (startDt.toTime().toUnix(),  endDt.toTime().toUnix())
+
+
 proc datetimeToUnix*(): int =
     let tm = now().toTime()
     result = tm.toUnix()
