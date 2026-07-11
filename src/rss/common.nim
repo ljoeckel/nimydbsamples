@@ -175,6 +175,29 @@ proc toDateTime*(datetime: int): string =
     dt.format("yyyy-MM-dd HH:mm:ss")
 
 
+proc calcTimeForHour*(ts: int, hour: int): int =
+    let timeObj = fromUnix(ts)
+    let dt = timeObj.local
+    let endDay = (dt + hours(hour)).local()
+    let endOfDay = dateTime(endDay.year, endDay.month, endDay.monthday, endDay.hour, 59, 59, 999_000_000).toTime()
+    return endOfDay.toUnix()
+
+proc calcTimeForDay*(ts: int, day: int): int =
+    let timeObj = fromUnix(ts)
+    let dt = timeObj.local
+    let endDay = (dt + days(day)).local()
+    let endOfDay = dateTime(endDay.year, endDay.month, endDay.monthday, 23, 59, 59, 999_000_000).toTime()
+    return endOfDay.toUnix()
+
+proc calcTimeForMonth*(ts: int, month: int): int =
+    let timeObj = fromUnix(ts)
+    let dt = timeObj.local
+    let endDay = (dt + months(month)).local()
+    let lastDay = getDaysInMonth(endDay.month, endDay.year)
+    let endOfDay = dateTime(endDay.year, endDay.month, lastDay, 23, 59, 59, 999_000_000).toTime()
+    return endOfDay.toUnix()
+
+
 proc getCurrentDayBounds(dt: DateTime): (DateTime, DateTime) =
   let startOfDay = dateTime(dt.year, dt.month, dt.monthday, 0, 0, 0, 0).toTime()
   let endOfDay = dateTime(dt.year, dt.month, dt.monthday, 23, 59, 59, 999_000_000).toTime()

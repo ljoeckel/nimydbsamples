@@ -44,19 +44,12 @@ proc getStats(mnemonic: string, domain: string, period: string): StatResult =
 
     let statType = parseEnum[StatType](period)
     case statType
-    of Hour:
-        #timeRange = (now - (60*60), now)
-        timeRange = currentHourFromTo()
-    of Day:
-        timeRange = currentDayFromTo()
-    of Week:
-        timeRange = currentWeekFromTo()
-    of Month:
-        timeRange = currentMonthFromTo()
-    of YearByDay, YearByMonth:
-        timeRange = currentYearFromTo()
-    of All:
-        timeRange = (0, now)
+    of Hour:    timeRange = currentHourFromTo()
+    of Day:     timeRange = currentDayFromTo()
+    of Week:    timeRange = currentWeekFromTo()
+    of Month:   timeRange = currentMonthFromTo()
+    of YearByDay, YearByMonth:  timeRange = currentYearFromTo()
+    of All:     timeRange = (0, now)
 
     for keys in QueryItr ^DBStatsDetail(mnemonic, timeRange[0]).keys:
         if mnemonic != keys[0] or domain != keys[2]: continue
@@ -75,51 +68,41 @@ proc getStats(mnemonic: string, domain: string, period: string): StatResult =
         let dt = timeObj.local
 
         case statType
-        of Hour, All:
-            result.data.mgetOrPut(tm, @[]).add(data)
-        of Day:
-            let hour = ord(dt.hour)
-            hours[hour] += delta
-        of Week:
-            let weekday = ord(dt.weekday)
-            weekdays[weekday] += delta
-        of Month:
-            let month = ord(dt.month)
-            monthdays[month] += delta
-        of YearByDay:
-            let yearday = ord(dt.yearday)
-            yeardays[yearday] += delta
-        of YearByMonth:
-            let month = ord(dt.month)
-            months[month] += delta
+        of Hour, All:   result.data.mgetOrPut(tm, @[]).add(data)
+        of Day:         hours[dt.hour] += delta
+        of Week:        weekdays[ord(dt.weekday)] += delta
+        of Month:       monthdays[dt.monthday] += delta
+        of YearByDay:   yeardays[dt.yearday] += delta
+        of YearByMonth: months[ord(dt.month)] += delta
     
     case statType
     of Hour, All:
         discard # handled before
     of Day:
         for i in 0..23:
-            let data = StatData(value: hours[i], delta: hours[i])
-            result.data.mgetOrPut(timeRange[0] + (i*3600), @[]).add(data)
+            let data = StatData(delta: hours[i])
+            let td = calcTimeForHour(timeRange[0], i)
+            result.data.mgetOrPut(td, @[]).add(data)
     of Week:
         for i in 0..<weekdays.len:
-            let value = weekdays[i]
-            let data = StatData(value: value, delta: value)
-            result.data.mgetOrPut(timeRange[0] + (i*3600), @[]).add(data)
+            let data = StatData(delta: weekdays[i])
+            let td = calcTimeForDay(timeRange[0], i)
+            result.data.mgetOrPut(td, @[]).add(data)
     of Month:
         for i in 0..<monthdays.len:
-            let value = monthdays[i]
-            let data = StatData(value: value, delta: value)
-            result.data.mgetOrPut(timeRange[0] + (i*3600), @[]).add(data)
+            let data = StatData(delta: monthdays[i])
+            let td = calcTimeForDay(timeRange[0], i)
+            result.data.mgetOrPut(td, @[]).add(data)
     of YearByDay:
         for i in 0..<yeardays.len:
-            let value = yeardays[i]
-            let data = StatData(value: value, delta: value)
-            result.data.mgetOrPut(timeRange[0] + (i*3600), @[]).add(data)
+            let data = StatData(delta: yeardays[i])
+            let td = calcTimeForDay(timeRange[0], i)
+            result.data.mgetOrPut(td, @[]).add(data)
     of YearByMonth:
         for i in 0..<months.len:
-            let value = months[i]
-            let data = StatData(value: value, delta: value)
-            result.data.mgetOrPut(timeRange[0] + (i*3600), @[]).add(data)
+            let data = StatData(delta: months[i])
+            let td = calcTimeForMonth(timeRange[0], i)
+            result.data.mgetOrPut(td, @[]).add(data)
 
     result.processed = processed
     result.data = result.data.sort()
@@ -138,8 +121,8 @@ proc handleChart(req: Request) =
 
     echo fmt"chartid: {chartid}, mnemnomic: {mnemonic}, domain: {domain}, period: {period}, processed: {stats.processed}, duration: {ms}"
 
-    var xAxis: seq[int]
-    var yAxis: seq[int]
+    var xAxis = newSeqOfCap[int](stats.data.len)
+    var yAxis = newSeqOfCap[int](stats.data.len)
     for (k, v) in stats.data.pairs():
         xAxis.add(k*1000)
         yAxis.add(v[0].delta)
