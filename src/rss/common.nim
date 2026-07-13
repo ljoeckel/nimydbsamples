@@ -174,6 +174,11 @@ proc toDateTime*(datetime: int): string =
     let dt = timeObj.local
     dt.format("yyyy-MM-dd HH:mm:ss")
 
+proc fromISO8601*(dt: string): DateTime =
+    # comes from webclient as 'yyyy-MM-ddTHH:mm'
+    let ss = dt.split("T")
+    result = parse(fmt"{ss[0]} {ss[1]}", "yyyy-MM-dd HH:mm")
+
 
 proc calcTimeForHour*(ts: int, hour: int): int =
     let timeObj = fromUnix(ts)
@@ -233,31 +238,26 @@ proc getYearBounds(dt: DateTime): (DateTime, DateTime) =
   return (startOfYearRaw.local(), endOfYearRaw.local())
 
 
-proc currentHourFromTo*(): (int, int) =
-    let dt = now()
+proc hourFromTo*(dt: DateTime = now()): (int, int) =
     let (startDt, endDt) = getCurrentHourBounds(dt)
     return (startDt.toTime().toUnix(),  endDt.toTime().toUnix())
 
-proc currentDayFromTo*(): (int, int) =
-    let dt = now()
+proc dayFromTo*(dt: DateTime = now()): (int, int) =
     let (startDt, endDt) = getCurrentDayBounds(dt)
     return (startDt.toTime().toUnix(),  endDt.toTime().toUnix())
 
 
-proc currentWeekFromTo*(): (int, int) =
-    let dt = now()
+proc weekFromTo*(dt: DateTime = now()): (int, int) =
     let (startDt, endDt) = getWeekBounds(dt)
     return (startDt.toTime().toUnix(),  endDt.toTime().toUnix())
 
 
-proc currentMonthFromTo*(): (int, int) =
-    let dt = now()
+proc monthFromTo*(dt: DateTime = now()): (int, int) =
     let (startDt, endDt) = getMonthBounds(dt)
     return (startDt.toTime().toUnix(),  endDt.toTime().toUnix())
 
 
-proc currentYearFromTo*(): (int, int) =
-    let dt = now()
+proc yearFromTo*(dt: DateTime = now()): (int, int) =
     let (startDt, endDt) = getYearBounds(dt)
     return (startDt.toTime().toUnix(),  endDt.toTime().toUnix())
 

@@ -4,6 +4,7 @@
         domain: 'srv',
         period: 'Day',
         chartType: 'bar',
+        mnemonics: ['GET', 'SET', 'ORD', 'QRY'],
         chart1: { id: 'chart1', mnemonic: 'GET', x: [], y: [] },
         chart2: { id: 'chart2', mnemonic: 'SET', x: [], y: [] },
         chart3: { id: 'chart3', mnemonic: 'ORD', x: [], y: [] },
@@ -21,7 +22,6 @@
         }
         .select-group label {
             width: 80px;
-            background: white;
             text-align: right;
         }
         .select-group select {
@@ -95,6 +95,7 @@
                     <option value="All">All datapoints</option>
                 </select>
             </div>                
+
             <div class="select-group">
                 <label for="chartType">Charttype:</label>
                 <select id="chartType" data-bind="chartType" 
@@ -105,7 +106,18 @@
                     <option value="scatter">Scatter</option>
                 </select>
             </div>
-        </div>
+
+            <!-- dateTime is a SSE signal regulary updated from the backend -->
+            <div data-signals="{ isEditing: false }"
+                 data-computed:localTime="!$isEditing && ($localTime = $dateTime)">
+                <input 
+                    type="datetime-local" 
+                    data-bind="localTime" 
+                    data-on:focus="$isEditing = true"
+                    data-on:blur="$isEditing = false; $localTime = $dateTime"
+                    data-on:input="$dateTime = $localTime; @post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4')"
+                />
+            </div>
     </div>
 
     <div id="chart1" style="width: 100vw; height: 20vh;" data-effect="window.updateChart($chart1, $chartType)"></div>

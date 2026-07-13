@@ -169,7 +169,7 @@ proc getFTI*(p: SearchParams): seq[TimeSearchEntry] =
         common = intersect(key, common, s2)
 
     # Update TimeSearchEntry with pubDate
-    let (todayFrom, todayTo) = currentDayFromTo()
+    let (todayFrom, todayTo) = dayFromTo()
 
     for entry in common:
         case p.sortBy

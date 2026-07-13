@@ -13,8 +13,14 @@ import wmWordcloud
 import wmDbMonitor
 
 proc updateWallClock(sse: SSEConnection) =
-    let wc = now().format("dd.MM.yyyy - HH:mm")
+    let dt = now()
+    let wc = dt.format("dd.MM.yyyy - HH:mm")
     patchElements(sse, fmt"<h3 id='wallclock'>{wc}</h3>") # Update Wall-Clock
+
+    # HTML ISO 8601  format: YYYY-MM-DDThh:mm
+    let date = dt.format("yyyy-MM-dd")
+    let time = dt.format("HH:mm")
+    patchSignals(sse, %* { "dateTime": fmt"{date}T{time}" })
 
 
 proc handleUpdateClock(req: Request) =

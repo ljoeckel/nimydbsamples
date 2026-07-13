@@ -25,7 +25,7 @@ proc getSearchParams*(sse: SSEConnection): SearchParams =
     p.lastIdxRef = ctx.getStr("lastIdxRef")
     p.maxArticles = ctx.getInt("articles")
     p.format = ctx.getStr("format")
-    (p.todayFrom, p.todayTo) = currentDayFromTo()
+    (p.todayFrom, p.todayTo) = dayFromTo()
 
     return p
 

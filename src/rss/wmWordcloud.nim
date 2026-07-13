@@ -40,7 +40,7 @@ proc createWordCloudFromTo(day00, day24: int): int =
 
 
 proc createWordCloudForToday*(): int =
-    let (day00, day24) = currentDayFromTo()
+    let (day00, day24) = dayFromTo()
     createWordCloudFromTo(day00, day24)
 
 

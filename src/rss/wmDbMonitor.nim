@@ -30,7 +30,7 @@ proc sort(table: OrderedTable[int, seq[StatData]]): OrderedTable[int, seq[StatDa
         result[key] = val
 
 
-proc getStats(mnemonic: string, domain: string, period: string): StatResult =
+proc getStats(mnemonic: string, domain: string, period: string, jsDt: DateTime): StatResult =
     var 
         lastData: StatData
         hours: array[24, int]
@@ -44,21 +44,22 @@ proc getStats(mnemonic: string, domain: string, period: string): StatResult =
 
     let statType = parseEnum[StatType](period)
     case statType
-    of Hour:    timeRange = currentHourFromTo()
-    of Day:     timeRange = currentDayFromTo()
-    of Week:    timeRange = currentWeekFromTo()
-    of Month:   timeRange = currentMonthFromTo()
-    of YearByDay, YearByMonth:  timeRange = currentYearFromTo()
+    of Hour:    timeRange = hourFromTo(jsDt)
+    of Day:     timeRange = dayFromTo(jsDt)
+    of Week:    timeRange = weekFromTo(jsDt)
+    of Month:   timeRange = monthFromTo(jsDt)
+    of YearByDay, YearByMonth:  timeRange = yearFromTo(jsDt)
     of All:     timeRange = (0, now)
 
     for keys in QueryItr ^DBStatsDetail(mnemonic, timeRange[0]).keys:
-        if mnemonic != keys[0] or domain != keys[2]: continue
+        if mnemonic != keys[0]: break
+        if domain != keys[2]: continue
         let tm = parseInt(keys[1])
         if tm > timeRange[1]: break
-        inc processed
 
         let value = Get ^DBStatsDetail(keys).int
         var delta = if lastData.isNil: value else: value - lastData.value
+
         if delta == 0: continue
         if delta < 0: delta = value # process restart, counters start from 0 again 
         let data = StatData(value: value, delta: delta)
@@ -74,6 +75,9 @@ proc getStats(mnemonic: string, domain: string, period: string): StatResult =
         of Month:       monthdays[dt.monthday] += delta
         of YearByDay:   yeardays[dt.yearday] += delta
         of YearByMonth: months[ord(dt.month)] += delta
+
+        inc processed
+
     
     case statType
     of Hour, All:
@@ -111,13 +115,17 @@ proc getStats(mnemonic: string, domain: string, period: string): StatResult =
 proc handleChart(req: Request) =
     let chartid = req.path[1..^1] # /chart1 -> chart1
     let ctx = getContext(req)
+    let mnemonics = ctx.getSeq("mnemonics")
+    let dts = ctx.getStr("dateTime")
+    let dt = fromISO8601(dts)
+
     let params = ctx.getJson(chartid)
     let mnemonic = params["mnemonic"].getStr()
     let domain = ctx.getStr("domain")
     let period = ctx.getStr("period")
 
     let ms = meassure:
-        let stats = getStats(mnemonic, domain, period)
+        let stats = getStats(mnemonic, domain, period, dt)
 
     echo fmt"chartid: {chartid}, mnemnomic: {mnemonic}, domain: {domain}, period: {period}, processed: {stats.processed}, duration: {ms}"
 
