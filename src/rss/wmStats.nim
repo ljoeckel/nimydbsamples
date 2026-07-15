@@ -224,8 +224,8 @@ proc handleEditGlobal(req: Request) =
 
     var 
         btn = ctx.getStr("btn")
-        subscripts_low = getSeq[string](ctx, "subscripts_low")
-        subscripts_high = getSeq[string](ctx, "subscripts_high")    
+        subscripts_low = ctx.getSeq("subscripts_low")
+        subscripts_high = ctx.getSeq("subscripts_high")    
         page = ctx.getInt("page")
         cnt = 0
         direction: ListDirection

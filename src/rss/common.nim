@@ -163,15 +163,13 @@ proc handleGoto*(req: Request) =
         forward(sse, HTML_DIR & page)
 
 
-proc getCurrentDay*(datetime: int): string =
-    let timeObj = fromUnix(datetime)
-    let dt = timeObj.local
+proc getCurrentDay*(ts: int): string =
+    let dt = fromUnix(ts).local
     dt.format("yyyy-MM-dd")
 
 
-proc toDateTime*(datetime: int): string =
-    let timeObj = fromUnix(datetime)
-    let dt = timeObj.local
+proc toDateTime*(ts: int): string =
+    let dt = fromUnix(ts).local
     dt.format("yyyy-MM-dd HH:mm:ss")
 
 proc fromISO8601*(dt: string): DateTime =
@@ -181,22 +179,19 @@ proc fromISO8601*(dt: string): DateTime =
 
 
 proc calcTimeForHour*(ts: int, hour: int): int =
-    let timeObj = fromUnix(ts)
-    let dt = timeObj.local
+    let dt = fromUnix(ts).local
     let endDay = (dt + hours(hour)).local()
     let endOfDay = dateTime(endDay.year, endDay.month, endDay.monthday, endDay.hour, 59, 59, 999_000_000).toTime()
     return endOfDay.toUnix()
 
 proc calcTimeForDay*(ts: int, day: int): int =
-    let timeObj = fromUnix(ts)
-    let dt = timeObj.local
+    let dt = fromUnix(ts).local
     let endDay = (dt + days(day)).local()
     let endOfDay = dateTime(endDay.year, endDay.month, endDay.monthday, 23, 59, 59, 999_000_000).toTime()
     return endOfDay.toUnix()
 
 proc calcTimeForMonth*(ts: int, month: int): int =
-    let timeObj = fromUnix(ts)
-    let dt = timeObj.local
+    let dt = fromUnix(ts).local
     let endDay = (dt + months(month)).local()
     let lastDay = getDaysInMonth(endDay.month, endDay.year)
     let endOfDay = dateTime(endDay.year, endDay.month, lastDay, 23, 59, 59, 999_000_000).toTime()

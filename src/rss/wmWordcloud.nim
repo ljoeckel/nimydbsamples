@@ -54,8 +54,7 @@ proc createWordCloudForAllDays(): int =
 
     for subs in QueryItr ^RSSItemPUBDATE.keys:
         let pubDate = parseInt(subs[0])
-        let timeObj = fromUnix(pubDate)
-        let dt = timeObj.local
+        let dt = fromUnix(pubDate).local
         let currentDay = dt.format("yyyy-MM-dd")
         if lastDay != currentDay:
             echo "Processed ", processed, " articles for ", currentDay

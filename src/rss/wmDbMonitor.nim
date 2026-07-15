@@ -65,9 +65,7 @@ proc getStats(mnemonic: string, domain: string, period: string, jsDt: DateTime):
         let data = StatData(value: value, delta: delta)
         lastData = data
 
-        let timeObj = fromUnix(tm)
-        let dt = timeObj.local
-
+        let dt = fromUnix(tm).local
         case statType
         of Hour, All:   result.data.mgetOrPut(tm, @[]).add(data)
         of Day:         hours[dt.hour] += delta
