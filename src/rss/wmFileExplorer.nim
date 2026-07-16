@@ -1,4 +1,4 @@
-import std/[json, strutils, strformat, times, oids]
+import std/[strutils, strformat]
 import mummy, mummy/routers, mummy/datastar
 import nimrss
 import wmFeedConfig
@@ -6,21 +6,37 @@ import std/[os, algorithm, sugar]
 
 const MAX_COUNT = 3000
 
+
 proc stripId(id: string): string =
     result = id.replace("/", "").replace(".", "").replace("_", "")
 
+
+proc stripTitle(id: string, title: string): string = 
+    if title.startsWith(id):
+        let pos = title.rfind("/")
+        if pos > 0:
+            result = title[pos+1..^1]
+        else:
+            result = title
+    else:
+        result = title
+
+
 proc dir(id: string, title: string): string =
-    let selector = fmt"""data-on:toggle="$isOpen=evt.target.open; $dir='{id}'; @post('/api/select-dir')" """
-    result.add("<li>")
-    result.add("<details " & selector & ">")
-    result.add("<summary>" & title & "</summary>")
-    result.add("<ul id='" & stripId(id) & "'></ul>")
-    result.add("</details>")
-    result.add("</li>")
+    result = fmt"""
+        <li>
+            <details data-on:toggle="$isOpen=evt.target.open; $dir='{id}'; @post('/api/select-dir')">
+                <summary>{stripTitle(id, title)}</summary>
+                <ul id='{stripId(id)}'></ul>
+            </details>
+        </li>
+    """
 
 
 proc file(id: string, title: string): string = 
-    result = "<li><a href='#" & stripId(id) & "'>" & title & "</a></li>"
+    result = fmt"""
+        <li><a href='#{stripId(id)}'>{stripTitle(id, title)}</a></li>
+    """
 
 
 proc scanDir(directory: string, id: string): seq[(PathComponent, string)] =
@@ -83,23 +99,14 @@ proc handleSelectDir(req: Request) =
         let html = getHTML(dir, items)
         SSE(req):
             patchElements(sse, html, selector=fmt"#{stripId(dir)}")
-            echo "#" & stripId(dir)
     else:
         let html = fmt"""
             <li id='{stripId(dir)}'>
-            <details data-on:toggle="$isOpen=evt.target.open; $id='{stripId(dir)}'; @post('/api/select-dir')">
-            <summary>{stripId(dir)}</summary>
-            </details>
+                <details data-on:toggle="$isOpen=evt.target.open; $id='{stripId(dir)}'; @post('/api/select-dir')">
+                    <summary>{stripId(dir)}</summary>
+                </details>
             </li>
             """
-        # let html = fmt"""
-        #     <li id='{stripId(dir)}'>
-        #     <details data-on:toggle="$isOpen=evt.target.open; $id='html'; @post('/api/select-dir')">
-        #     <summary>{stripId(dir)}</summary>
-        #     </details>
-        #     </li>
-        #     """
-
 
         SSE(req):
             patchElements(sse, html, selector=fmt"#{stripId(dir)}")

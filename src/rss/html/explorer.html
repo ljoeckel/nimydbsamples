@@ -1,4 +1,4 @@
-<div id="container" data-signals="{formId: 'dbexplorer', dir: '/home/ljoeckel/git', id: '', isOpen: false}">
+<div id="container" data-signals="{formId: 'explorer', dir: '/home/ljoeckel/git', id: '', isOpen: false}">
     <style>
         /* Grundaufbau der Liste */
         .tree,
@@ -100,8 +100,8 @@
     </style>
 
 
-    <div class="header">
-        <h1>Globals Explorer</h1>
+    <div class="header" data-bind="dir">
+        <h3><div data-text="$dir"></div></h3>
     </div>
 
     <div data-init="@post('/api/list-globals')">
