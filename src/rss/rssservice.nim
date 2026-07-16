@@ -11,6 +11,7 @@ import wmSearch
 import wmStats
 import wmWordcloud
 import wmDbMonitor
+import wmFileExplorer
 
 proc updateWallClock(sse: SSEConnection) =
     let dt = now()
@@ -113,6 +114,7 @@ if isMainModule:
     wmStatsModule.register(router)
     wmWordcloud.register(router)
     wmDbMonitor.register(router)
+    wmFileExplorer.register(router)
 
     router.post("/update-clock", handleUpdateClock)
     router.post("/show-rssitem", handleShowRSSItem)

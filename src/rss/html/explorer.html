@@ -1,0 +1,112 @@
+<div id="container" data-signals="{formId: 'dbexplorer', dir: '/home/ljoeckel/git', id: '', isOpen: false}">
+    <style>
+        /* Grundaufbau der Liste */
+        .tree,
+        .tree ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .tree ul {
+            margin-left: 1em;
+            /* Einrückung der Unterebenen */
+            position: relative;
+        }
+
+        /* Vertikale Verbindungslinien */
+        .tree ul::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            border-left: 1px solid #ccc;
+        }
+
+        /* Einzelne Listeneinträge */
+        .tree li {
+            margin: 0;
+            padding: 0 1.5em;
+            /* Platz für die horizontalen Linien */
+            line-height: 2em;
+            position: relative;
+        }
+
+        /* Horizontale Verbindungslinien zu den Elementen */
+        .tree li::before {
+            content: "";
+            position: absolute;
+            top: 1em;
+            left: 0;
+            width: 1em;
+            border-top: 1px solid #ccc;
+        }
+
+        /* Entfernt die überstehende vertikale Linie am letzten Element */
+        .tree li:last-child::before {
+            background: #fff;
+            /* Muss der Hintergrundfarbe der Seite entsprechen */
+            height: auto;
+            top: 1em;
+            bottom: 0;
+        }
+
+        /* Styling für die klickbaren Ordner-Überschriften */
+        .tree summary {
+            cursor: pointer;
+            font-weight: bold;
+            color: darkblue;
+            outline: none;
+        }
+
+        /* Standard-Browserpfeil verstecken (Chrome/Safari & Firefox) */
+        .tree summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .tree summary {
+            list-style: none;
+        }
+
+        /* Eigenes Icon für geöffneten/geschlossenen Zustand (optional) */
+        .tree summary::marker {
+            display: none;
+        }
+
+        .tree summary::before {
+            content: "📁 ";
+            margin-right: 0.3em;
+        }
+
+        .tree details[open]>summary::before {
+            content: "📂 ";
+        }
+
+        /* Styling für die finalen Links (Dateien) */
+        .tree a {
+            text-decoration: none;
+            color: #333;
+        }
+
+        .tree a::before {
+            content: "📄 ";
+            margin-right: 0.3em;
+        }
+
+        .tree a:hover {
+            text-decoration: underline;
+        }
+    </style>
+
+
+    <div class="header">
+        <h1>Globals Explorer</h1>
+    </div>
+
+    <div data-init="@post('/api/list-globals')">
+        <div id="tree"></div>
+    </div>
+
+
+</div>
