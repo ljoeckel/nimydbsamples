@@ -1,4 +1,4 @@
-import std/[os, times, json, strutils, strformat, tables, base64]
+import std/[os, times, json, strutils, strformat, math, tables, base64]
 import std/[options, typetraits]
 import std/[httpclient]
 import checksums/sha1
@@ -97,6 +97,14 @@ const mnemomics* = {
     "ZTR": "# of ZTRigger command operations"
 }.toTable
 
+
+func hrb*(bytes: int): string =
+    # return number of bytes as b/k/m/g
+    if bytes < 1024:     return $bytes & "b"
+    elif bytes < 1024^2: return $(bytes div 1024) & "k"
+    elif bytes < 1024^3: return $(bytes div 1024^2) & "m"
+    elif bytes < 1024^4: return $(bytes div 1024^3) & "g"
+    elif bytes < 1024^5: return $(bytes div 1024^4) & "t"
 
 
 template meassure*(body: untyped): auto =

@@ -20,14 +20,6 @@ const
     TABLE_PAGESIZE = 20
 
 
-func hrb(bytes: int): string =
-    # return number of bytes as b/k/m/g
-    if bytes < 1024:     return $bytes & "b"
-    elif bytes < 1024^2: return $(bytes div 1024) & "k"
-    elif bytes < 1024^3: return $(bytes div 1024^2) & "m"
-    elif bytes < 1024^4: return $(bytes div 1024^3) & "g"
-    
-
 proc countKeys(gbl: string): DBStats =
     var stats = DBStats()
     let global = if gbl.startsWith("^"): gbl else: "^" & gbl

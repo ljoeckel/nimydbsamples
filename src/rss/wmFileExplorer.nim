@@ -2,9 +2,31 @@ import std/[strutils, strformat]
 import mummy, mummy/routers, mummy/datastar
 import nimrss
 import wmFeedConfig
-import std/[os, algorithm, sugar]
+import std/[times, os, algorithm, sugar]
 
 const MAX_COUNT = 3000
+
+type
+    FileEntry = object
+        kind: PathComponent
+        path: string
+        info: FileInfo
+
+
+proc toDateTimeString(tm: Time): string =
+    let dt = times.inZone(tm, local())
+    dt.format("dd.MM.YYYY HH:mm:ss")
+
+proc toPermissionString(p: set[FilePermission]): string =
+      if fpUserRead in p: result.add("r") else: result.add("-")
+      if fpUserWrite in p: result.add("w") else: result.add("-")
+      if fpUserExec in p: result.add("x") else: result.add("-")
+      if fpGroupRead in p: result.add("r") else: result.add("-")
+      if fpGroupWrite in p: result.add("w") else: result.add("-")
+      if fpGroupExec in p: result.add("x") else: result.add("-")                  
+      if fpOthersRead in p: result.add("r") else: result.add("-")                  
+      if fpOthersWrite in p: result.add("w") else: result.add("-")
+      if fpOthersExec in p: result.add("x") else: result.add("-")
 
 
 proc stripId(id: string): string =
@@ -22,7 +44,10 @@ proc stripTitle(id: string, title: string): string =
         result = title
 
 
-proc dir(id: string, title: string): string =
+proc dir(item: FileEntry): string =
+    let id = item.path
+    let title = item.path
+
     result = fmt"""
         <li>
             <details data-on:toggle="$isOpen=evt.target.open; $dir='{id}'; @post('/api/select-dir')">
@@ -33,34 +58,57 @@ proc dir(id: string, title: string): string =
     """
 
 
-proc file(id: string, title: string): string = 
+proc file(item: FileEntry): string = 
+    let id = item.path
+    let title = item.path
+    let size = hrb(item.info.size)
+    let permissions = toPermissionString(item.info.permissions)
+    let lastWriteTime = toDateTimeString(item.info.lastWriteTime)
+    #let creationTime = toDateTimeString(item.info.creationTime)
+    #let lastAccessTime = toDateTimeString(item.info.lastAccessTime)
+    #let kind = item.kind
+
     result = fmt"""
-        <li><a href='#{stripId(id)}'>{stripTitle(id, title)}</a></li>
+        <tr>
+            <td><a href='#{stripId(id)}'>{stripTitle(id, title)}</a></td>
+            <td>{lastWriteTime}</td>
+            <td>{size}</td>
+            <td>{permissions}</td>
+        </tr>
     """
 
 
-proc scanDir(directory: string, id: string): seq[(PathComponent, string)] =
-    var items: seq[(PathComponent, string)]
-    var dirs: seq[(PathComponent, string)]
+proc scanDir(directory: string, id: string): seq[FileEntry] =
+    var items: seq[FileEntry]
+    var dirs: seq[FileEntry]
     var count = 0
     for kind, path in walkDir(directory):
+        var fileEntry: FileEntry
+        fileEntry.kind = kind
+        fileEntry.path = path
+
         let rpath = path
         if count <= MAX_COUNT:
             if kind in {pcDir, pcLinkToDir}:
-                dirs.add((kind, rpath))
+                dirs.add(fileEntry)
             else:
-                items.add((kind, rpath))
+                try:
+                  # Retrieve metadata
+                  fileEntry.info = getFileInfo(path)
+                  items.add(fileEntry)
+                except OSError as e:
+                  echo "Failed to read file info: ", e.msg                
         inc count
 
     if count > MAX_COUNT:
         echo fmt"For directory '{directory}': There are {count - MAX_COUNT} more items. Ignored"
 
     items.sort((x, y) => (
-      let c = cmp(x[1], y[1])
+      let c = cmp(x.path, y.path)
       c
     ))
     dirs.sort((x, y) => (
-      let c = cmp(x[1], y[1])
+      let c = cmp(x.path, y.path)
       c
     ))
 
@@ -68,14 +116,15 @@ proc scanDir(directory: string, id: string): seq[(PathComponent, string)] =
     result.add(items)
 
 
-proc getHTML(id: string, items: seq[(PathComponent, string)]): string =
+proc getHTML(id: string, items: seq[FileEntry]): string =
     result.add(fmt"<ul class='tree' id='{stripId(id)}'>")
-    for (kind, path) in items:
-        if kind in {pcDir, pcLinkToDir}:
-            result.add(dir(id=path, title=path))
+    result.add("<table>")
+    for item in items:
+        if item.kind in {pcDir, pcLinkToDir}:
+            result.add(dir(item))
         else:
-            result.add(file(id=path, title=path))
-
+            result.add(file(item))
+    result.add("</table>")
     result.add("</ul>")
 
 
