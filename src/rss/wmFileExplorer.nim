@@ -51,7 +51,12 @@ proc dir(item: FileEntry): string =
     result = fmt"""
         <li>
             <details data-on:toggle="$isOpen=evt.target.open; $dir='{id}'; @post('/api/select-dir')">
-                <summary>{stripTitle(id, title)}</summary>
+                <summary 
+                    data-on:contextmenu="$dir='{id}'"
+                    data-class="{{'highlight': $showMenu && $dir === '{id}' }}"
+                >
+                {stripTitle(id, title)}
+                </summary>
                 <ul id='{stripId(id)}'></ul>
             </details>
         </li>
@@ -148,23 +153,43 @@ proc handleSelectDir(req: Request) =
         let html = getHTML(dir, items)
         SSE(req):
             patchElements(sse, html, selector=fmt"#{stripId(dir)}")
-    else:
-        let html = fmt"""
-            <li id='{stripId(dir)}'>
-                <details data-on:toggle="$isOpen=evt.target.open; $id='{stripId(dir)}'; @post('/api/select-dir')">
-                    <summary>{stripId(dir)}</summary>
-                </details>
-            </li>
-            """
+    #else:
+    #     let html = fmt"""
+    #         <li id='{stripId(dir)}'>
+    #             <details data-on:toggle="$isOpen=evt.target.open; $id='{stripId(dir)}'; @post('/api/xselect-dir')">
+    #                 <summary>
+    #                 {stripId(dir)}
+    #                 </summary>
+    #             </details>
+    #         </li>
 
-        SSE(req):
-            patchElements(sse, html, selector=fmt"#{stripId(dir)}")
+    #         </div>
+    #         """
+
+    #    SSE(req):
+    #        patchElements(sse, html, selector=fmt"#{stripId(dir)}")
+
+proc handleEditItem(req: Request) =
+    echo "handleEditItem"
+    let ctx = getContext(req)
+    let dir = ctx.getStr("dir")
+    let isOpen = ctx.getBool("isOpen")
+    let showMenu = ctx.getBool("showMenu")
+    let menuX = ctx.getInt("menuX")
+    let menuY = ctx.getInt("menuY")
+    echo fmt"dir={dir}, isOpen={isOpen}, showMenu={showMenu}, menuX={menuX}, menuY={menuY}"
+
+proc handleDeleteItem(req: Request) =
+    echo "handleDeleteItem"
 
 
 # Callback for router registration
 proc register*(router: var Router) =
     router.post("/api/list-globals", handleListGlobals)
     router.post("/api/select-dir", handleSelectDir)
+    router.post("/api/item/edit", handleEditItem)
+    router.post("/api/item/delete", handleDeleteItem)
+
 
 
 # Create module instance

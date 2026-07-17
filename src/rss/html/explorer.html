@@ -1,6 +1,13 @@
-<div id="container" data-signals="{formId: 'explorer', dir: '/home/ljoeckel/git', id: '', isOpen: false}">
-    <style>
+<div id="container" data-signals="{
+        formId: 'explorer',
+        dir: '/home/ljoeckel/git',
+        isOpen: false,
+        showMenu: false,
+        menuX: 0,
+        menuY: 0
+        }">
 
+    <style>
         /* Grundaufbau der Liste */
         .tree,
         .tree ul {
@@ -99,16 +106,86 @@
         .tree a:hover {
             text-decoration: underline;
         }
+
+
+        .context-menu {
+            position: absolute;
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.15);
+            border-radius: 4px;
+            padding: 5px 0;
+            margin-top: 12px;
+            min-width: 150px;
+            z-index: 1000;
+            font-family: sans-serif;
+        }
+
+        .menu-item {
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+        .menu-item:hover {
+            background-color: #f0f0f0;
+        }
+
+        /* This backdrop ensures any click outside the menu dismisses it safely */
+        .menu-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 999;
+            /* Just below context-menu */
+            background: transparent;
+        }
+
+        summary.highlight {
+          /*background-color: #e2e8f0; *//* Soft gray background */
+          color: #1a202c;            /* Darker text color */
+          border-radius: 4px;
+          padding-left: 4px;         /* Prevents text shifting if you use padding */
+          font-weight: bold;
+        }
+
+    
+    .tabs a:hover {
+      border-bottom-color: #4a4a4a !important; 
+    }
     </style>
 
 
     <div class="header" data-bind="dir">
-        <h3><div data-text="$dir"></div></h3>
+        <h3>
+            <div data-text="$dir"></div>
+        </h3>
     </div>
 
-    <div data-init="@post('/api/list-globals')">
-        <div id="tree"></div>
+    <!-- The context menu triggers backend server-sent events (SSE) on action click -->
+    <div class="context-menu" data-show="$showMenu" data-style:left="`${$menuX}px`" data-style:top="`${$menuY}px`">
+        <div class="menu-item" data-on:click="@post('/api/item/edit'); $showMenu = false"><i class="bi bi-info-square"></i> Directory info</div>
+        <div class="menu-item" data-on:click="@post('/api/item/delete'); $showMenu = false"><i class="bi bi-folder-x"></i> Delete directory</div>
+        <!-- hr -->
+        <div class="menu-item" data-on:click="$showMenu = false"><i class="bi bi-x-circle"></i> Cancel</div>
     </div>
+    <!-- Global click capture to close the menu if clicking outside of it -->
+    <div data-show="$showMenu" class="menu-backdrop" data-on:click="$showMenu = false"></div>
 
+
+    <div 
+        data-init="@post('/api/list-globals')"
+        data-on:contextmenu="
+            evt.preventDefault(); 
+            $menuX = evt.pageX; 
+            $menuY = evt.pageY; 
+            $showMenu = true;
+        ">
+
+
+        <!-- Will be patched via SSE from the backend -->
+        <div class="tree" id="tree"></div>
+    </div>
 
 </div>
