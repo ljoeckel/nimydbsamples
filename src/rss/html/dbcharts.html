@@ -109,7 +109,8 @@
 
             <!-- dateTime is a SSE signal regulary updated from the backend -->
             <div data-signals="{ isEditing: false }"
-                 data-computed:localTime="!$isEditing && ($localTime = $dateTime)">
+                data-computed:localTime="!$isEditing && ($localTime = $dateTime)"
+                data-init="$localTime = $dateTime">
                 <input 
                     type="datetime-local" 
                     data-bind="localTime" 

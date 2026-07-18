@@ -58,8 +58,11 @@ proc getStats(mnemonic: string, domain: string, period: string, jsDt: DateTime):
         if tm > timeRange[1]: break
 
         let value = Get ^DBStatsDetail(keys).int
-        var delta = if lastData.isNil: value else: value - lastData.value
+        if lastData.isNil: 
+            lastData = StatData(value: value, delta: 0)
+            continue
 
+        var delta = value - lastData.value
         if delta == 0: continue
         if delta < 0: delta = value # process restart, counters start from 0 again 
         let data = StatData(value: value, delta: delta)
