@@ -19,11 +19,11 @@ const TIME_FORMATS* = [
   ]
 
 
-proc pubDate(item: RSSItem): string =
+proc pubDate(item: RSSItem, format: string = "dd.MM.yyyy HH:mm"): string =
     try: 
         let dt = getOption(item.pubDate)
         let fu = parseInt(dt).fromUnix()
-        result = fu.format("dd.MM.yyyy HH:mm")
+        result = fu.format(format)
     except:
          result = "01.01.1970 00:00"
 
@@ -182,6 +182,10 @@ proc getFTI*(p: SearchParams): seq[TimeSearchEntry] =
 
 iterator getLatestRSSItems*(timeFrom: int, idxref: string, userid: string, sortBy: SortBy): RSSItem =
     var feedtable = getEnabledFeeds(userid)
+    if feedtable.len == 0:
+        var empty: RSSItem
+        yield empty
+
     let gbl = if idxref.isEmptyOrWhitespace: fmt"^RSSItemPUBDATE({timeFrom})" else: fmt"""^RSSItemPUBDATE({timeFrom}, "{idxref}")"""
     # Iterate from new to old
     for key  in QueryItr @gbl.reverse.keys:  # youngest first
@@ -220,51 +224,68 @@ proc createRSSItemCard*(item: RSSItem): string =
     let description = getOption(item.description)
     let link = getOption(item.link)
 
-    # categories
-    var category: string
-    if item.category.len > 0:
-        var cat: string
-        for idx, word in enumerate(item.category):
-            cat.add(word & " ")
-            if idx >= 2: break
-        category = fmt"""<span class="tag">{cat}</span>"""
-    
-    var topic = getOption(item.topic)
-    if topic.len > 0: topic = fmt"""<span class="tag">{toUpper(topic)}</span>"""
-    
-    var keywords: string
-    if item.keywords.len > 0:
-        var keywordlist: string
-        for idx, word in enumerate(item.keywords):
-            keywordlist.add(word & " ")
-            if idx >= 2: break # show only first 3 keywords
-        keywords = fmt"""<span class="tag">{keywordlist}</span>"""
+    var tags = ""
 
-    let (feedTitle, feedLink) = feedData(item)
-    let divimg = fmt"""
-        <a target='_blank' href={feedLink} class='footer-link'>
-        <span class='feed-title'>{feedTitle}</span></a>
-        """
+    if item.category.len > 0:
+        var pos = 0
+        for idx, word in enumerate(item.category):
+            tags.add(&"<span class='tag is-primary is-light'>{word}</span>")
+            if idx > 1:
+                let remaining = item.category[idx+1..^1].join(" ")
+                tags.add(&"<span title='{remaining}' class='tag is-primary is-light'>...</span>")
+                break
+
     
+    var topic = toUpper(getOption(item.topic))
+    if topic.len > 0:
+        var pos = 0
+        for idx, word in enumerate(topic.split(",")):
+            tags.add(&"<span class='tag is-warning is-light'>{word}</span>")
+            inc(pos, word.len + 1)
+            if idx > 1 and pos < topic.len:
+                tags.add(&"<span title='{topic[pos..^1]}' class='tag is-warning is-light'>...</span>")
+                break
+
+    if item.keywords.len > 0:
+        for words in item.keywords:
+            var pos = 0
+            for idx, word in enumerate(words.split(",")):
+                tags.add(&"<span class='tag is-info is-light'>{word}</span>")
+                inc(pos, word.len + 1)
+                if idx > 1 and pos < words.len:
+                    tags.add(&"<span title='{words[pos..^1]}' class='tag is-info is-light'>...</span>")
+                    break
+
+    var (feedTitle, feedLink) = feedData(item)
+    feedTitle = feedTitle.replace("RSS Feed von ", "")  # TODO: im preprocessing
+    if feedTitle.len > 24: feedTitle = feedTitle[0..24] & ".."
+
     let idxref = fmt"""
         <button data-on:click__stop="$id='{item.idxref}'; @post('/show-rssitem')"
         popovertarget="rss-detail">
             &nbsp;&nbsp;
-            <i class="bi bi-info-square"></i>
+            <i class="has-text-link bi bi-info-square"></i>
         </button>"""
 
+# style="display: inline-block; line-height: 1.125;"
+    let htmltags = if tags.len > 0: fmt"<div class='tags has-addons mt-0 mb-0'>{tags}</div>" else: ""
     result = fmt"""
-        <div class='rsscard'>
-            <div class='rsscard-tags'>
-                {topic}
-                {category}
-                {keywords}
-            </div>
-            <div class='rsscard-title'> <a target='_blank' href='{link}'> {title}</a> </div>
-            <p class='rsscard-text'> <a target='_blank' href='{link}'> {description}</a> </p>
-            <div class='rsscard-footer'>
-                <p>{divimg}</p>
-                <p class='rsspubdate'> {pubDate(item)}  {idxref}</p>
+        <div class='box cell is-flex is-flex-direction-column'>
+            {htmltags}
+
+            <a target='_blank' href='{link}'><h6 class='subtitle is-5'>{title}</h6></a>
+            
+            <span class="is-size-6a mt-3">{description}</span>
+
+            <div class="columns is-gapless mt-auto" style="width: 100%;">
+                <div class="column is-four-fifths">
+                    <a class='subtitle is-7 has-text-info mt-auto' target='_blank' href={feedLink}>
+                        {feedTitle}  {pubDate(item, "dd.MM HH:mm")}
+                    </a>
+                </div>
+                <div class="column has-text-right">
+                    {idxref}
+                </div>
             </div>
         </div>
         """
@@ -274,15 +295,10 @@ proc createRSSItemList*(item: RSSItem): string =
     let title = getOption(item.title)
     let link = getOption(item.link)
     let (feedTitle, feedLink) = feedData(item)
-    let divimg = fmt"<a target='_blank' href={feedLink}><span>{feedTitle}</span></a>"
-
     result = fmt"""
-        <div class='rsscard-title'>
-            <a target='_blank' href='{link}'> {title}</a>
-            <p class='rsspubdate'> {pubDate(item)} / {item.idxref} / {divimg} </p>
-        </div>
+        <a target='_blank' href='{link}'><h6 class='subtitle is-6'>{title}</h6></a>
+        <span class='subtitle is-7 has-text-info'> {pubDate(item)} / {item.idxref} / {feedTitle}</span>
         """
-
 
 proc getRSSFields*(subscript: seq[string]): seq[(string, string)] =
     if subscript.len == 0:

@@ -123,7 +123,7 @@ proc scanDir(directory: string, id: string): seq[FileEntry] =
 
 proc getHTML(id: string, items: seq[FileEntry]): string =
     result.add(fmt"<ul class='tree' id='{stripId(id)}'>")
-    result.add("<table>")
+    result.add("<table class='table is-narrow'>")
     for item in items:
         if item.kind in {pcDir, pcLinkToDir}:
             result.add(dir(item))

@@ -1,70 +1,87 @@
+
 class UserIdField extends HTMLElement {
     connectedCallback() {
         this.innerHTML = `
-        <div class="form-group">
-            <div>
-                <label for="name">Userid</label>
-                <small class="error" data-show="$useridInvalid">Userid is already registered. </small>
+            <div class="field">
+                <label class="label">
+                    Userid
+                    <small class="has-text-danger" data-show="$useridInvalid">already registered.</small>
+                </label>
+            <div class="control">
+                <input class="input" type="text" required minlength="3"
+                    id="userid"
+                    data-bind:userid type="text"
+                    data-class="{'is-danger': $useridInvalid}"
+                    data-on:input__debounce.500ms="@post('/validate-userid')"
+                    required
+                    placeholder="Your Userid" autofocus />
             </div>
-            <input
-                id="userid"
-                data-bind:userid type="text"
-                data-class="{'input-error': $useridInvalid}"
-                data-on:input__debounce.500ms="@post('/validate-userid')"
-                required
-                placeholder="Your Userid" autofocus />
+            <p class="help">The 'userid' will be used to login.</p>
+            </div>
         </div>`;
     }
 }
+
 
 class NameField extends HTMLElement {
     connectedCallback() {
         this.innerHTML = `
-        <div class="form-group">
-            <label for="name">Name</label>
-            <input
-                id="name"
-                data-bind:name type="text"
-                required
-                placeholder="Your Name" autofocus />
+            <div class="field">
+                <label class="label">
+                    Name
+                </label>
+                <div class="control">
+                    <input class="input" type="text" required minlength="3"
+                        id="name"
+                        data-bind:name
+                        required
+                        placeholder="Your Name" autofocus />
+                </div>
+            </div>
         </div>`;
     }
 }
 
+
 class EmailField extends HTMLElement {
     connectedCallback() {
         this.innerHTML = `
-            <div class="form-group">
-                <div>
-                    <label for="email">Email</label>
-                    <small class="error" data-show="$emailInvalid">E-Mail address already registered. </small>
+            <div class="field">
+                <label class="label">
+                    EMail
+                    <small class="has-text-danger" data-show="$emailInvalid">already registered.</small>                
+                </label>
+                <div class="control">
+                    <input class="input" type="email" required minlength="8"
+                        id="email" 
+                        data-bind:email
+                        data-class="{'is-danger': $emailInvalid}"
+                        data-on:input__debounce.500ms="@post('/validate-email')"
+                    />
                 </div>
-                <input 
-                    id="email" 
-                    data-bind:email /* if emailInvalid is true class 'input-error' will be added */
-                    data-class="{'input-error': $emailInvalid}"
-                    data-on:input__debounce.500ms="@post('/validate-email')"
-                    type="email"
-                    required />
-                <small class="hint">Enter a valid E-Mail address</small>
             </div>
-        `;
+        </div>`;
     }
 }
+
 
 
 class PasswordField extends HTMLElement {
     connectedCallback() {
         this.innerHTML = `
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input 
-                    id="password" 
-                    name="password" 
-                    data-bind:password type="password" 
-                    placeholder="••••••••"
-                    autocomplete="new-password" />
-                <small class="hint">Use at least 8 characters.</small>
+            <div class="field">
+                <label class="label">
+                    Password
+                </label>
+                <div class="control">
+                    <input class="input" type="password" required minlength="8"
+                        id="password" 
+                        name="password" 
+                        data-bind:password
+                        placeholder="••••••••"
+                        autocomplete="new-password" />
+                    <small class="hint">Use at least 8 characters.</small>
+                </div>
             </div>
         `;
     }
@@ -73,22 +90,26 @@ class PasswordField extends HTMLElement {
 class CountryField extends HTMLElement {
     connectedCallback() {
         this.innerHTML = `
-            <div class="form-group">
-                <label for="country">Country</label>
-                <select 
-                    id="country" 
-                    name="country" 
-                    data-bind:country
-                    autocomplete="country-name">
-                    <option value="" selected disabled>Select country</option>
-                    <option>Switzerland</option>
-                    <option>Germany</option>
-                    <option>Spain</option>
-                    <option>Canada</option>
-                    <option>Australia</option>
-                    <option>USA</option>
-                </select>
-                <small class="hint">This helps us show localized content.</small>
+            <div class="field">
+                <label class="label">
+                    Country
+                </label>
+                <div class="select">
+                    <select
+                        id="country" 
+                        name="country" 
+                        data-bind:country
+                        autocomplete="country-name">
+                            <option value="" selected disabled>Select country</option>
+                            <option>Switzerland</option>
+                            <option>Germany</option>
+                            <option>Spain</option>
+                            <option>Canada</option>
+                            <option>Australia</option>
+                            <option>USA</option>
+                            </select>
+                </div>
+                <p class="help"><small>This helps us show localized content.</small></p>
             </div>
         `;
     }
@@ -97,14 +118,13 @@ class CountryField extends HTMLElement {
 class TermsField extends HTMLElement {
     connectedCallback() {
         this.innerHTML = `
-            <div class="form-group checkbox full">
-                <label>
-                    <input 
-                        type="checkbox" 
-                        data-bind:terms />
-                    I agree to the terms and conditions
-                </label>
-                <label> </label>
+            <div class="field">
+                <div class="control>
+                    <label class="checkbox">
+                        <input type="checkbox" data-bind:terms />
+                        I agree to the terms and conditions
+                    </label>
+                </div>
             </div>
         `;
     }
@@ -113,19 +133,16 @@ class TermsField extends HTMLElement {
 class PlanField extends HTMLElement {
     connectedCallback() {
         this.innerHTML = `
-            <div class="form-group full">
-                <span class="section-title">Choose Plan</span>
-
-                <div class="form-group checkbox">
-                    <!-- data-bind both on 'plan' -->
-                    <label>
-                        <input type="radio" value="starter" data-bind:plan />Starter (Free)
+            <div class="field">
+                <div class="control">
+                    <label class="label">
+                        Choose Plan
                     </label>
-                </div>
-
-                <div class="form-group checkbox">
-                    <label>
-                        <input type="radio" value="pro" data-bind:plan />Pro (Paid)
+                    <label class="radio">
+                        <input type="radio" value="starter" data-bind:plan /> Starter (Free)
+                    </label>
+                    <label class="radio">
+                        <input type="radio" value="pro" data-bind:plan /> Pro (Paid)
                     </label>
                 </div>
             </div>
@@ -136,7 +153,7 @@ class PlanField extends HTMLElement {
 class StatusField extends HTMLElement {
     connectedCallback() {
         this.innerHTML = `
-        <div class="form-group">
+        <div class="field">
             <label for="status">Status</label>
             <input id="status" data-bind:status name="status" type="text" readonly />
         </div>
@@ -147,7 +164,7 @@ class StatusField extends HTMLElement {
 class TimeField extends HTMLElement {
     connectedCallback() {
         this.innerHTML = `
-        <div class="form-group">
+        <div class="field">
             <label for="time">Last update</label>
             <input id="time" data-bind:time name="time" type="text" readonly />
         </div>

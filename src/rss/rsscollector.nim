@@ -241,3 +241,4 @@ if isMainModule:
                 dec maxItems
                 if maxItems == 0:
                     break
+        updateDBStats("clc")

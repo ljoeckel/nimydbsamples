@@ -41,6 +41,12 @@ proc handleSearch*(sse: SSEConnection, p: SearchParams) =
     var timeFrom = p.lastPubDate
     var lastRSSItem: RSSItem
     var articles = 0
+    let selector = "#rsscards"
+    let rootElement = if p.format == "card":
+            fmt"<div id='rsscards' class='grid is-col-min-13'></div>"
+        else:
+            fmt"<div id='rsscards'></div>"
+
 
     proc searchByKeyword() =
         var searchResults = getFTI(p) # @["1158,4", "118,10"...]
@@ -51,13 +57,18 @@ proc handleSearch*(sse: SSEConnection, p: SearchParams) =
             let subs = searchResults[idx].subscript
             let rssItem = loadObject[RSSItem](subs[1..^1]) # 0=pubDate, 1=rss, 2=article
             let card = trim(getHTMLForRSSItem(p.format, rssItem))
-            patchElements(sse, card, selector="#rsscards", mode=Append)
+
+            patchElements(sse, card, selector=selector, mode=Append)
             lastRSSItem = rssItem
         articles = mx
 
     proc search() =
         var cards: seq[string]
         for rssItem in getLatestRSSItems(timeFrom, p.lastIdxRef, p.userid, p.sortBy):
+            if rssItem.idxref == "":
+                patchElements(sse, "No RSSFeed selected", selector=selector, mode=Replace)
+                break
+
             let pubDate = parseInt(getOption(rssItem.pubDate))
             if p.sortBy in {ByTodayAscending, ByTodayDescending} and pubDate < p.todayFrom: break # only Todays articles
             let card = trim(getHTMLForRSSItem(p.format, rssItem))
@@ -66,22 +77,20 @@ proc handleSearch*(sse: SSEConnection, p: SearchParams) =
                 if pubDate < p.lowerBoundPubdate: break # ignore older articles than from update
                 cards.add(card)    
             else:
-                patchElements(sse, card, selector="#rsscards", mode=Append)
+                patchElements(sse, card, selector=selector, mode=Append)
             
             lastRSSItem = rssItem
             inc articles
             if articles >= p.maxArticles: break
-
+        # youngst on first position after loopend
         if p.searchType == Incremental:
             for idx in countdown(cards.len-1, 0):
-                patchElements(sse, cards[idx], selector="#rsscards", mode=Prepend)
+                patchElements(sse, cards[idx], selector=selector, mode=Prepend)
 
 
     case p.searchType:
     of Basic:
-        let containerClass = if p.format == "card": "rsscard-container" else: "rsslist-container"
-        let rssContainer = fmt"""<div id="rsscards" class="{containerClass}"></div>"""
-        patchElements(sse, rssContainer) # remove old entries on fresh search
+        patchElements(sse, rootElement, selector=selector, mode=Replace) # remove old entries on fresh search
     of Append:
         # Remove the intersect element
         patchElements(sse, "", selector="#intersect", mode=Remove)
@@ -97,7 +106,7 @@ proc handleSearch*(sse: SSEConnection, p: SearchParams) =
     # Intersect element to continue search on scroll at the end
     if articles >= p.maxArticles:
         let intersect = """<div id="intersect" data-on-intersect__threshold.25="@post('/search-more')"></div>"""
-        patchElements(sse, intersect, selector="#rsscards", mode=Append)
+        patchElements(sse, intersect, selector=selector, mode=Append)
 
     # Update info
     let nextRun = Get ^Session("rsscollector", "nextRun").int

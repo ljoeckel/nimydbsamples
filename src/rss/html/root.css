@@ -1,0 +1,189 @@
+:root {
+    --line-height-tight: 1.125;
+    --font-size-tight: 1.125rem;
+}
+
+.subtitle.is-7 {
+  font-size: 0.85rem;
+}
+
+.is-size-6a {
+  font-size: var(--font-size-tight) !important;
+  line-height: var(--line-height-tight) !important;
+}
+
+@media screen and (max-width: 768px) {
+  .is-size-6a-mobile {
+    font-size: 1rem !important;
+    line-height: var(--line-height-tight) !important;
+  }
+}
+@media screen and (min-width: 769px), print {
+  .is-size-6a-tablet {
+    font-size: 1rem !important;
+    line-height: var(--line-height-tight) !important;    
+  }
+}
+@media screen and (max-width: 1023px) {
+  .is-size-6a-touch {
+    font-size: 1rem !important;
+    line-height: var(--line-height-tight) !important;
+  }
+}
+@media screen and (min-width: 1024px) {
+  .is-size-6a-desktop {
+    font-size: 1rem !important;
+    line-height: var(--line-height-tight) !important;    
+  }
+}
+@media screen and (min-width: 1216px) {
+  .is-size-6a-widescreen {
+    font-size: 1rem !important;
+    line-height: var(--line-height-tight) !important;    
+  }
+}
+@media screen and (min-width: 1408px) {
+  .is-size-6a-fullhd {
+    font-size: 1rem !important;
+    line-height: var(--line-height-tight) !important;    
+  }
+}
+
+
+
+.info {
+    font-size: small;
+    font-family: 'Lucida Console', Monaco, monospace;
+    font-weight: var(--bulma-weight-light);
+    color: var(--bulma-primary);
+}
+
+
+
+/* Back to top button */
+#backToTop {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 18px;
+    background: #333;
+    color: white;
+    border-radius: 50px;
+    border: none;
+    cursor: pointer;
+    z-index: 1000;
+
+    /* Animation */
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    opacity: 0;
+    transform: translateY(20px);
+    pointer-events: none;
+    /* Ignore clicks when not visible */
+}
+
+/* This class will be added by Datastar */
+.is-visible {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+    pointer-events: auto !important;
+}
+
+/* Popover detail styling */
+.rss-detail {
+    background: whitesmoke;
+    border-radius: 12px;
+    margin-top: 0px;
+    margin-left: 0px;
+    padding: 2rem;
+    max-width: 100vh;
+    max-height: 100vh;
+    overflow-y: auto;
+    overflow-x: auto;
+    border: none;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.rss-detail:popover-open {
+    animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.rss-detail::backdrop {
+    background: rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(1px);
+}
+
+.close-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 24px;
+    height: 24px;
+    border: none;
+    color: white;
+    background: #333;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+    z-index: 1000;
+}
+
+.close-btn:hover {
+    background: darkblue;
+}
+
+
+.rssinfotable {
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: 75vw;
+    /* Table fills the container */
+}
+
+.rssinfotable th {
+    top: 0;
+    background: #e4e3e3;
+    color: darkslategrey;
+    z-index: 10;
+    border: 1px solid #ddd;
+    padding: 4px;
+    text-align: left;
+}
+
+.rssinfotable table {
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: 100%;
+}
+
+.rssinfotable thead tr {
+    background: #3b82f6;
+    color: #ffffff;
+    text-align: left;
+}
+
+.rssinfotable td {
+    border: 1px solid #ddd;
+    padding: 6px;
+    overflow-wrap: break-word;
+    white-space: normal;
+    text-align: left;
+}
+
+.rssinfotable tbody tr {
+    font-size: 14px;
+    color: black;
+}
+
+

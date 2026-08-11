@@ -1,108 +1,15 @@
 <div id="container" data-signals="{formId: 'dbstats', showGlobals: false, btn: '', page: 1}">
 
-<style>
-:root {
-    --row-height: 26px;
-    /* Höhe einer Tabellenzeile */
-    --header-height: 26px;
-    /* Höhe des Tabellenkopfes */
-    --visible-rows: 8;
-    /* Wie viele Zeilen ohne Scrollen sichtbar sein sollen */
-    --shadow-height: 3px;
-}
-
-/* The wrapper handles the scrollbar */
-.table-container {
-    height: 100vh;
-    /*height: calc((var(--row-height) * var(--visible-rows)) + var(--header-height) + var(--shadow-height));*/
-    overflow-y: auto;
-    scrollbar-gutter: stable;
-    border: 1px solid #e5e7eb;
-    width: max-content;
-}
-
-.ljtable {
-    border-collapse: collapse;
-    table-layout: fixed;
-    width: max-content;
-    /* Table fills the container */
-}
-
-.ljtable th {
-    position: sticky;
-    top: 0;
-    background: #e4e3e3;
-    color: darkslategrey;
-    z-index: 10;
-    border: 1px solid #ddd;
-    padding: 8px;
-    /*text-align: left;*/
-    height: var(--header-height);
-}
-
-.ljtable tr {
-    height: var(--row-height);
-}
-
-.ljtable table {
-    border-collapse: collapse;
-    table-layout: fixed;
-    width: 100%;
-}
-
-.ljtable thead tr {
-    background: #3b82f6;
-    color: #ffffff;
-    /*text-align: left;*/
-}
-
-.ljtable td {
-    max-width: 100px;
-    border: 1px solid #ddd;
-    padding: 8px;
-    overflow: auto;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    /*text-align: left;*/
-}
-
-.ljtable td a {
-    color: rgb(65, 65, 201);
-    text-decoration: underline;
-    text-decoration-style: dotted;
-}
-
-.ljtable tbody tr {
-    cursor: pointer;
-    font-size: 14px;
-    color: black;
-}
-
-.ljtable tr:hover {
-    outline: 2px solid darkgray;
-    outline-offset: -2px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    transition: box-shadow 0.3s ease;
-}
-
-.ljtable tbody tr.selected {
-    background: #e0f2fe;
-}
-
-.highlighted {
-    background-color: yellow !important;
-    transition: background-color 0.3s ease;
-}    
-</style>
     <div class="header">
-        <h1>Database statistics</h1>
+        <h1 class="subtitle mt-2 mb-2">Database statistics</h1>
     </div>
 
     <div>
-        <table class="ljtable">
+        <table class="table is-narrow is-hoverable">
             <thead>
+            <!--thead class="table-secondary"></thead-->
                 <tr>
-                    <th align="left" width="160px">Global</th>
+                    <th align="left" width="220px">Global</th>
                     <th align="right" width="90px"># Order Keys</th>
                     <th align="right" width="90px"># Query Keys</th>
                     <th align="right" width="90px">Keys (bytes)</th>
@@ -125,8 +32,8 @@
 
         <!-- Globals Table -->
         <div data-show="$showGlobals">
-            <table class="ljtable">
-                <thead>
+            <table class="table">
+                <thead class="table-secondary">
                     <tr>
                         <td data-text="$global"></td>
                     </tr>

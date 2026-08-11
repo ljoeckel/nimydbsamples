@@ -49,14 +49,85 @@
 
 
     <div data-init="@post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4')">
-        <div class="select-group">
-            <div class="select-group">
-                <button 
-                    title="Refresh the statistics"
+
+<!-- Main container -->
+<nav class="level mt-3">
+  <!-- Left side -->
+    <div class="level-left">
+        <div class="level-item">
+            <div class="field">
+            <p class="control">
+                <span data-show="$isLoading" class="led-red"></span>
+                <svg data-show="!$isLoading" width="16" height="16"></svg>
+            </p>
+        </div>
+        </div>
+        <div class="level-item has-addons">
+            <p class="subtitle is-6"><strong>Process:</strong></p>
+            <div class="select ml-3">
+                <select id="domain" data-bind="domain" 
                     data-indicator="isLoading"
-                    data-on:click="@post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4')">
-                <i class="bi bi-arrow-clockwise"></i>
-                </button>
+                    data-on:change="@post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4')">
+                    <option value="srv">RSSServer</option>
+                    <option value="clc">RSSCollector</option>
+                </select>
+            </div>
+        </div>
+        <div class="level-item has-addons">
+            <p class="subtitle is-6"><strong>Timerange:</strong></p>
+            <div class="select ml-3">
+                <select class="column" id="period" data-bind="period" 
+                    data-indicator="isLoading"
+                    data-on:change="@post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4')">
+                    <option value="Hour">Hour</option>
+                    <option value="Day">Day 24h</option>
+                    <option value="Week">Week 7d</option>
+                    <option value="Month">Month 31d</option>
+                    <option value="YearByDay">Year 365d</option>
+                    <option value="YearByMonth">Year 12m</option>
+                    <option value="All">All datapoints</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="level-item has-addons">
+            <p class="subtitle is-6"><strong>Charttype:</strong></p>
+            <div class="select ml-3">
+                <select id="chartType" data-bind="chartType" 
+                    data-indicator="isLoading"
+                    data-on:change="@post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4')">
+                    <option value="line">Line</option>
+                    <option value="bar">Bar</option>
+                    <option value="scatter">Scatter</option>
+                </select>
+            </div>
+        </div>
+  </div>
+
+  <!-- Right side -->
+  <div class="level-right">
+    <div class="level-item">
+        <div class="field">
+            <p class="control">
+            <!-- dateTime is a SSE signal regulary updated from the backend -->
+            <div data-signals="{ isEditing: false }"
+                data-computed:localTime="!$isEditing && ($localTime = $dateTime)"
+                data-init="$localTime = $dateTime">
+                <input
+                    type="datetime-local" 
+                    data-bind="localTime" 
+                    data-on:focus="$isEditing = true"
+                    data-on:blur="$isEditing = false; $localTime = $dateTime"
+                    data-on:input="$dateTime = $localTime; @post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4')"
+                />
+            </div>
+            </p>
+        </div>
+    </div>
+
+    <div class="level-item">
+        <div class="field">
+            <p class="control">
                 <div class="checkbox full">
                     <label for="auto" title="Auto Update">Auto</label>
                     <input 
@@ -67,63 +138,30 @@
                         data-on-interval__duration.10s="if ($poll) { @post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4') }">
                     </input>
                 </div>
-                
-                <span data-show="$isLoading" class="led-red"></span>
-                <svg data-show="!$isLoading" width="16" height="16"></svg>
-            </div>
-            
-            <div class="select-group">
-                <label for="domain">Process:</label>
-                <select id="domain" data-bind="domain" 
-                    data-indicator="isLoading"
-                    data-on:change="@post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4')">
-                    <option value="srv">RSSServer</option>
-                    <option value="clc">RSSCollector</option>
-                </select>
-            </div>
-            <div class="select-group">
-                <label for="period">Timerange:</label>
-                <select id="period" data-bind="period" 
-                    data-indicator="isLoading"
-                    data-on:change="@post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4')">
-                    <option value="Hour">Last hour</option>
-                    <option value="Day">Day 24h</option>
-                    <option value="Week">Week 7d</option>
-                    <option value="Month">Month 31d</option>
-                    <option value="YearByDay">Year 365d</option>
-                    <option value="YearByMonth">Year 12m</option>
-                    <option value="All">All datapoints</option>
-                </select>
-            </div>                
-
-            <div class="select-group">
-                <label for="chartType">Charttype:</label>
-                <select id="chartType" data-bind="chartType" 
-                    data-indicator="isLoading"
-                    data-on:change="@post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4')">
-                    <option value="line">Line</option>
-                    <option value="bar">Bar</option>
-                    <option value="scatter">Scatter</option>
-                </select>
-            </div>
-
-            <!-- dateTime is a SSE signal regulary updated from the backend -->
-            <div data-signals="{ isEditing: false }"
-                data-computed:localTime="!$isEditing && ($localTime = $dateTime)"
-                data-init="$localTime = $dateTime">
-                <input 
-                    type="datetime-local" 
-                    data-bind="localTime" 
-                    data-on:focus="$isEditing = true"
-                    data-on:blur="$isEditing = false; $localTime = $dateTime"
-                    data-on:input="$dateTime = $localTime; @post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4')"
-                />
-            </div>
+            </p>
+        </div>
     </div>
+    <div class="level-item">
+        <div class="field">
+            <p class="control">
+                <button 
+                    title="Refresh the statistics"
+                    data-indicator="isLoading"
+                    data-on:click="@post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4')">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+            </p>
+        </div>
+    </div>
+  </div>
+</nav>
 
-    <div id="chart1" style="width: 100vw; height: 20vh;" data-effect="window.updateChart($chart1, $chartType)"></div>
-    <div id="chart2" style="width: 100vw; height: 20vh;" data-effect="window.updateChart($chart2, $chartType)"></div>
-    <div id="chart3" style="width: 100vw; height: 20vw;" data-effect="window.updateChart($chart3, $chartType)"></div>
-    <div id="chart4" style="width: 100vw; height: 20vw;" data-effect="window.updateChart($chart4, $chartType)"></div>
+<div class="container">
+
+    <div id="chart1" style="width: 90vw; height: 20vh;" data-effect="window.updateChart($chart1, $chartType)"></div>
+    <div id="chart2" style="width: 90vw; height: 20vh;" data-effect="window.updateChart($chart2, $chartType)"></div>
+    <div id="chart3" style="width: 90vw; height: 20vw;" data-effect="window.updateChart($chart3, $chartType)"></div>
+    <div id="chart4" style="width: 90vw; height: 20vw;" data-effect="window.updateChart($chart4, $chartType)"></div>
+</div>        
     
 </div>

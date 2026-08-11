@@ -15,8 +15,9 @@ import wmFileExplorer
 
 proc updateWallClock(sse: SSEConnection) =
     let dt = now()
-    let wc = dt.format("dd.MM.yyyy - HH:mm")
-    patchElements(sse, fmt"<h3 id='wallclock'>{wc}</h3>") # Update Wall-Clock
+    let dtf = dt.format("dd.MM.yyyy - HH:mm")
+    let element = fmt"<p id='wallclock'>{dtf}</p>"
+    patchElements(sse, element) # Update Wall-Clock
 
     # HTML ISO 8601  format: YYYY-MM-DDThh:mm
     let date = dt.format("yyyy-MM-dd")

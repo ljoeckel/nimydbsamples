@@ -1,35 +1,37 @@
-<div id="container" class="card" data-signals="{formId: 'registration', userid: '', password: '', name: '', email: '', country: '', terms: false, plan: 'starter'}">
-    <div>
-        <div class="header">
-            <div class="form-group header">
-                <h1>Registration</h1>
-            </div>
+<div id="container" data-signals="{formId: 'registration', userid: '', password: '', name: '', email: '', country: '', terms: false, plan: 'starter'}">
+    
+        <h3 class="title is-4">Registration</h3>
+        <div class="notification is-info">
             <h3>Register for the RSS Demo</h3>
             <p>All data of this form is saved in YottaDB under the globalname <b>^Registration</b></p>
             <p>EMail address validated by HTML/CSS, existence by backend</p>
         </div>
 
         <form class="form" data-on:submit__prevent="@post('/submit-registration')">
-            <userid-field 
-                data-ignore-morph
-                data-init="document.getElementById('userid').focus()" >
-            </userid-field>
-            <name-field data-ignore-morph></name-field>
-            <email-field data-ignore-morph></email-field>
-            <password-field data-ignore-morph></password-field>
-            <country-field data-ignore-morph></country-field>
-            <plan-field></plan-field>
-            <terms-field></terms-field>
+            <div class="box fixed-grid">
+                <div class="grid">
+                    <userid-field 
+                        data-ignore-morph
+                        data-init="document.getElementById('userid').focus()" >
+                    </userid-field>
+                    <name-field data-ignore-morph></name-field>
+                    <email-field data-ignore-morph></email-field>
+                    <password-field data-ignore-morph></password-field>
+                    <country-field data-ignore-morph></country-field>
+                    <plan-field></plan-field>
+                    <terms-field></terms-field>
+                </div>
+            </div>
 
             <!-- Fine print -->
-            <p class="fine-print full">
+            <div class="block is-size-7">
                 By submitting this form, you agree to our <a href="#">Privacy Policy</a>.
-            </p>
+            </div>
 
             <!-- Buttons -->
             <div class="actions full">
-                <button class="btn" type="submit" data-attr:disabled="!$canSubmit">Submit</button>
-                <button class="btn btn-secondary" type="button" data-on:click="@post('/clear-form')">Clear</button>
+                <button class="button is-primary" type="submit" data-attr:disabled="!$canSubmit">Submit</button>
+                <button class="button is-secondary" type="button" data-on:click="@post('/clear-form')">Clear</button>
                 <!-- Response from server is here -->
                 <div id="response-message"></div>
             </div>
@@ -37,4 +39,4 @@
         
         <div id='response-message'></div>
 
-    </div>
+    

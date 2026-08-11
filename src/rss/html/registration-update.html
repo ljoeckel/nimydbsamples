@@ -1,30 +1,31 @@
-<div id="container" class="card" data-signals="{formId: 'registration', canSubmit: true}">
-    <div>
-        <div class="header">
-            <div class="form-group header">
-                <h1>Update your registration</h1>
-            </div>
-        </div>
+<div id="container" data-signals="{formId: 'registration', canSubmit: true}">
 
-        <form class="form" data-on:submit__prevent="@post('/update-registration')">
-            <userid-field data-ignore-morph></userid-field>
-            <name-field data-ignore-morph></name-field>
-            <email-field data-ignore-morph></email-field>
-            <password-field data-ignore-morph></password-field>
-            <country-field data-ignore-morph></country-field>
-            <plan-field></plan-field>
-            <terms-field></terms-field>
+    <div class="header">
+        <h1 class="subtitle mt-2 mb-2">Update your registration</h1>
+    </div>    
+
+    <form class="form" data-on:submit__prevent="@post('/update-registration')">
+            <div class="box fixed-grid">
+                <div class="grid">
+                    <userid-field data-ignore-morph></userid-field>
+                    <name-field data-ignore-morph></name-field>
+                    <email-field data-ignore-morph></email-field>
+                    <password-field data-ignore-morph></password-field>
+                    <country-field data-ignore-morph></country-field>
+                    <plan-field></plan-field>
+                    <terms-field></terms-field>
+                </div>
+            </div>
 
             <!-- Fine print -->
-            <p class="fine-print full">
+            <div class="block is-size-7">
                 By submitting this form, you agree to our <a href="#">Privacy Policy</a>.
-            </p>
+            </div>
 
             <!-- Buttons -->
             <div class="actions full">
-                <button class="btn" type="submit" data-attr:disabled="!$canSubmit">Submit</button>
+                <button class="button is-primary" type="submit" data-attr:disabled="!$canSubmit">Submit</button>
                 <!-- Response from server is here -->
                 <div id="response-message"></div>
             </div>
         </form>
-    </div>

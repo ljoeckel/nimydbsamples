@@ -1,106 +1,8 @@
-<!-- data-init="@post('/getGlobalList'); @post('/editglobal')" -->
 <div id="container" data-signals="{formId: 'dbedit', page: 1, lastpage: 1, btn: 'firstPage'}"
     data-signals:global__ifmissing=''>
 
-    <style>
-        .ljtable {
-            border-collapse: collapse;
-            table-layout: fixed;
-        }
-
-
-        .ljtable th {
-            position: sticky;
-            top: 0;
-            background: #e4e3e3;
-            color: var(--th-color);
-            z-index: 10;
-            border: 1px solid #ddd;
-            padding: 8px;
-            height: var(--header-height);
-        }
-
-        .ljtable tr {
-            height: var(--row-height);
-        }
-
-        .ljtable thead tr {
-            background: var(--th-background);
-            color: var(--th-color);
-        }
-
-        .ljtable td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            word-wrap: break-word;
-        }
-
-        .ljtable td a {
-            color: var(--th-color);
-            text-decoration: underline;
-            text-decoration-style: dotted;
-        }
-
-        .ljtable tbody tr {
-            cursor: pointer;
-            font-size: 14px;
-            color: black;
-        }
-
-        .ljtable tr:hover {
-            outline: 2px solid darkgray;
-            outline-offset: -2px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            transition: box-shadow 0.3s ease;
-        }
-
-
-        .footer {
-            position: fixed;
-            bottom: 5px;
-            width: 100%;
-            display: flex;
-            padding: 0 10px;
-            justify-content: center;
-            align-items: center;
-            background-color: white;
-        }
-
-        .pagination-list {
-            display: flex;
-            list-style: none;
-            align-items: center;
-            flex-wrap: wrap;
-            background-color: white;
-            gap: 6px;
-        }
-
-        .pagination-item {
-            list-style: none;
-            margin: 1px 3px 3px 1px;
-            background-color: white;
-            border-radius: 5px;
-            border: 1px solid var(--brand);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 24px;
-            height: 24px;
-        }
-        .pagination-input {
-            width: 100px;
-            height: 24px;
-            border: none;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-    </style>
-
-
     <div class="header">
-        <h1>Globals</h1>
+        <h1 class="subtitle mt-2 mb-2">Globals</h1>
     </div>
 
     <select id="globals" name="globals" data-bind="global" data-init="@post('/getGlobalList')"
@@ -109,9 +11,8 @@
 
     <!-- Globals Table -->
 
-    <div class="ljtable-container">
-        <table class="ljtable">
-            <thead>
+        <table class="table is-narrow is-hoverable">
+            <thead class="table-secondary">
                 <tr>
                     <th width="40%">Subscripts</th>
                     <th>Value</th>
@@ -121,7 +22,6 @@
             </tbody>
 
         </table>
-    </div>
 
 
     <footer class="footer">

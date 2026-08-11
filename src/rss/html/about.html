@@ -1,224 +1,111 @@
-<div id="container" class="card" data-signals="{formId: 'about'}">
+<div id="container" data-signals="{formId: 'about'}">
+<style>
 
-    <style>
-        :root {
-            --primary-color: darkred;
-            --primary-color-dark: darkred;
-            /*--text-main: #1f2937;*/
-            --text-muted: #4b5563;
-            /*--bg-light: #f9fafb;*/
-            --white: #ffffff;
-            --border: #e5e7eb;
-        }
-
-        summary {
+summary {
             margin: 3px;
-            padding-left: 5px;
-            font-size: 1.1em;
-            color: darkred;
+            margin-top: 0px;
+            padding-left: 15px;
+            font-size: 0.8em;
+            color: var(--bulma-danger)
         }
 
         .summarysub {
-            margin-left: 20px;
-            margin-top: 2px;
-            color: darkblue;
+            margin-left: 30px;
+            margin-top: 0px;
+            margin-bottom: -10px;
+            color: var(--bulma-link);
+            font-size: 0.8em;
         }
 
         ul {
-            padding-left: 25px;
-            gap: 5px;
-            margin: 5px;
+            margin-top: 0px;
+            padding-left: 10px;
+            gap: 1px;
+            margin: 1px;
+            font-size: 0.8em;
         }
-
-        li {
-            margin: 6px;
+        details summary + ul > li {
+            margin-top: -10px;
+            font-size: 0.9em;
         }
 
         li::marker {
             content: \F309;
-            color: orange;
-            font-size: 1.0em;
-        }
+            color: var(--bulma-warning);
+        }    
+</style>
 
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 20px;
-        }
 
-        .center {
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-            width: 50%;
-        }
-
-        .container a:link {
-            text-decoration: underline;
-        }
-
-        .container a:hover {
-            color: #2980b9;
-            text-decoration: underline;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        /* Hero Header */
-        .hero {
-            background: linear-gradient(135deg, #6e1f2d 0%, #d7426f 100%);
-            color: white;
-            padding: 25px 0;
-            text-align: center;
-        }
-
-        .hero h1 {
-            margin: 0;
-            font-size: 2.5rem;
-        }
-
-        .tagline {
-            font-size: 1.2rem;
-            opacity: 0.9;
-        }
-
-        /* Sections */
-        .section {
-            padding: 20px 0;
-        }
-
-        .subsection {
-            padding: 5px 0;
-        }
-
-        h2 {
-            color: var(--primary-color);
-            margin-bottom: 20px;
-        }
-
-        hr {
-            border: 0;
-            border-top: 1px solid var(--border);
-        }
-
-        /* Grid & Cards */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 15px;
-        }
-
-        .card {
-            background: var(--white);
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-
-        .card h3 {
-            margin-top: 0;
-            color: var(--primary-color-dark);
-        }
-
-        /* Buttons */
-        .cta-buttons {
-            display: flex;
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: bold;
-            transition: transform 0.2s;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .primary {
-            background: var(--primary-color);
-            color: white;
-        }
-
-        .secondary {
-            border: 2px solid var(--primary-color);
-            color: var(--primary-color);
-        }
-
-        /* Footer */
-        .footer {
-            text-align: center;
-            padding: 40px;
-            font-size: 0.9rem;
-            color: var(--text-muted);
-        }
-
-        /* Mobile Adjustments */
-        @media (max-width: 600px) {
-            .cta-buttons {
-                flex-direction: column;
-            }
-
-            .hero h1 {
-                font-size: 2rem;
-            }
-        }
-    </style>
-
-    <div class="container center">
-        <a href="html/architecture.jpg">
-            <img width="400" src="html/nimetic.jpg">
-            <img width="400" src="html/features.jpg">
-            <h4 class="fine-print center">Architecture overview</h4>
-        </a>
+    <div class="container mt-3">
+      <div class="columns is-centered">
+        <div class="column is-8">
+          <span>
+                <div class="container grid has-1-cols has-text-centered">
+                    <a href="html/architecture.jpg">
+                        <div class="cell">
+                        <img width="400" src="images/nimetic.jpg">
+                        </div>
+                        <div class="cell">
+                        <img width="400" src="images/features.jpg">
+                        </div>
+                    </a>
+                </div>            
+          </span>  
+          <div class="card mt-3">
+            <p class="title is-6 m-3">
+                Modern web development is often bogged down by heavy client-side frameworks and complex build pipelines.
+                It’s time to bring the power back to the server.                
+            </p>
+            <p class="title is-6 m-3">
+                The "nimetic" stack is a streamlined approach to building Single Page Applications (SPAs) using Nim as the
+                primary engine.
+                By leveraging the native strengths of HTML5/CSS3 and the lightweight Datastar framework,
+                we eliminate the need for React-like bloat.
+            </p>
+            </div>
+        </div>
+      </div>
     </div>
 
-    <main class="container">
-        <!-- The Vision Section -->
-            <p>
-                Modern web development is often bogged down by heavy client-side frameworks and complex build pipelines.
-                It’s time to bring the power back to the server.
-            <p>
-            <p>&nbsp;</p>
-            The "nimetic" stack is a streamlined approach to building Single Page Applications (SPAs) using Nim as the
-            primary engine.
-            By leveraging the native strengths of HTML5/CSS3 and the lightweight Datastar framework,
-            we eliminate the need for React-like bloat.
-            </p>
-            <p>&nbsp;</p>
-            <p>
-                'nimetic' allows to use SSE via 'Datastar' to render dynamic UI components directly from Nim.
+  <!-- Main Article Body -->
+    <div class="container">
+      <div class="columns is-centered">
+        <div class="column is-11">
+          <div class="content is-medium">
+            <h2 class="title is-5 mt-6">Overview</h2>
+            <p class="is-size-6">'nimetic' allows to use SSE via 'Datastar' to render dynamic UI components directly from Nim.
                 Integrating YottaDB via a native Nim DSL for ultra-low latency data handling.
                 Reducing cognitive load by maintaining application state on the server.
                 Discover how to build fast, maintainable, and modern web applications without leaving the Nim ecosystem.
             </p>
-            <p>&nbsp;</p>
-            <p>Built for Nim-powered SPAs, this architecture swaps frontend bloat for vanilla HTML5/CSS3.
+            <p class="is-size-6">Built for Nim-powered SPAs, this architecture swaps frontend bloat for vanilla HTML5/CSS3.
                 It uses YottaDB for efficient persistence through a native Nim DSL, while Datastar handles SSE to
                 deliver dynamic updates.
-                This approach simplifies development by keeping state and component rendering on the server.</p>
+                This approach simplifies development by keeping state and component rendering on the server.
+            </p>
+            
+            <hr>
 
-        <hr>
+            <h2 class="title is-4 mt-6">The building blocks</h2>
 
-        <!-- Tech Stack Section -->
-        <section class="section">
-            <h2>Architecture & Frameworks</h2>
-            <div class="grid">
-                <div class="card">
-                    <h3><a href="https://nim-lang.org" target='_blank'>Nim</a></h3>
-                    <div class="subsection">
+            <div class="grid is-col-min-12">
+                <div class="card cell">
+                    <div class="card-header">
+                        <a class="card-header-title" href="https://nim-lang.org" target='_blank'>Nim</a>
+                        <a class="card-header-icon" href="https://nim-lang.org" target='_blank'>
+                            <img width="24" height=24 src="/images/nim.png"/>
+                        </a>
+                    </div>
+
+                    <div class="block ml-3 is-size-6">
                         Nim is a statically typed, compiled programming language designed for high performance and
                         expressiveness,
                         with Python’s readability and C’s efficiency.
                         Its standout features include a powerful macro system for metaprogramming and zero-cost
                         abstractions.
                     </div>
-                    <details>
+
+                   <details>
                         <summary>Python-like Syntax with C Performance</summary>
                         <ul>
                             <li>It uses a clean, indentation-based syntax that is easy for beginners to read.</li>
@@ -245,9 +132,15 @@
                     </details>
                 </div>
 
-                <div class="card">
-                    <h3><a href="https://nginx.org/en/" target="_blank">nginx</a></h3>
-                    <div class="subsection">
+                <div class="card cell">
+                    <div class="card-header">
+                        <a class="card-header-title" href="https://nginx.org/en/" target="_blank">nginx</a>
+                        <a class="card-header-icon" href="https://nginx.org/en/" target="_blank">
+                            <img width="24" height=24 src="/images/nginx.webp"/>
+                        </a>
+                    </div>
+
+                    <div class="block ml-3 is-size-6">
                         Nginx is a high-performance web server and reverse proxy renowned for its event-driven
                         architecture, which allows it to handle tens of thousands of concurrent connections with
                         extremely low memory overhead.
@@ -272,9 +165,12 @@
                     </details>
                 </div>
 
-                <div class="card">
-                    <h3><a href="https://github.com/ljoeckel/mummyDS.git" target="_blank">mummyDS</a></h3>                    
-                    <div class="subsection">
+                <div class="card cell">
+                     <div class="card-header">
+                        <a class="card-header-title" href="https://github.com/ljoeckel/mummyDS.git" target="_blank">mummyDS</a>
+                        <a class="card-header-icon has-text-link-light" href="https://github.com/ljoeckel/mummyDS.git"><i class="bi bi-github"></i></a>
+                    </div>
+                    <div class="block ml-3 is-size-6">
                         "mummy" is a high-performance, multithreaded HTTP and WebSocket server library written entirely in Nim.
                         It is designed to maximize hardware performance while providing a straightforward developer experience,
                         specifically avoiding the complexities of asynchronous programming (async/await) in favor of simple, blocking code
@@ -315,9 +211,16 @@
 
                 </div>
                 
-                <div class="card">
-                    <h3><a href="https://data-star.dev/" target="_blank">Datastar</a></h3>
-                    <div class="subsection">
+                <div class="card cell">
+                    <div class="card-header">
+                        <a class="card-header-title" href="https://data-star.dev/" target="_blank">Datastar</a>
+                        <a class="card-header-icon" href="https://data-star.dev/" target="_blank">
+                            <img width="24" height=24 src="/images/datastar.png"/>
+                        </a>
+                    </div>
+
+                    
+                    <div class="block ml-3 is-size-6">
                         Datastar is a lightweight hypermedia framework that combines the reactive state management
                         of Alpine.js with the server-driven simplicity of htmx, using Server-Sent Events (SSE)
                         to stream real-time DOM updates from any backend.
@@ -373,9 +276,15 @@
                         </ul>
                     </details>
                 </div>
-                <div class="card">
-                    <h3><a href="https://yottadb.com/" target="_blank">YottaDB</a></h3>
-                    <div class="subsection">
+                <div class="card cell">
+                    <div class="card-header">
+                        <a class="card-header-title" href="https://yottadb.com/" target="_blank">YottaDB</a>
+                        <a class="card-header-icon" href="https://yottadb.com/" target="_blank">
+                            <img width="64" src="/images/YottaDB_logo.svg"/>
+                        </a>
+                    </div>
+
+                    <div class="block ml-3 is-size-6">
                         YottaDB is a high-performance, hierarchical NoSQL database designed for mission-critical
                         applications, distinguished by its unique daemon-less architecture that allows the database
                         engine to run directly within the application's process space for near-zero latency.
@@ -438,68 +347,96 @@
                     </details>
 
                 </div>
-                <div class="card">
-                    <div class="card">
-                        <h3><a href="https://codeberg.org/samsamros/rssatom.git" target='_blank'>atomrss</a></h3>
-                        <p class="subsection">The "RSS Concentrator" sample app uses the 'rssatom' library 
-                            with minor parsing modifications and integration with YottaDB
-                            to allow indexing of RSS fields in YottaDB.
-                        </p>
+                <div class="cell card">
+                     <div class="card-header">
+                        <a class="card-header-title" href="https://codeberg.org/samsamros/rssatom.git" target='_blank'>rssatom</a>
+                        <a class="card-header-icon has-text-link-light" href="https://codeberg.org/samsamros/rssatom.git"><i class="bi bi-github"></i></a>
                     </div>
-                    <div class="card">
-                        <h3><a href="https://icons.getbootstrap.com/" target='_blank'>Bootstrap Icons</a></h3>
-                        <p class="subsection">Using these icons in the RSS application.</p>
+                    
+                    <p class="block ml-3 is-size-6">The "RSS Concentrator" sample app uses the 'rssatom' library 
+                        with minor parsing modifications and integration with YottaDB
+                        to allow indexing of RSS fields in YottaDB.
+                    </p>
+                </div>
+
+                <div class="cell card">
+                    <div class="card-header">
+                        <a class="card-header-title" href="https://bulma.io/" target='_blank'>Bulma CSS Framework</a>
+                        <a class="card-header-icon" href="https://bulma.io/" target="_blank">
+                            <img width="48" height="48" src="/images/bulma.png"/>
+                        </a>
                     </div>
+
+                    <p class="block ml-3 is-size-6">Bulma is a free, open source framework that provides
+                         ready-to-use frontend components that you can easily combine to build responsive web interfaces. </p>
+                    <details>
+                        <summary>Key Features</summary>
+                        <ul>
+                            <li>Fast prototyping without writing layout CSS.</li>
+                            <li>Consistent spacing and typography rules.</li>
+                            <li>Fully responsive mobile-first grid systems.</li>
+                        </ul>
+                    </details>                         
+                </div>
+
+                <div class="cell card">
+                    <div class="card-header">
+                        <a class="card-header-title" href="https://icons.getbootstrap.com/" target='_blank'>Bootstrap Icons</a>
+                        <a class="card-header-icon" href="https://icons.getbootstrap.com/" target="_blank">
+                            <img width="24" height=24 src="/images/bootstrap_logo.webp"/>
+                        </a>
+                    </div>
+
+                    <p class="block ml-3 is-size-6">Using these icons in the RSS application.</p>
                 </div>
             </div>
-        </section>
+          </div>
 
-        <hr>
 
-        <section class="section">
-            <h2>Core Technical Features</h2>
-            <ul>
-                <li><strong>Nim Backend</strong>
-                    High-performance, statically typed backend logic for SPAs.</li>
-                <li><strong>No-Framework Frontend</strong>
-                    Direct reliance on native HTML5 and CSS3 to eliminate React/JavaScript bloat.</li>
-                <li><strong>SSE</strong>
-                    Integration of Datastar for efficient Server-Sent Events, enabling real-time UI updates.</li>
-                <li><strong>Simple Persistence</strong>
-                    Robust data management via YottaDB with a native Nim DSL for seamless database interaction.</li>
-                <li><strong>SSR Logic</strong>
+            <!-- Callout Box -->
+            <div class="notification is-info is-light">
+              <p class="has-text-weight-bold mb-1 is-size-4">Core Technical Features</p>
+                <p class="is-size-6"><strong>Nim Backend</strong>
+                    High-performance, statically typed backend logic for SPAs.</p>
+                <p class="is-size-6"></p><strong>No-Framework Frontend</strong>
+                    Direct reliance on native HTML5 and CSS3 to eliminate React/JavaScript bloat.</p>
+                <p class="is-size-6"></p><strong>SSE</strong>
+                    Integration of Datastar for efficient Server-Sent Events, enabling real-time UI updates.</p>
+                <p class="is-size-6"></p><strong>Simple Persistence</strong>
+                    Robust data management via YottaDB with a native Nim DSL for seamless database interaction.</p>
+                <p class="is-size-6"></p><strong>SSR Logic</strong>
                     Simplified programming model where dynamic components are rendered server-side, reducing client-side
-                    complexity.</li>
-            </ul>
-        </section>
+                    complexity.</p>
+            </div>
 
-        <section class="section">
-            <h2>Key Advantages for Developers</h2>
-            <ul>
-                <li><strong>Zero Bloat</strong>
-                    Minimal dependencies by avoiding complex client-side state management.</li>
-                <li><strong>Performance</strong>
-                    Combines Nim’s speed with YottaDB’s low-latency persistence. Loading the last 5000 RSS articles from YottaDB takes less than a second.</li>
-                <li><strong>Simple</strong>
-                    A simple programming model that combines Datastar with Nim's backend speed and YottaDB’s low-latency persistence.</li>
-                <li><strong>Maintainability</strong>
-                    A unified codebase where the server remains the single source of truth for the UI.</li>
+            <div class="notification is-warning is-light">
+              <p class="has-text-weight-bold mb-1 is-size-4">Key Advantages for Developers</p>
+                <p class="is-size-6"></p><strong>Zero Bloat</strong>
+                    Minimal dependencies by avoiding complex client-side state management.</p>
+                <p class="is-size-6"></p><strong>Performance</strong>
+                    Combines Nim’s speed with YottaDB’s low-latency persistence. Loading the last 5000 RSS articles from YottaDB takes less than a second.</p>
+                <p class="is-size-6"></p><strong>Simple</strong>
+                    A simple programming model that combines Datastar with Nim's backend speed and YottaDB’s low-latency persistence.</p>
+                <p class="is-size-6"></p><strong>Maintainability</strong>
+                    A unified codebase where the server remains the single source of truth for the UI.</p>
             </ul>
-        </section>
-
+  
+        </div>
+      </div>
+    </div>
+  
+    <div class="content">
         <hr>
-
         <!-- Call to Action -->
         <section class="section contact-box">
             <h2>Sourcecode & Contact</h2>
             <h3><i>This is a 'Proof of Concept' and ongoing work.</i></h3>
             <div class="cta-buttons">
-                <a href="https://github.com/ljoeckel/nimydbsamples.git" class="btn primary">GitHub Repository</a>
-                <a href="mailto:lothar.joeckel@gmail.com" class="btn primary">Contact me</a>
+                <a href="https://github.com/ljoeckel/nimydbsamples.git" class="button is-light is-link"><i class="bi bi-github"></i>&nbsp;GitHub Repository</a>
+                <a href="mailto:lothar.joeckel@gmail.com" class="button is-light is-info">Contact me</a>
             </div>
         </section>
-
-    </main>
+    </div>
 
     <footer class="footer">
         <p>&copy; 2026 Lothar Jöckel</p>

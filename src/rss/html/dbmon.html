@@ -1,47 +1,6 @@
 <div id="container" data-signals="{formId: 'dbmonitor'}">
 
 <style>
-
-.ljtable {
-    border-collapse: collapse;
-    table-layout: fixed;
-    width: max-content;
-}
-
-.ljtable th {
-    background: #e4e3e3;
-    color: darkslategrey;
-    border: 1px solid #ddd;
-    padding: 4px;
-    /*text-align: left;*/
-    height: var(--header-height);
-}
-
-.ljtable thead tr {
-    background: #3b82f6;
-    color: #ffffff;
-    text-align: left;
-}
-
-.ljtable tr {
-    height: var(--row-height);
-}
-
-.ljtable td {
-    border: 1px solid #ddd;
-    padding-left: 4px;
-    white-space: nowrap;
-    /*text-align: left;*/
-}
-
-.ljtable tr:hover {
-    outline: 2px solid darkgray;
-    outline-offset: -2px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    transition: box-shadow 0.3s ease;
-}
-
-
         /* ==========================================
             1. Haupt-Wrapper (Das native Viereck eliminieren)
         ========================================== */
@@ -139,14 +98,13 @@
     </style>
 
     <div class="header">
-        <h1>Database Monitor</h1>
-        <h4>Interval: 5 seconds</h4>
+        <h1 class="subtitle mt-2 mb-2">Database Monitor</h1>
     </div>
 
-    <div>
-        <table class="ljtable" data-on-interval__duration.5000.leading="@post('/get-rtstats')">
+    <div data-on-interval__duration.1000.leading="@post('/get-rtstats')">
+        <table class="table is-narrow is-hoverable">
             <tt>
-                <thead>
+                <thead class="table-secondary">
                     <tr>
                         <th align="left" width="160px">Mnemonic</th>
                         <th align="right" width="120px">Current</th>

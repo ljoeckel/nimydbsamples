@@ -105,8 +105,15 @@ proc scanKeys(req: Request) =
 proc scanFull(req: Request) =
     let ctx = getContext(req)
     if not ctx.isAdmin():
+        let err = """
+        <div class="notification is-danger">
+            <button class="delete" data-on:click="@post('goto/livefeed.html')"></button>
+            Only the Administrator is allowed to run this kind of database analysis.
+            <strong>Please ask your admin!</strong>
+        </div>
+        """
         SSE(req):
-            patchElements(sse, "<h4>'admin' only!</h4>", selector="#stats-body", mode=Replace)
+            patchElements(sse, err, selector="#stats-body", mode=Replace)
             return
 
     var sse = req.respondSSE()
@@ -185,15 +192,17 @@ proc handleStats(req: Request) =
 
 
 proc handleRTStats(req: Request) =
+    updateDBStats("srv")
+    
+    #subtitle is-6 has-text-info
     var tbody = "<tbody id='rtstats'>"
     for k in OrderItr ^DBSTATS.keys:
         let mnemonic = k[0]
-        let v = Get ^DBSTATS(mnemonic)
-        let delta = Get ^DBSTATS(mnemonic, "delta")
-        if v != "0":
-            #<td><span class='has-tooltip' data-tooltip='{title}' tabindex='0' role='toolbar'>{k[0]}</span></td>
+        let v = Get ^DBSTATS(mnemonic).int
+        let delta = Get ^DBSTATS(mnemonic, "delta").int
+        if v != 0:
             let title = mnemonic & ": " & mnemomics[mnemonic]
-            tbody.add(fmt"""
+            tbody.add(&"""
                 <tr>
                     <td><span class='has-tooltip tooltip-right' data-tooltip='{title}' tabindex='0' role='toolbar'>{k[0]}</span></td>
                     <td align='right'>{v}</td>
@@ -265,8 +274,8 @@ proc handleEditGlobal(req: Request) =
         let k = keys.join(", ")
         result.add(fmt"""
             <tr>
-                <td>{k}</td>
-                <td>{value}</td>
+                <td class='text'>{k}</td>
+                <td class='text'>{value}</td>
             </tr>
             """)
 

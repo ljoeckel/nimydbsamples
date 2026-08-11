@@ -1,188 +1,139 @@
 <!DOCTYPE html>
-<html>
+<html class="has-navbar-fixed-top" lang="en">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="robots" content="noindex, nofollow" />
-    <!--script type="module" src="https://cdn.jsdelivr.net/gh/starfederation/datastar@v1.0.1/bundles/datastar.js"></script-->
+    <meta name="robots" content="nofollow" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="/bulma.min.css">
+    <link rel="stylesheet" href="/bulmaswatch-slate.min.css">
+    <!--link rel="stylesheet" href="/bulmaswatch-materia.min.css"-->
+    
     <script type="module" src="/datastar.js"></script>
-    <script src="formfields.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/6.0.0/echarts.min.js"></script>
     <script src="dbcharts.js"></script>
 
-    <link rel="stylesheet" href="/reset.css">
-    <link rel="stylesheet" href="/style.css">
-    <link rel="stylesheet" href="/table.css">
-    <link rel="stylesheet" href="/card.css">
+    <link rel="stylesheet" href="/root.css">
+    <script src="formfields.js"></script>
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
     <link rel="shortcut icon" href="/favicon.ico" />
-
 </head>
 
-<style>
-/* NAVBAR */
-    .force-closed {
-        display: none !important;
-    }
-        
-    .navbar {
-        display: flex;
-        align-items: center;
-        background-color: var(--nav-bar);
-        /*position: relative;*/
-        position: sticky;
-        top: 0px;
-        z-index: 100;
-    }
 
-    /* For #clock field */
-    .navbar h3 {
-        margin-left: auto;
-        font-size: 14px;
-        color: rgb(159, 178, 196);
-        padding: 14px 16px;
-        margin-top: 0;
-        margin-bottom: 0;
-    }
-
-    /* Navigation without submenu */
-    .navbar a {
-        font-size: 16px;
-        color: var(--nav-fg);
-        text-align: center;
-        padding: 14px 16px;
-        text-decoration: none;
-    }
-
-    .subnav {
-        position: relative;
-    }
-
-    .subnav .subnavbtn {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 16px;
-        border: none;
-        color: var(--nav-fg);
-        padding: 14px 16px;
-        background-color: inherit;
-        cursor: pointer;
-        height: 100%;
-        /* Matches parent height */
-    }
-
-    /* Add a red background color to navigation links on hover */
-    .navbar a:hover,
-    .subnav:hover,
-    .subnav:hover .subnavbtn {
-        background-color: var(--nav-bg);
-    }
-
-    .subnav-content {
-        display: none;
-        position: absolute;
-        top: 100%;
-        /* Aligns precisely with the bottom of the stretched navbar */
-        right: 0;
-        /* Aligns the dropdown flush to the RIGHT edge of the icon */
-        background-color: var(--nav-bg);
-        width: max-content;
-        z-index: 1000;
-        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-        /* Optional: adds depth to the dropdown */
-    }
-
-    .subnav-content a {
-        display: block;
-        /* Changed from float:left to stack options vertically */
-        color: var(--nav-fg);
-        padding: 12px 16px;
-        /* Gives items a good clickable hit-area */
-        text-decoration: none;
-        text-align: left;
-    }
-
-    .subnav-content a:hover {
-        text-decoration: underline;
-        text-decoration-style: double;
-    }
-
-    /* When you move the mouse over the subnav container, open the subnav content */
-    .subnav:hover .subnav-content {
-        display: block;
-    }
-</style>
-
-<body data-signals="{formId:'index', userid:'', password:'', loggedIn: false, menuOpen: false, action: ''}">
-    <!-- The navigation menu -->
-    <div class="navbar">
-        <div class="subnav" data-show="$loggedIn">
-            <a href="#livefeed" title="Show the RSS Live Feeds" id="home" data-on:click="@post('/livefeed.html')"
-                style="display: inline-flex; align-items: center; gap: 4px; text-decoration: none;">
+<body    
+    data-signals="{formId:'index', userid:'', password:'', loggedIn: false, action: '', burgerOpen: false, menuOpen: false, ydbMenuOpen: false}">
+    <nav class="navbar is-fixed-top" role="navigation" aria-label="main navigation">
+        <div class="navbar-brand">
+            <a class="navbar-item" data-show="$loggedIn"
+                data-on:click="$rssOpen=!$rssOpen; $burgerOpen=false; @post('/livefeed.html')">
                 <img src="rss.png" height="20" width="20" alt="RSS Icon">
                 Live
             </a>
-        </div>
 
-        <a href="#wordcloud" data-show="$loggedIn"  data-on:click="$menuOpen = false; @post('goto/wordcloud.html')" title='Show the latest Word-Cloud'><i class="bi bi-cloud"></i></a>
+            <a class="navbar-item" title="Login" data-show="!$loggedIn && $formId == 'about'"
+                data-on:click="rssOpen=!$rssOpen; $burgerOpen=false; @post('/index.html')">
+                <i class="bi bi-box-arrow-in-right"></i>
+                Login
+            </a>
 
-        <div class="subnav" 
-            data-show="$loggedIn" 
-            data-on:mouseenter="$menuOpen = true" 
-            data-on:mouseleave="$menuOpen = false">
-            <button class="subnavbtn" title="YottaDB Status">
-                <i class="bi bi-database"></i>
-            </button>
-            <div class="subnav-content" data-show="$menuOpen">
-                <a href="#dbstats1" title="Count the Order Keys" data-on:click="$menuOpen = false; $action = 'keys'; @post('goto/stats.html')"><i class="bi bi-bar-chart"></i> Keycount</a>
-                <a href="#dbstats1" title="Full Global Scan" data-on:click="$menuOpen = false; $action = 'full'; @post('goto/stats.html')"><i class="bi bi-bar-chart-fill"></i> Full Scan</a>
-                <a href="#dbstats2" title="Monitor database in RealTime" data-on:click="$menuOpen = false; @post('goto/dbmon.html')"><i class="bi bi-activity"></i> Monitor</a>
-                <a href="#dbstats3" data-on:click="$menuOpen = false; @post('goto/dbedit.html')"><i class="bi bi-pencil"></i> Globals</a>
-                <a href="#dbcharts" title="YottaDB Database performance charts" data-on:click="$menuOpen = false; @post('goto/dbcharts.html')"><i class="bi bi-graph-up"></i> Statistics</a>
-                <a href="#explorer" title="File Explorer" data-on:click="$menuOpen = false; @post('goto/explorer.html')"><i class="bi bi-folder2"></i> Explorer</a>
+            <a class="navbar-item" title="About" data-show="!$loggedIn"
+                data-on:click="rssOpen=!$rssOpen; $burgerOpen=false; @post('/about.html')">
+                <i class="bi bi-question-circle"></i>
+            </a>
+
+            <a class="navbar-item" title="Feed configuration" data-show="$loggedIn"
+                data-show="$loggedIn"
+                data-on:click="$menuOpen=false; $burgerOpen=false; @post('goto/configfeeds.html')">
+                <i class="bi bi-gear"></i>
+            </a>
+
+            <a class="navbar-item" title="News Trend" data-show="$loggedIn" 
+                data-on:click="$burgerOpen=false; @post('goto/wordcloud.html')"
+                title='Show the latest Word-Cloud'>
+                <i class="bi bi-graph-up-arrow"></i>
+            </a>
+
+            <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample"
+                data-show="$loggedIn" data-on:click="$burgerOpen=!$burgerOpen" data-class:is-active="$burgerOpen">
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+            </a>
+        </div>      
+
+        <div id="navbarFull" class="navbar-menu" data-class:is-active="$burgerOpen">
+            <div class="navbar-start">
+                <div class="navbar-item has-dropdown"
+                    data-show="$loggedIn"
+                    data-class:is-active="$ydbMenuOpen"
+                    data-on:click="$ydbMenuOpen = !$ydbMenuOpen"
+                    data-on:mouseenter="$ydbMenuOpen=true"
+                    data-on:mouseleave="$ydbMenuOpen=false">
+
+                    <a class="navbar-link">
+                        <i class="bi bi-database"></i>
+                        Status
+                    </a>
+                    <div class="navbar-dropdown">
+                        <a class="navbar-item" title="Count the Order Keys"
+                            data-on:click="$burgerOpen=false; $action='keys'; @post('goto/stats.html')">
+                            <i class="bi bi-bar-chart"></i> Keycount</a>
+                        <a class="navbar-item" title="Full Global Scan"
+                            data-on:click="$burgerOpen=false; $action='full'; @post('goto/stats.html')">
+                            <i class="bi bi-bar-chart-fill"></i> Full Scan</a>
+                        <a class="navbar-item" title="Monitor database in RealTime"
+                            data-on:click="$burgerOpen=false; @post('goto/dbmon.html')">
+                            <i class="bi bi-activity"></i> Monitor</a>
+                        <a class="navbar-item" title="List the YottaDB globals"
+                            data-on:click="$burgerOpen=false; @post('goto/dbedit.html')">
+                            <i class="bi bi-pencil"></i> Globals</a>
+                        <a class="navbar-item" title="YottaDB Database performance charts"
+                            data-on:click="$burgerOpen=false; @post('goto/dbcharts.html')">
+                            <i class="bi bi-graph-up"></i> Statistics</a>
+                        <a class="navbar-item" title="File Explorer"
+                            data-on:click="$burgerOpen=false; @post('goto/explorer.html')">
+                            <i class="bi bi-folder2"></i> Explorer</a>
+                    </div>
+                </div>
+
+                <!-- Der INFO placeholder -->
+                <a class="navbar-item info" data-show="$loggedIn">
+                    <p id="info"></p>
+                </a>
+            </div>
+                
+
+            <div class="navbar-end">
+                <a class="navbar-item info" data-show="$loggedIn">
+                    <p id="wallclock"></p>
+                </a>
+
+                <a class="navbar-item" title="About" data-show="$loggedIn"
+                    data-on:click="rssOpen=!$rssOpen; $burgerOpen=false; @post('/about.html')">
+                    <i class="bi bi-question-circle"></i>
+                </a>
+
+                <a class="navbar-item" data-show="$loggedIn" data-attr:title="$userid"
+                    data-on:click="$menuOpen=false; $burgerOpen=false; @post('/edit-registration')">
+                    <i class="bi bi-person-lines-fill"></i>
+                </a>
+                <a class="navbar-item" title="Logout" data-show="$loggedIn"
+                    data-on:click="$menuOpen=false; $burgerOpen=false; @post('/logout')">
+                    <i class="bi bi-box-arrow-right"></i>
+                </a>
+
             </div>
         </div>
-
-
-        <a href="#about" data-on:click="$menuOpen = false; @post('/about.html')" title="About"><i class="bi bi-question-circle"></i></a>
-        <a href="#login" data-show="!$loggedIn" data-on:click="$menuOpen = false; @post('/index.html')"><i class="bi bi-box-arrow-in-right"></i> Login</a>        
-
-        <div class="subnav" 
-            data-show="$loggedIn" 
-            data-on:mouseenter="$menuOpen = true" 
-            data-on:mouseleave="$menuOpen = false">
-            <button class="subnavbtn" data-attr:title="'You are logged in as: ' + $userid">
-                <i class="bi bi-person-circle"></i>
-            </button>
-            <div class="subnav-content" data-show="$menuOpen">
-                <a href="#feeds" title="Feed Configuration" data-on:click="$menuOpen = false; @post('goto/configfeeds.html')"><i class="bi bi-gear"></i> Configuration</a>
-                <a href="#edit" data-on:click="$menuOpen = false; @post('/edit-registration')"><i class="bi bi-person-lines-fill"></i> Edit Profile</a>
-                <a href="#logout" data-on:click="$menuOpen = false; @post('/logout')"><i class="bi bi-box-arrow-right"></i> Logout</a>
-            </div>
-        </div>
-
-        
-        <div class="subnav"
-            data-show="$userid=='ljoeckel'" 
-            data-on:mouseenter="$menuOpen = true" 
-            data-on:mouseleave="$menuOpen = false">
-            <button class="subnavbtn" title="Lothar">LJ</button>
-            <div class="subnav-content" data-show="$menuOpen">
-                <a href="#explorer" title="File Explorer" data-on:click="$menuOpen = false; @post('goto/explorer.html')">Explorer</a>
-            </div>
-        </div>
-        
-
-        <!-- placeholders for the 'info' field (Query time etc.) -->
-        <h3 id="info"></h3>
-        
-        <!-- placeholder for the wallclock -->
-        <h3 id="wallclock"></h3>
-    </div>
+    </nav>
 
     <!-- 'container' is the placeholder for content -->
-    <div id="container" data-init="@post('./html/login.html')"></div>
+     <div class="mt-0 ml-3">
+        <div id="container" data-init="@post('./html/login.html')"></div>
+    </div>
+
 </body>
 
 </html>
