@@ -268,14 +268,14 @@ proc createRSSItemCard*(item: RSSItem): string =
         </button>"""
 
 # style="display: inline-block; line-height: 1.125;"
-    let htmltags = if tags.len > 0: fmt"<div class='tags has-addons mt-0 mb-0'>{tags}</div>" else: ""
+    let htmltags = if tags.len > 0: fmt"<div class='tags has-addons mb-0'>{tags}</div>" else: ""
     result = fmt"""
         <div class='box cell is-flex is-flex-direction-column'>
             {htmltags}
 
-            <a target='_blank' href='{link}'><h6 class='subtitle is-5'>{title}</h6></a>
+            <a target='_blank' href='{link}'><h6 class='subtitle is-size-5'>{title}</h6></a>
             
-            <span class="is-size-6a mt-3">{description}</span>
+            <span class="is-size-6a mt-2">{description}</span>
 
             <div class="columns is-gapless mt-auto" style="width: 100%;">
                 <div class="column is-four-fifths">

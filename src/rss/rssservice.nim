@@ -127,7 +127,7 @@ if isMainModule:
     router.notFoundHandler = serveStatic
 
     let (host, port) = ("localhost", 8080)
-    let server = newServer(router)
+    let server = newServer(router, workerThreads=32)
     echo fmt"Simple SSE / Datastar server - Open http://{host}:{port} in your browser"
 
     server.serve(Port(port), host)
