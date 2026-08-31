@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <link rel="stylesheet" href="/bulma.min.css">
-    <link rel="stylesheet" href="/bulmaswatch-slate.min.css">
+    <!--link rel="stylesheet" href="/bulmaswatch-slate.min.css"-->
     <!--link rel="stylesheet" href="/bulmaswatch-materia.min.css"-->
     
     <script type="module" src="/datastar.js"></script>
@@ -45,12 +45,12 @@
 
             <a class="navbar-item" title="Feed configuration" data-show="$loggedIn"
                 data-show="$loggedIn"
-                data-on:click="$menuOpen=false; $burgerOpen=false; @post('goto/configfeeds.html')">
+                data-on:click="$menuOpen=false; $burgerOpen=false; @post('configfeeds.html')">
                 <i class="bi bi-gear"></i>
             </a>
 
             <a class="navbar-item" title="News Trend" data-show="$loggedIn" 
-                data-on:click="$burgerOpen=false; @post('goto/wordcloud.html')"
+                data-on:click="$burgerOpen=false; @post('wordcloud.html')"
                 title='Show the latest Word-Cloud'>
                 <i class="bi bi-graph-up-arrow"></i>
             </a>
@@ -79,22 +79,22 @@
                     </a>
                     <div class="navbar-dropdown">
                         <a class="navbar-item" title="Count the Order Keys"
-                            data-on:click="$burgerOpen=false; $action='keys'; @post('goto/stats.html')">
+                            data-on:click="$burgerOpen=false; $action='keys'; @post('stats.html')">
                             <i class="bi bi-bar-chart"></i> Keycount</a>
                         <a class="navbar-item" title="Full Global Scan"
-                            data-on:click="$burgerOpen=false; $action='full'; @post('goto/stats.html')">
+                            data-on:click="$burgerOpen=false; $action='full'; @post('stats.html')">
                             <i class="bi bi-bar-chart-fill"></i> Full Scan</a>
                         <a class="navbar-item" title="Monitor database in RealTime"
-                            data-on:click="$burgerOpen=false; @post('goto/dbmon.html')">
+                            data-on:click="$burgerOpen=false; @post('dbmon.html')">
                             <i class="bi bi-activity"></i> Monitor</a>
                         <a class="navbar-item" title="List the YottaDB globals"
-                            data-on:click="$burgerOpen=false; @post('goto/dbedit.html')">
+                            data-on:click="$burgerOpen=false; @post('dbedit.html')">
                             <i class="bi bi-pencil"></i> Globals</a>
                         <a class="navbar-item" title="YottaDB Database performance charts"
-                            data-on:click="$burgerOpen=false; @post('goto/dbcharts.html')">
+                            data-on:click="$burgerOpen=false; @post('dbcharts.html')">
                             <i class="bi bi-graph-up"></i> Statistics</a>
                         <a class="navbar-item" title="File Explorer"
-                            data-on:click="$burgerOpen=false; @post('goto/explorer.html')">
+                            data-on:click="$burgerOpen=false; @post('explorer.html')">
                             <i class="bi bi-folder2"></i> Explorer</a>
                     </div>
                 </div>

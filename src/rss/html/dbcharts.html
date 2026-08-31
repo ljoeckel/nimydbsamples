@@ -70,6 +70,7 @@
                     data-on:change="@post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4')">
                     <option value="srv">RSSServer</option>
                     <option value="clc">RSSCollector</option>
+                    <option value="binary">test/binary</option>
                 </select>
             </div>
         </div>
@@ -79,6 +80,7 @@
                 <select class="column" id="period" data-bind="period" 
                     data-indicator="isLoading"
                     data-on:change="@post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4')">
+                    <option value="Minute">Minute</option>
                     <option value="Hour">Hour</option>
                     <option value="Day">Day 24h</option>
                     <option value="Week">Week 7d</option>

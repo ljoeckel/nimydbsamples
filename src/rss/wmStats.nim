@@ -107,7 +107,7 @@ proc scanFull(req: Request) =
     if not ctx.isAdmin():
         let err = """
         <div class="notification is-danger">
-            <button class="delete" data-on:click="@post('goto/livefeed.html')"></button>
+            <button class="delete" data-on:click="@post('livefeed.html')"></button>
             Only the Administrator is allowed to run this kind of database analysis.
             <strong>Please ask your admin!</strong>
         </div>

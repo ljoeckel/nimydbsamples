@@ -4,26 +4,24 @@ import nimrss
 
 
 type 
-    StatData* = ref object
-        value*: int
-        delta*: int
-
     StatResult = object
         processed: int
-        data: OrderedTable[int, seq[StatData]]
+        data: OrderedTable[int, seq[int]]
 
     StatType = enum
+        All,
+        Minute,
         Hour,
         Day,
         Week,
         Month,
         YearByDay,
-        YearByMonth,
-        All
+        YearByMonth
 
-proc sort(table: OrderedTable[int, seq[StatData]]): OrderedTable[int, seq[StatData]]=
+
+proc sort(table: OrderedTable[int, seq[int]]): OrderedTable[int, seq[int]]=
     var pairsSeq = toSeq(table.pairs)
-    pairsSeq.sort(proc (x, y: (int, seq[StatData])): int =
+    pairsSeq.sort(proc (x, y: (int, seq[int])): int =
       result = system.cmp(x[0], y[0])
     )
     for (key, val) in pairsSeq:
@@ -32,7 +30,8 @@ proc sort(table: OrderedTable[int, seq[StatData]]): OrderedTable[int, seq[StatDa
 
 proc getStats(mnemonic: string, domain: string, period: string, jsDt: DateTime): StatResult =
     var 
-        lastData: StatData
+        seconds: array[60, int]
+        minutes: array[60, int]
         hours: array[24, int]
         weekdays: array[7, int]
         monthdays: array[31, int]
@@ -44,70 +43,66 @@ proc getStats(mnemonic: string, domain: string, period: string, jsDt: DateTime):
 
     let statType = parseEnum[StatType](period)
     case statType
+    of Minute:  timeRange = minuteFromTo(jsDt)
     of Hour:    timeRange = hourFromTo(jsDt)
     of Day:     timeRange = dayFromTo(jsDt)
     of Week:    timeRange = weekFromTo(jsDt)
     of Month:   timeRange = monthFromTo(jsDt)
     of YearByDay, YearByMonth:  timeRange = yearFromTo(jsDt)
     of All:     timeRange = (0, now)
-
-    for keys in QueryItr ^DBStatsDetail(mnemonic, timeRange[0]).keys:
-        if mnemonic != keys[0]: break
-        if domain != keys[2]: continue
-        let tm = parseInt(keys[1])
+    for keys in QueryItr ^DBStatsDOMAIN(domain, mnemonic, timeRange[0]).keys:
+        # ^DBStatsDOMAIN("srv","KIL",1788065309,318994)=5
+        if keys[0] != domain: break
+        if keys[1] != mnemonic: break
+        let tm = parseInt(keys[2])
         if tm > timeRange[1]: break
-
-        let value = Get ^DBStatsDetail(keys).int
-        if lastData.isNil: 
-            lastData = StatData(value: value, delta: 0)
-            continue
-
-        var delta = value - lastData.value
-        if delta == 0: continue
-        if delta < 0: delta = value # process restart, counters start from 0 again 
-        let data = StatData(value: value, delta: delta)
-        lastData = data
+        let value = parseInt( Get ^DBStatsDOMAIN(keys) )
 
         let dt = fromUnix(tm).local
         case statType
-        of Hour, All:   result.data.mgetOrPut(tm, @[]).add(data)
-        of Day:         hours[dt.hour] += delta
-        of Week:        weekdays[ord(dt.weekday)] += delta
-        of Month:       monthdays[dt.monthday] += delta
-        of YearByDay:   yeardays[dt.yearday] += delta
-        of YearByMonth: months[ord(dt.month)] += delta
+        of Minute:      seconds[dt.second] += value
+        of Hour:        minutes[dt.minute] += value
+        of Day:         hours[dt.hour] += value
+        of Week:        weekdays[ord(dt.weekday)] += value
+        of Month:       monthdays[dt.monthday-1] += value
+        of YearByDay:   yeardays[dt.yearday] += value
+        of YearByMonth: months[ord(dt.month)-1] += value
+        of All:         result.data.mgetOrPut(tm, @[]).add(value)
 
         inc processed
 
     
     case statType
-    of Hour, All:
+    of All:
         discard # handled before
+    of Minute:
+        for i in 0..59:
+            let td = calcTimeForSecond(timeRange[0], i)
+            result.data.mgetOrPut(td, @[]).add(seconds[i])
+    of Hour:
+        for i in 0..59:
+            let td = calcTimeForMinute(timeRange[0], i)
+            result.data.mgetOrPut(td, @[]).add(minutes[i])
     of Day:
         for i in 0..23:
-            let data = StatData(delta: hours[i])
             let td = calcTimeForHour(timeRange[0], i)
-            result.data.mgetOrPut(td, @[]).add(data)
+            result.data.mgetOrPut(td, @[]).add(hours[i])
     of Week:
         for i in 0..<weekdays.len:
-            let data = StatData(delta: weekdays[i])
             let td = calcTimeForDay(timeRange[0], i)
-            result.data.mgetOrPut(td, @[]).add(data)
+            result.data.mgetOrPut(td, @[]).add(weekdays[i])
     of Month:
         for i in 0..<monthdays.len:
-            let data = StatData(delta: monthdays[i])
             let td = calcTimeForDay(timeRange[0], i)
-            result.data.mgetOrPut(td, @[]).add(data)
+            result.data.mgetOrPut(td, @[]).add(monthdays[i])
     of YearByDay:
         for i in 0..<yeardays.len:
-            let data = StatData(delta: yeardays[i])
             let td = calcTimeForDay(timeRange[0], i)
-            result.data.mgetOrPut(td, @[]).add(data)
+            result.data.mgetOrPut(td, @[]).add(yeardays[i])
     of YearByMonth:
         for i in 0..<months.len:
-            let data = StatData(delta: months[i])
             let td = calcTimeForMonth(timeRange[0], i)
-            result.data.mgetOrPut(td, @[]).add(data)
+            result.data.mgetOrPut(td, @[]).add(months[i])
 
     result.processed = processed
     result.data = result.data.sort()
@@ -125,16 +120,20 @@ proc handleChart(req: Request) =
     let domain = ctx.getStr("domain")
     let period = ctx.getStr("period")
 
-    let ms = meassure:
+    let duration = meassure:
         let stats = getStats(mnemonic, domain, period, dt)
 
-    echo fmt"chartid: {chartid}, mnemnomic: {mnemonic}, domain: {domain}, period: {period}, processed: {stats.processed}, duration: {ms}"
+    #echo fmt"chartid: {chartid}, mnemnomic: {mnemonic}, domain: {domain}, period: {period}, processed: {stats.processed}, duration: {duration}"
 
     var xAxis = newSeqOfCap[int](stats.data.len)
     var yAxis = newSeqOfCap[int](stats.data.len)
     for (k, v) in stats.data.pairs():
         xAxis.add(k*1000)
-        yAxis.add(v[0].delta)
+        yAxis.add(v[0])
+
+    if yAxis.len == 0: 
+        xAxis.add(0)
+        yAxis.add(0)
 
     SSE(req):
         patchSignals(sse, %*{
@@ -159,7 +158,7 @@ proc register*(router: var Router) =
 
 
 # Create module instance
-let wmDbMonitorModule* = WebModule(
-    name: "wmDbMonitor",
+let wmDbChartsModule* = WebModule(
+    name: "wmDbCharts",
     register: register
 )

@@ -7,6 +7,11 @@
   font-size: 0.85rem;
 }
 
+/* Visited style for the title link */
+a:visited h6.subtitle {
+    color: #9ab;
+}
+
 .is-size-6a {
   font-size: var(--font-size-tight) !important;
   line-height: var(--line-height-tight) !important;

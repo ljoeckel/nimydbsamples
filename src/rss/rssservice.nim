@@ -10,8 +10,8 @@ import wmLogin
 import wmSearch
 import wmStats
 import wmWordcloud
-import wmDbMonitor
 import wmFileExplorer
+import wmDbCharts
 
 proc updateWallClock(sse: SSEConnection) =
     let dt = now()
@@ -114,7 +114,7 @@ if isMainModule:
     wmSearchModule.register(router)
     wmStatsModule.register(router)
     wmWordcloud.register(router)
-    wmDbMonitor.register(router)
+    wmDbCharts.register(router)
     wmFileExplorer.register(router)
 
     router.post("/update-clock", handleUpdateClock)
@@ -122,8 +122,7 @@ if isMainModule:
     router.post("/update-scroll", handleUpdateScroll)
     
 
-    # Standard handlers
-    router.post("/goto/**", handleGoto)
+    # Standard NotFound handler
     router.notFoundHandler = serveStatic
 
     let (host, port) = ("localhost", 8080)
