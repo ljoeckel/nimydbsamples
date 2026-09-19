@@ -7,7 +7,7 @@ import streams
 import sugar
 import htmlparser
 import options
-import types
+import rsstypes
 
 proc innerTexts*(n: XmlNode): Option[string] =
   if not isNil(n):

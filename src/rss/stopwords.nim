@@ -2,7 +2,7 @@ import std/[sequtils]
 import std/[options, parseopt, strutils, strformat, typetraits, os]
 import std/tables
 
-import types
+import rsstypes
 import yottadb
 import stemmer
 import common

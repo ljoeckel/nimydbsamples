@@ -1,6 +1,5 @@
 import options
 import yottadb
-import mummy, mummy/routers
 
 const
     MIN_KEYWORD_LEN* = 2
@@ -9,11 +8,6 @@ const
     DEFAULT_LANGUAGE* = "EN"
 
 type
-    RouteHandler* = proc (req: Request)
-    WebModule* = object
-        name*: string
-        register*: proc (router: var Router)
-
     Feed* = object of RootObj
         rssid*: string
         group*: string

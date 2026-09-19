@@ -2,7 +2,7 @@ import std/[enumerate, strformat, algorithm, hashes, sets, tables]
 import std/[options, strutils, typetraits, times]
 import yottadb
 import stemmer
-import types
+import rsstypes
 import sugar
 import common
 

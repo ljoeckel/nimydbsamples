@@ -8,7 +8,8 @@
         chart1: { id: 'chart1', mnemonic: 'GET', x: [], y: [] },
         chart2: { id: 'chart2', mnemonic: 'SET', x: [], y: [] },
         chart3: { id: 'chart3', mnemonic: 'ORD', x: [], y: [] },
-        chart4: { id: 'chart4', mnemonic: 'QRY', x: [], y: [] }
+        chart4: { id: 'chart4', mnemonic: 'QRY', x: [], y: [] },
+        chart5: { id: 'chart5', mnemonic: 'KIL', x: [], y: [] }
     }">
 
     <style>
@@ -48,7 +49,7 @@
     </style>
 
 
-    <div data-init="@post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4')">
+    <div data-init="@post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4'); @post('/chart5')">
 
 <!-- Main container -->
 <nav class="level mt-3">
@@ -67,9 +68,12 @@
             <div class="select ml-3">
                 <select id="domain" data-bind="domain" 
                     data-indicator="isLoading"
-                    data-on:change="@post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4')">
+                    data-on:change="@post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4'); @post('/chart5')">
                     <option value="srv">RSSServer</option>
                     <option value="clc">RSSCollector</option>
+                    <option value="hnsw_articles">hnsw_articles</option>
+                    <option value="hnsw_search">hnsw_search</option>
+                    <option value="hnsw_clean">hnsw_clean</option>
                     <option value="binary">test/binary</option>
                 </select>
             </div>
@@ -79,7 +83,7 @@
             <div class="select ml-3">
                 <select class="column" id="period" data-bind="period" 
                     data-indicator="isLoading"
-                    data-on:change="@post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4')">
+                    data-on:change="@post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4'); @post('/chart5')">
                     <option value="Minute">Minute</option>
                     <option value="Hour">Hour</option>
                     <option value="Day">Day 24h</option>
@@ -97,7 +101,7 @@
             <div class="select ml-3">
                 <select id="chartType" data-bind="chartType" 
                     data-indicator="isLoading"
-                    data-on:change="@post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4')">
+                    data-on:change="@post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4'); @post('/chart5')">
                     <option value="line">Line</option>
                     <option value="bar">Bar</option>
                     <option value="scatter">Scatter</option>
@@ -120,7 +124,7 @@
                     data-bind="localTime" 
                     data-on:focus="$isEditing = true"
                     data-on:blur="$isEditing = false; $localTime = $dateTime"
-                    data-on:input="$dateTime = $localTime; @post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4')"
+                    data-on:input="$dateTime = $localTime; @post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4'); @post('/chart5')"
                 />
             </div>
             </p>
@@ -137,7 +141,7 @@
                         type="checkbox" 
                         data-bind="poll"
                         data-indicator="isLoading"
-                        data-on-interval__duration.10s="if ($poll) { @post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4') }">
+                        data-on-interval__duration.10s="if ($poll) { @post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4'); @post('/chart5') }">
                     </input>
                 </div>
             </p>
@@ -149,7 +153,7 @@
                 <button 
                     title="Refresh the statistics"
                     data-indicator="isLoading"
-                    data-on:click="@post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4')">
+                    data-on:click="@post('/chart1'); @post('/chart2'); @post('/chart3'); @post('/chart4'); @post('/chart5')">
                     <i class="bi bi-arrow-clockwise"></i>
                 </button>
             </p>
@@ -162,6 +166,7 @@
 
     <div id="chart1" style="width: 90vw; height: 20vh;" data-effect="window.updateChart($chart1, $chartType)"></div>
     <div id="chart2" style="width: 90vw; height: 20vh;" data-effect="window.updateChart($chart2, $chartType)"></div>
+    <div id="chart5" style="width: 90vw; height: 20vw;" data-effect="window.updateChart($chart5, $chartType)"></div>    
     <div id="chart3" style="width: 90vw; height: 20vw;" data-effect="window.updateChart($chart3, $chartType)"></div>
     <div id="chart4" style="width: 90vw; height: 20vw;" data-effect="window.updateChart($chart4, $chartType)"></div>
 </div>        

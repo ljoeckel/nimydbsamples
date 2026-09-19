@@ -1,4 +1,4 @@
-import types
+import rsstypes
 import searchlib
 import yottadb
 import ydbutils
@@ -6,7 +6,7 @@ import stopwords
 import stemmer
 import common
 
-export types
+export rsstypes
 export yottadb
 export ydbutils
 export searchlib

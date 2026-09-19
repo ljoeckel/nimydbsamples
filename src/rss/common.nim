@@ -5,7 +5,12 @@ import checksums/sha1
 import mummy, mummy/routers, mummy/datastar
 import macros
 import yottadb
-import types
+import rsstypes
+
+type
+    WebModule* = object
+        name*: string
+        register*: proc (router: var Router)
 
 const
     MAXNEWS* = 100 # How many news to show in 'latest'
@@ -21,8 +26,8 @@ template meassure*(body: untyped): auto =
     else: $td & " µs."
 
 
-template getOption*(option: Option): string =
-    if option.isSome: option.get() else: ""
+# template getOption*(option: Option): string =
+#     if option.isSome: option.get() else: ""
 
 
 proc generateSHA1*(input: string, length: int = 20): string =
