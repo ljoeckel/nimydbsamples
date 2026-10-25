@@ -34,17 +34,22 @@ proc setupStopwords(lang: string): int =
         inc result
 
 proc isStopword*(word: string, lang: string): bool =
-    var ucLang = lang.toUpper()
-    let wrd = strip(word.toLower())
-    result = false
+    var gblKey = initYdbKey(STOPWORDS["WC"],"")
     if word.len == 0: return false
-    if ydb_data(STOPWORDS["WC"], @[wrd]) == 1: return true
+    result = false
 
+    let wrd = strip(word.toLower())
+    gblKey.setSub(0, wrd)
+    if 1 == ydb_data(gblKey) : return true
+
+    var ucLang = lang.toUpper()
+    gblKey.setName(STOPWORDS[uclang])
     if ucLang.len > 0:
-        if ydb_data(STOPWORDS[ucLang], @[wrd]) == 1: return true
+        if 1 == ydb_data(gblKey): return true
     else:
         for lang in STOPWORDS.keys:
-            if ydb_data(STOPWORDS[lang], @[wrd]) == 1: return true
+            gblKey.setName(STOPWORDS[lang])
+            if 1 == ydb_data(gblKey): return true
 
 proc splitWords*(text: string, lang: string): seq[string] =
     # Replace with ' '
