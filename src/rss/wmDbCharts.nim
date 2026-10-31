@@ -19,14 +19,15 @@ type
         YearByMonth
 
 
-proc sort(table: OrderedTable[int, seq[int]]): OrderedTable[int, seq[int]]=
-    var pairsSeq = toSeq(table.pairs)
+proc sort(table: OrderedTable[int, seq[int]]): OrderedTable[int, seq[int]] =
+    var pairsSeq: seq[(int, seq[int])] = @[]
+    for k, v in table.pairs():
+        pairsSeq.add((k, v))
     pairsSeq.sort(proc (x, y: (int, seq[int])): int =
       result = system.cmp(x[0], y[0])
     )
     for (key, val) in pairsSeq:
         result[key] = val
-
 
 proc getStats(mnemonic: string, domain: string, period: string, jsDt: DateTime): StatResult =
     var 
