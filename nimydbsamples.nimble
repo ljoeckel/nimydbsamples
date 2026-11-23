@@ -9,6 +9,7 @@ srcDir        = "src"
 # Dependencies
 requires "nim >= 2.2.4"
 requires "https://github.com/ljoeckel/nim-yottadb.git"
+requires "https://github.com/ljoeckel/ydb-hnsw.git"
 requires "https://github.com/ljoeckel/mummyDS.git"
 requires "checksums"
 requires "nimpy"

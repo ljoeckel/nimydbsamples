@@ -27,3 +27,4 @@ src/rss/rsscollector.log
 src/rss/rssservice.err
 src/rss/rssservice.log
 src/rss/html/wordcloud.jpg
+src/rss/.ned/settings.json
